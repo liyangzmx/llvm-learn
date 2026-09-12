@@ -207,7 +207,17 @@ flowchart LR
 
 Canonicalizer 会反复尝试让局部 IR 变得规范，但它不是搜索所有等价程序再选全局最优。规则通常选择一个方向，例如嵌套 reshape 变成单层，而不是同时添加相反规则。规范形式给多次局部变换提供稳定落点。
 
-本地 benefit=1 是模式排序的相对值，不是删除一条指令便计 1。规则优先级可能影响得到哪一种规范结果，因此应优先写对顺序不敏感的规则，并使用合适的测试保护行为。
+本章 C++ 模式 `SimplifyRedundantTranspose` 显式传入 `benefit=1`；这个 1 不能推广为所有本地模式的收益值。DRR 在生成重写代码时，按 [Pattern::getBenefit()](/opt/llvm-project/mlir/lib/TableGen/Pattern.cpp:699) 计算“源模式中的操作节点数量 + addBenefit 增量”。这里数的是 operation 节点，不是一个操作有多少输入 operands；未指定增量时，默认 `addBenefit 0`，见 [PatternBase.td](/opt/llvm-project/mlir/include/mlir/IR/PatternBase.td:92)。
+
+本地三个 DRR reshape 规则都没有增加额外 benefit，因此：
+
+| 规则 | 源模式中的操作节点 | benefit |
+|---|---|---:|
+| `RedundantReshapeOptPattern` | 一个 ReshapeOp | 1 |
+| `ReshapeReshapeOptPattern` | 外层和内层两个 ReshapeOp | 2 |
+| `FoldConstantReshapeOptPattern` | ReshapeOp 与 ConstantOp | 2 |
+
+这些数值都是模式排序使用的相对指标，不是实测加速比，也不是“删除一条指令便计 1”。较高 benefit 为匹配规则提供优先级依据，不保证所有模式都按表格顺序全局执行；匹配条件、遍历和重写产生的新 IR 仍影响结果。应优先写对顺序不敏感的规则，并使用合适的测试保护行为。
 
 ## 9. 把 DRR 逐个符号读出来
 

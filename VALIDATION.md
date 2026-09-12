@@ -27,6 +27,8 @@ node /opt/coding/mlir-toy/scripts/validate-materials.test.mjs
 
 本轮复核结论及未采纳意见见 [ds4.1 处理记录](issues/ds4.1-response.md)。
 
+2026-09-13 的 GLM 后续复核见 [GLM 处理记录](issues/glm-response.md)。修订后重新运行主校验及内存变异回归测试，均通过；代码块来源分类数量不变。
+
 ## 未做及原因
 
 现有 `/opt/llvm-project/build` 未启用 MLIR/Toy，因此没有重建 LLVM、编译 C++ 摘录、执行 MLIR 验证器、运行 Toy/JIT 或 FileCheck。相关输出为源码/测试约定和数学推导，不是运行日志。

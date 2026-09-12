@@ -81,6 +81,8 @@ node /opt/coding/mlir-toy/scripts/validate-materials.mjs
 
 针对 [ds4.1 检查清单](issues/ds4.1check.md) 的独立复核、采纳项与不采纳理由见 [处理记录](issues/ds4.1-response.md)。原检查文件保持不变。
 
+2026-09-13 对 [GLM 检查清单](issues/glmcheck.md) 的两项意见完成源码复核：限定 C++ 模式 benefit=1 的适用范围，并补充 DRR 的收益计算与第 6 章目录图。详见 [GLM 处理记录](issues/glm-response.md)。本次未改写两份原始检查清单。
+
 ## 6. 授权
 
 LLVM Project 原文和源代码采用 Apache License 2.0 with LLVM Exceptions；完整许可证副本见 [LICENSE-LLVM.txt](LICENSE-LLVM.txt)，对应本地 [LICENSE.TXT](/opt/llvm-project/LICENSE.TXT)。中文翻译、结构重排、纠错与补充是修改部分。本材料不代表 LLVM 官方审阅或背书。

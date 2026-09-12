@@ -63,7 +63,7 @@ mlir/examples/toy/ChN/               各章实现
 mlir/test/Examples/Toy/ChN/          各章输入和 FileCheck 预期
 ```
 
-以第 6 章为例：
+以第 6 章为例（列出与教材直接相关的源码；省略各层 CMakeLists.txt）：
 
 ```text
 Ch6/
@@ -71,6 +71,9 @@ Ch6/
 ├─ include/toy/
 │  ├─ AST.h / Lexer.h / Parser.h
 │  ├─ Dialect.h / Ops.td        方言与操作定义
+│  ├─ MLIRGen.h                AST 到 MLIR 的生成器入口
+│  ├─ ShapeInferenceInterface.h  形状推断接口的 C++ 入口
+│  ├─ ShapeInferenceInterface.td  形状推断接口的 TableGen 定义
 │  └─ Passes.h                 pass 工厂声明
 ├─ parser/AST.cpp              AST 打印
 └─ mlir/
