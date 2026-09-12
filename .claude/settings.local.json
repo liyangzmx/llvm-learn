@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//opt/llvm-project/mlir/**)",
+      "Read(//opt/llvm-project/mlir/examples/toy/Ch6/**)",
+      "Bash(node /opt/coding/mlir-toy/scripts/validate-materials.mjs)"
+    ]
+  }
+}

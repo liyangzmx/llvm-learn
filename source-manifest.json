@@ -1,0 +1,756 @@
+{
+  "sourceRoot": "/opt/llvm-project",
+  "branch": "release/18.x",
+  "commit": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff",
+  "scope": [
+    "mlir/docs/Tutorials/Toy",
+    "mlir/examples/toy",
+    "mlir/test/Examples/Toy"
+  ],
+  "files": [
+    {
+      "path": "mlir/docs/Tutorials/Toy/_index.md",
+      "sha256": "7d9cf7c353f8e9290fa7002c8020f9d3ee210b6fbd2b66fd88607345a233c5a8"
+    },
+    {
+      "path": "mlir/docs/Tutorials/Toy/Ch-1.md",
+      "sha256": "85d55ab5447f240529bf2abaaef1d06df239695ca9911ec38fe505db32dc7d34"
+    },
+    {
+      "path": "mlir/docs/Tutorials/Toy/Ch-2.md",
+      "sha256": "9bbf4761a3888e95e3a0be3a55add3a907c9e55178c88a5c5bf8c4ab993d1439"
+    },
+    {
+      "path": "mlir/docs/Tutorials/Toy/Ch-3.md",
+      "sha256": "47e4d937f7091fbc06b64c5439176bfd4b70dbc73abea7799843dfbded0056ce"
+    },
+    {
+      "path": "mlir/docs/Tutorials/Toy/Ch-4.md",
+      "sha256": "7ace9f3e41ebd54f6f97cf0d8f1aa2e870e7eec10262a97724adbab8362d5d6e"
+    },
+    {
+      "path": "mlir/docs/Tutorials/Toy/Ch-5.md",
+      "sha256": "23af310055f7bf796fcfeb3410b99d846fb4cf496ce04ea145fb519cf12c9376"
+    },
+    {
+      "path": "mlir/docs/Tutorials/Toy/Ch-6.md",
+      "sha256": "750f0bce0342becbf15dd67143e4001c9da91f11c751a13cad4a851133da98c5"
+    },
+    {
+      "path": "mlir/docs/Tutorials/Toy/Ch-7.md",
+      "sha256": "107a7592ecabee366b02283aa139e41299aaeaeff2afd9bea587a2d1fe8057a4"
+    },
+    {
+      "path": "mlir/examples/toy/Ch1/CMakeLists.txt",
+      "sha256": "176f62ae0d758c0a616b2606bf32adc0d3307fbbe15f20e3764536160fe70a40"
+    },
+    {
+      "path": "mlir/examples/toy/Ch1/include/toy/AST.h",
+      "sha256": "b5ec5a31b543e850dd96c0af89d2413e0dd93cb0340b5700ab550eec15909f89"
+    },
+    {
+      "path": "mlir/examples/toy/Ch1/include/toy/Lexer.h",
+      "sha256": "5586aa5d3077f75bc3e5c89835dfe856c9d8ee954ee5e9f1e8921a94f36b50d9"
+    },
+    {
+      "path": "mlir/examples/toy/Ch1/include/toy/Parser.h",
+      "sha256": "1d651d2d76890ecc0639978d973b48cdc6c81d161f507549139887254755946a"
+    },
+    {
+      "path": "mlir/examples/toy/Ch1/parser/AST.cpp",
+      "sha256": "e214a6baf6205a632354999148ee9fc22a7c9a60482fae81ae50008004d06d13"
+    },
+    {
+      "path": "mlir/examples/toy/Ch1/toyc.cpp",
+      "sha256": "4eb76b013002cb3ca2730f10a15a394b56bffad6a2bd983405280ea54d8fc069"
+    },
+    {
+      "path": "mlir/examples/toy/Ch2/CMakeLists.txt",
+      "sha256": "a9c9c2d9f3228528ebb893f114567ca5982e3289ca027ad97f6bbb012c6eaa55"
+    },
+    {
+      "path": "mlir/examples/toy/Ch2/include/CMakeLists.txt",
+      "sha256": "40ad9d516b97ce518fa78a17f4cea7d163b076c556287102090c8f300a9599ae"
+    },
+    {
+      "path": "mlir/examples/toy/Ch2/include/toy/AST.h",
+      "sha256": "b5ec5a31b543e850dd96c0af89d2413e0dd93cb0340b5700ab550eec15909f89"
+    },
+    {
+      "path": "mlir/examples/toy/Ch2/include/toy/CMakeLists.txt",
+      "sha256": "90dd7cb2e36734e44110a464d20724e3b55612ff30010f98522d88f96a7229ea"
+    },
+    {
+      "path": "mlir/examples/toy/Ch2/include/toy/Dialect.h",
+      "sha256": "2e6859fb3da9da4829bd74cb6988323ec01d4574b6b13229f0d4d85709a827ac"
+    },
+    {
+      "path": "mlir/examples/toy/Ch2/include/toy/Lexer.h",
+      "sha256": "7d2c626584bfbd723a18e19c7c2de00f2b3d7da43b8defe49b61334248e7d3fa"
+    },
+    {
+      "path": "mlir/examples/toy/Ch2/include/toy/MLIRGen.h",
+      "sha256": "eab6002e139022aad7c822a9f14ce0e6e01f3c8f20ea55a218c48f7d354b5f4e"
+    },
+    {
+      "path": "mlir/examples/toy/Ch2/include/toy/Ops.td",
+      "sha256": "c443616a7af8653ae9cc00a70c521867ea719de02c90d0390801152b7b9fd976"
+    },
+    {
+      "path": "mlir/examples/toy/Ch2/include/toy/Parser.h",
+      "sha256": "1d651d2d76890ecc0639978d973b48cdc6c81d161f507549139887254755946a"
+    },
+    {
+      "path": "mlir/examples/toy/Ch2/mlir/Dialect.cpp",
+      "sha256": "84c627b4f3f85bdec3d1e365de9559ea6914fc40875bed0c45587803e5dec3ee"
+    },
+    {
+      "path": "mlir/examples/toy/Ch2/mlir/MLIRGen.cpp",
+      "sha256": "58512f629c631d01906024398c26db57fe22946ccb7586eabec6a31c86bd157f"
+    },
+    {
+      "path": "mlir/examples/toy/Ch2/parser/AST.cpp",
+      "sha256": "e214a6baf6205a632354999148ee9fc22a7c9a60482fae81ae50008004d06d13"
+    },
+    {
+      "path": "mlir/examples/toy/Ch2/toyc.cpp",
+      "sha256": "7767b2793feaf51a9db1829dd4f76221f18a4bcc7122a5a048a804be147b5842"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/CMakeLists.txt",
+      "sha256": "ff84e7de8e0c28bfa87e7eb5796d4d79373d833c5111b11771d905b8c1d5d865"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/include/CMakeLists.txt",
+      "sha256": "40ad9d516b97ce518fa78a17f4cea7d163b076c556287102090c8f300a9599ae"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/include/toy/AST.h",
+      "sha256": "b5ec5a31b543e850dd96c0af89d2413e0dd93cb0340b5700ab550eec15909f89"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/include/toy/CMakeLists.txt",
+      "sha256": "7c7c90415b5fb0de08c8d0f73de83641806c33fafcc6fa386f56e9ae37d09f34"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/include/toy/Dialect.h",
+      "sha256": "2e6859fb3da9da4829bd74cb6988323ec01d4574b6b13229f0d4d85709a827ac"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/include/toy/Lexer.h",
+      "sha256": "7d2c626584bfbd723a18e19c7c2de00f2b3d7da43b8defe49b61334248e7d3fa"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/include/toy/MLIRGen.h",
+      "sha256": "eab6002e139022aad7c822a9f14ce0e6e01f3c8f20ea55a218c48f7d354b5f4e"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/include/toy/Ops.td",
+      "sha256": "65de2ddc0c9152c0d2a0280f8966255a84dcd63b15e981e73d56db39cc01a409"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/include/toy/Parser.h",
+      "sha256": "1d651d2d76890ecc0639978d973b48cdc6c81d161f507549139887254755946a"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/mlir/Dialect.cpp",
+      "sha256": "a89cca8a84e965bb2a9097b2d39f17d419c27b4b0df1c79166a00a9e9754f4da"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/mlir/MLIRGen.cpp",
+      "sha256": "58512f629c631d01906024398c26db57fe22946ccb7586eabec6a31c86bd157f"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/mlir/ToyCombine.cpp",
+      "sha256": "984992199c3693b7ae4bc55fb4d2d93d6863f2696077eb569cd391fc9b328586"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/mlir/ToyCombine.td",
+      "sha256": "be76b3029a08ec3b29a4eccd49934b2123547d3bcd505b3a3b573328a5f9322e"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/parser/AST.cpp",
+      "sha256": "e214a6baf6205a632354999148ee9fc22a7c9a60482fae81ae50008004d06d13"
+    },
+    {
+      "path": "mlir/examples/toy/Ch3/toyc.cpp",
+      "sha256": "47219044566edd8d3f3b02949deaf6ce5d8f1e2e1f61fa03c2c764299ade3905"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/CMakeLists.txt",
+      "sha256": "c56a025658a9cf5bafc87ab6fdc2b491648fd9675be9e5a5ee4ba88db38b05cd"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/include/CMakeLists.txt",
+      "sha256": "40ad9d516b97ce518fa78a17f4cea7d163b076c556287102090c8f300a9599ae"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/include/toy/AST.h",
+      "sha256": "b5ec5a31b543e850dd96c0af89d2413e0dd93cb0340b5700ab550eec15909f89"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/include/toy/CMakeLists.txt",
+      "sha256": "eefcbd755a0b3d69b310deb3363c3c499e9b1cfc68d54b390de1ee0854efbc36"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/include/toy/Dialect.h",
+      "sha256": "7e2faf55ad6b7a062bbfd88ecc0c5585559908d04c95feeeb882b79bcd21170f"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/include/toy/Lexer.h",
+      "sha256": "7d2c626584bfbd723a18e19c7c2de00f2b3d7da43b8defe49b61334248e7d3fa"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/include/toy/MLIRGen.h",
+      "sha256": "eab6002e139022aad7c822a9f14ce0e6e01f3c8f20ea55a218c48f7d354b5f4e"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/include/toy/Ops.td",
+      "sha256": "58fd12a2faeb3eff40a55b7c6b149526b0ab2821f40bd2088fa11f708c4d7f31"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/include/toy/Parser.h",
+      "sha256": "1d651d2d76890ecc0639978d973b48cdc6c81d161f507549139887254755946a"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/include/toy/Passes.h",
+      "sha256": "d66a21d5a94d7c600729c23a45e828e9b94539cc260569628ab9df9bb915fca4"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/include/toy/ShapeInferenceInterface.h",
+      "sha256": "10152e98f31e2b7ba6fc9b9515979d758fb6cc2834f631143cd9b48de4786981"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/include/toy/ShapeInferenceInterface.td",
+      "sha256": "79c9f18e4804f02ba338f95bf91f5044137a250fde8566c9bac31923df55d851"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/mlir/Dialect.cpp",
+      "sha256": "e142970b851ca2b570ba8c6915581780d47b8908b669918d0e5643bb27342153"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/mlir/MLIRGen.cpp",
+      "sha256": "445319c2423d47356e6d0db1f6d0673de22b6bf155f780fec2142a39b1b957b0"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/mlir/ShapeInferencePass.cpp",
+      "sha256": "25cf5e5dbc467586a3fee8d73853bf90b97b00e05f57b53acd97896e728f3369"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/mlir/ToyCombine.cpp",
+      "sha256": "984992199c3693b7ae4bc55fb4d2d93d6863f2696077eb569cd391fc9b328586"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/mlir/ToyCombine.td",
+      "sha256": "1813d6c2c1e61c47a05caf131686db5c8e176324478eb94cae8352ccdf9de56f"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/parser/AST.cpp",
+      "sha256": "e214a6baf6205a632354999148ee9fc22a7c9a60482fae81ae50008004d06d13"
+    },
+    {
+      "path": "mlir/examples/toy/Ch4/toyc.cpp",
+      "sha256": "4805973c338f484fed23525a0e5d8cb7dae11a54965971ecacb2c7306daf726a"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/CMakeLists.txt",
+      "sha256": "9682d4dba4f74c44458f8aed1dbd01087d1e445f924b90145b51230248c376b6"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/include/CMakeLists.txt",
+      "sha256": "40ad9d516b97ce518fa78a17f4cea7d163b076c556287102090c8f300a9599ae"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/include/toy/AST.h",
+      "sha256": "b5ec5a31b543e850dd96c0af89d2413e0dd93cb0340b5700ab550eec15909f89"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/include/toy/CMakeLists.txt",
+      "sha256": "ba3e65f2a10267e64d2de88c7c436e8a8ef278b551f4969dc6a0ee11062e92ec"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/include/toy/Dialect.h",
+      "sha256": "7e2faf55ad6b7a062bbfd88ecc0c5585559908d04c95feeeb882b79bcd21170f"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/include/toy/Lexer.h",
+      "sha256": "7d2c626584bfbd723a18e19c7c2de00f2b3d7da43b8defe49b61334248e7d3fa"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/include/toy/MLIRGen.h",
+      "sha256": "eab6002e139022aad7c822a9f14ce0e6e01f3c8f20ea55a218c48f7d354b5f4e"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/include/toy/Ops.td",
+      "sha256": "c06161c1a0813c3474c4e449536e12f2ce117cd6899a7265139574a630c93b16"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/include/toy/Parser.h",
+      "sha256": "1d651d2d76890ecc0639978d973b48cdc6c81d161f507549139887254755946a"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/include/toy/Passes.h",
+      "sha256": "0faff4bf6a67cc85fee2e8dc3f7ac3f9d1caf9e4ae9e642e855eaea93d11bc82"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/include/toy/ShapeInferenceInterface.h",
+      "sha256": "10152e98f31e2b7ba6fc9b9515979d758fb6cc2834f631143cd9b48de4786981"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/include/toy/ShapeInferenceInterface.td",
+      "sha256": "79c9f18e4804f02ba338f95bf91f5044137a250fde8566c9bac31923df55d851"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/mlir/Dialect.cpp",
+      "sha256": "a6b600c5321fcfb19e9651a84332ea0620202fe14e3afdf5fa5a8306e139f86b"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/mlir/LowerToAffineLoops.cpp",
+      "sha256": "100e731b243b9df9eb1575e4866f04024a7b0699cb2d555957e2b5e775ccf6ed"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/mlir/MLIRGen.cpp",
+      "sha256": "445319c2423d47356e6d0db1f6d0673de22b6bf155f780fec2142a39b1b957b0"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/mlir/ShapeInferencePass.cpp",
+      "sha256": "25cf5e5dbc467586a3fee8d73853bf90b97b00e05f57b53acd97896e728f3369"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/mlir/ToyCombine.cpp",
+      "sha256": "984992199c3693b7ae4bc55fb4d2d93d6863f2696077eb569cd391fc9b328586"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/mlir/ToyCombine.td",
+      "sha256": "1813d6c2c1e61c47a05caf131686db5c8e176324478eb94cae8352ccdf9de56f"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/parser/AST.cpp",
+      "sha256": "e214a6baf6205a632354999148ee9fc22a7c9a60482fae81ae50008004d06d13"
+    },
+    {
+      "path": "mlir/examples/toy/Ch5/toyc.cpp",
+      "sha256": "dfb0a4d2fa3ecaeca78a29f44f2e7ba44c8bf7d7d21a7b7ff258d25c58de34e9"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/CMakeLists.txt",
+      "sha256": "d4adb069961a37cd5fec609bb89b2eef3ed6fa8a6c883f01408b2f366fc25673"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/include/CMakeLists.txt",
+      "sha256": "40ad9d516b97ce518fa78a17f4cea7d163b076c556287102090c8f300a9599ae"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/include/toy/AST.h",
+      "sha256": "b5ec5a31b543e850dd96c0af89d2413e0dd93cb0340b5700ab550eec15909f89"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/include/toy/CMakeLists.txt",
+      "sha256": "a2ec8efc67a02f8d16d8398a0339a57f36f802832cd8fddcc4b6573bad25b42c"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/include/toy/Dialect.h",
+      "sha256": "7e2faf55ad6b7a062bbfd88ecc0c5585559908d04c95feeeb882b79bcd21170f"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/include/toy/Lexer.h",
+      "sha256": "7d2c626584bfbd723a18e19c7c2de00f2b3d7da43b8defe49b61334248e7d3fa"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/include/toy/MLIRGen.h",
+      "sha256": "eab6002e139022aad7c822a9f14ce0e6e01f3c8f20ea55a218c48f7d354b5f4e"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/include/toy/Ops.td",
+      "sha256": "985930888a444278688178c0a8309bcd43a607e2389a39b0c14a8e0a8dc63848"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/include/toy/Parser.h",
+      "sha256": "1d651d2d76890ecc0639978d973b48cdc6c81d161f507549139887254755946a"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/include/toy/Passes.h",
+      "sha256": "5537bd8d4de9d25345684c73035ef322f14f457a61b0badccb0edaf8a5bce749"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/include/toy/ShapeInferenceInterface.h",
+      "sha256": "10152e98f31e2b7ba6fc9b9515979d758fb6cc2834f631143cd9b48de4786981"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/include/toy/ShapeInferenceInterface.td",
+      "sha256": "79c9f18e4804f02ba338f95bf91f5044137a250fde8566c9bac31923df55d851"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/mlir/Dialect.cpp",
+      "sha256": "a6b600c5321fcfb19e9651a84332ea0620202fe14e3afdf5fa5a8306e139f86b"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/mlir/LowerToAffineLoops.cpp",
+      "sha256": "100e731b243b9df9eb1575e4866f04024a7b0699cb2d555957e2b5e775ccf6ed"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/mlir/LowerToLLVM.cpp",
+      "sha256": "094cae5242200ad429a6df9f940bb1d29624eb3303a9ee8bc5ef33f9e7922949"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/mlir/MLIRGen.cpp",
+      "sha256": "445319c2423d47356e6d0db1f6d0673de22b6bf155f780fec2142a39b1b957b0"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/mlir/ShapeInferencePass.cpp",
+      "sha256": "25cf5e5dbc467586a3fee8d73853bf90b97b00e05f57b53acd97896e728f3369"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/mlir/ToyCombine.cpp",
+      "sha256": "984992199c3693b7ae4bc55fb4d2d93d6863f2696077eb569cd391fc9b328586"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/mlir/ToyCombine.td",
+      "sha256": "1813d6c2c1e61c47a05caf131686db5c8e176324478eb94cae8352ccdf9de56f"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/parser/AST.cpp",
+      "sha256": "e214a6baf6205a632354999148ee9fc22a7c9a60482fae81ae50008004d06d13"
+    },
+    {
+      "path": "mlir/examples/toy/Ch6/toyc.cpp",
+      "sha256": "7a62d9afcc5eca1d2ed86b7e5467dcf486119d8d61ad55f89ec4a7678727f33e"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/CMakeLists.txt",
+      "sha256": "4a22fe5fb19a1c3b7b3644e3671abe8f6b44b55db6a7d7df2b29c8c78f54917a"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/include/CMakeLists.txt",
+      "sha256": "40ad9d516b97ce518fa78a17f4cea7d163b076c556287102090c8f300a9599ae"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/include/toy/AST.h",
+      "sha256": "a863b75a68837526991422586d9585d09e0e4fab666e9ff484f04288a184c8aa"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/include/toy/CMakeLists.txt",
+      "sha256": "3cb260582fbbcaf228100734cf4eee8c95d199cc0ecc4fcf9e3bc17c31c68b51"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/include/toy/Dialect.h",
+      "sha256": "273315e6db21cbe06a17c49065668eb072e06fff0c482c3558c51778e245334e"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/include/toy/Lexer.h",
+      "sha256": "2d725805cbbf1cb632a80c7242c5b8084e20f46143310d96237551ebe7889eb4"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/include/toy/MLIRGen.h",
+      "sha256": "eab6002e139022aad7c822a9f14ce0e6e01f3c8f20ea55a218c48f7d354b5f4e"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/include/toy/Ops.td",
+      "sha256": "42a59eb6c662d6d9c35f157a1a60573c6e48bd34f2c4d1cb91d39352d6aceb9f"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/include/toy/Parser.h",
+      "sha256": "e409d90050501607987f026d334cb51e0356f606dec009e5aa3bf836aad0a15c"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/include/toy/Passes.h",
+      "sha256": "5537bd8d4de9d25345684c73035ef322f14f457a61b0badccb0edaf8a5bce749"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/include/toy/ShapeInferenceInterface.h",
+      "sha256": "10152e98f31e2b7ba6fc9b9515979d758fb6cc2834f631143cd9b48de4786981"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/include/toy/ShapeInferenceInterface.td",
+      "sha256": "79c9f18e4804f02ba338f95bf91f5044137a250fde8566c9bac31923df55d851"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/mlir/Dialect.cpp",
+      "sha256": "e92cca002f5e4cd25cc781c8fb033d3d1f64de1795dc079eedfb6877952f1721"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/mlir/LowerToAffineLoops.cpp",
+      "sha256": "100e731b243b9df9eb1575e4866f04024a7b0699cb2d555957e2b5e775ccf6ed"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/mlir/LowerToLLVM.cpp",
+      "sha256": "094cae5242200ad429a6df9f940bb1d29624eb3303a9ee8bc5ef33f9e7922949"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/mlir/MLIRGen.cpp",
+      "sha256": "23ca9f5de460095009fedd85f21dcafc25620304d0291bbfa8982d905f26b41e"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/mlir/ShapeInferencePass.cpp",
+      "sha256": "25cf5e5dbc467586a3fee8d73853bf90b97b00e05f57b53acd97896e728f3369"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/mlir/ToyCombine.cpp",
+      "sha256": "33367a1cf0590cd266aebc7cca098634ab8423b79d0f3401623f0383958b7c63"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/mlir/ToyCombine.td",
+      "sha256": "1813d6c2c1e61c47a05caf131686db5c8e176324478eb94cae8352ccdf9de56f"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/parser/AST.cpp",
+      "sha256": "716bab39b8796ce46e12460dd1cbd46f12478f7fcdb0029868f13b8bc2ba0eaa"
+    },
+    {
+      "path": "mlir/examples/toy/Ch7/toyc.cpp",
+      "sha256": "ac274d2641eb3785f051d0b91218d180fe03b091f4cf584f999533396f76f1f1"
+    },
+    {
+      "path": "mlir/examples/toy/CMakeLists.txt",
+      "sha256": "7ffdafc4a91eb6473b3b4a61c76e020e0b69c970818a4bcaa65a519229f62d6d"
+    },
+    {
+      "path": "mlir/examples/toy/README.md",
+      "sha256": "8313ddfede6c778737a805987f41ad6e14578b896ef338a08498d222fcf9a58b"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch1/ast.toy",
+      "sha256": "87f1eafce426e17ac545edaeae003a10e1e332e4d2458c301fe0d9c577872818"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch1/empty.toy",
+      "sha256": "e87ab7f2d49d6ef187439c4383ed641fa13eabc8e7812c59b1e3d8e701a5eeb6"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch2/ast.toy",
+      "sha256": "b601c07ac335dea386a9f166a49fc5a67360bc522068ed3d3ef648f82ae5869f"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch2/codegen.toy",
+      "sha256": "0af22915f4dcd0c66c30b2892ef6639fb8fa531a0d52d025f9c8a14bf72c5f68"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch2/empty.toy",
+      "sha256": "2f64d1c9fdc1802a768e89332565a735ee71e67ac13a8389bea929d8cf459cce"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch2/invalid.mlir",
+      "sha256": "e566c9e33f04d0f3ba22e1b09a938c7ecc638ab84dfeca9388a1969341643b1e"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch2/scalar.toy",
+      "sha256": "c429a8ddb9e54ad0285cf959dbe2d47c0e8e707e94dbe3a4706a43c6d50c2d2f"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch3/ast.toy",
+      "sha256": "f85dbc84e2018c603ab8517214be8b3f30de2a74126713bdc000c3f4cd28aa4d"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch3/codegen.toy",
+      "sha256": "9d5cedfdaaf1704a192617a298d496d640a273cdf836e8401603659bc49d4017"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch3/empty.toy",
+      "sha256": "8a82c22f13cbd496a28b361155ed86f9d98ccb547c4aa06aa12dc97fdb99141c"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch3/invalid.mlir",
+      "sha256": "8c88f8ff231e5f0c7341067445843010987a86243615e76767c5a9d708268857"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch3/scalar.toy",
+      "sha256": "02a71ff840a8494b2684ab6b0479327898a08741ad0edabdef2a60860820c853"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch3/transpose_transpose.toy",
+      "sha256": "8b864d66e413aebb4ea29ead33ab9ea95bef692d7e9c2cdeaeba55b75a1c843c"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch3/trivial_reshape.toy",
+      "sha256": "34c9913f495a1d7a4a7b58ba1123d70fce2a753734fbd81cbdb34bee08041179"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch4/ast.toy",
+      "sha256": "e7df179c4678845a5bcc90a27b3d068bb145c641976522975ed2b1b96e28aa5e"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch4/codegen.toy",
+      "sha256": "fb53e35d968270acfcaec34a2a525de19841fc9748250588882d3130fa9c65e9"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch4/empty.toy",
+      "sha256": "c8a10f5d0ba156b3aff2d02694413cfa060f5976257715b87c416e2724696d86"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch4/invalid.mlir",
+      "sha256": "51476745c7ba79bb26b6c36cb4d9be4e52326632715f3499c61bcfe254c19ad7"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch4/scalar.toy",
+      "sha256": "e0528c349536f2bee60cbd11067fac81e1954f65de8603e8c438ee2093e4fcce"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch4/shape_inference.mlir",
+      "sha256": "7f3486f50821c4abd5e8a4acdcb233d9c92c4f40f353826efcaca2872c9cd0f1"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch4/transpose_transpose.toy",
+      "sha256": "149cae69c9119f3e166e494f7b5e98423673b693e97cdb8f87defa40c440276f"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch4/trivial_reshape.toy",
+      "sha256": "ba8f00b3a4408ba302d55755ff36d18e3cba19bc0610fe0e147b72c93f567d38"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch5/affine-lowering.mlir",
+      "sha256": "ddac5c3517f055aaf638d89c34dfcfc9989e933c1049d2a7e11197c53225c8b8"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch5/ast.toy",
+      "sha256": "810c5c0bdbbc7da89f6dbb9e8d2165f16e127df504498e1ff6b688814cc39d1a"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch5/codegen.toy",
+      "sha256": "c021ecd531de489801b42b6b23d8d14abb26f442aa69885085f6983e7b8310b0"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch5/empty.toy",
+      "sha256": "4032ac7c8369884695ed545fe67b91b007d2cdf2ae4b8f7388e6dc1f2fdbccac"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch5/invalid.mlir",
+      "sha256": "42ea390f648190f7c397a9dbc78cfd1e5b3103d302172905eab3fe2105576e13"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch5/scalar.toy",
+      "sha256": "0e6a8f258afa09cccdb99b637bd2d74a47d5fa90e355998b6abcaa0036c5ec70"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch5/shape_inference.mlir",
+      "sha256": "8305f0cf9e54fb015ad0cfc526cea51459e0e8f3bc1f1e57edd2656252af7298"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch5/transpose_transpose.toy",
+      "sha256": "bf570b99be3789196a54fb1f2ee19fe864135c048508c2e78dcf3ebaa7be873f"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch5/trivial_reshape.toy",
+      "sha256": "2f358a423729fa194be86c05dbff6705aa2ecce925bdb2129fc624c24907cc2b"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch6/affine-lowering.mlir",
+      "sha256": "c55f84a2deb543b90b4fd46227cc41016861e07e487fe31cf3e3770b408b670b"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch6/ast.toy",
+      "sha256": "18d88f4004d0a4dc514141309c76d165648d01299570526ef0c2755f77323924"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch6/codegen.toy",
+      "sha256": "238adc76ebcd4cc826e413c6540f66e91c4adadb86bd90b22b9a3bd46514b747"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch6/empty.toy",
+      "sha256": "9cc4a97d85cd9bc14b07c8c1e3ae34fa82947015cab5f49b82b5658b02533d45"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch6/invalid.mlir",
+      "sha256": "56d703ffc80244e1c42c74ce7a4bd57fe31ac10a9251c3499ea160554966ddfb"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch6/jit.toy",
+      "sha256": "79bf22dc04a5b1dd290e94326aacee4944125369351fd726849cad88c4dc89be"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch6/lit.local.cfg",
+      "sha256": "b1e232bde62cefc97ad3192891aedf8328f9e468d7d20ce1b80178065ddda530"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch6/llvm-lowering.mlir",
+      "sha256": "5c25018078196aa9757da7ac32f3cba7b3c22c0c33c9ecfebc95f324854291f1"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch6/scalar.toy",
+      "sha256": "aef5c6003a1d4c9465f0fbbda9e35245cfc3b973c541dc0c448111e7e789f780"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch6/shape_inference.mlir",
+      "sha256": "6340261424e63bfa020a38335f9643fb29cea758478837880f7a1dbf7a5c64c4"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch6/transpose_transpose.toy",
+      "sha256": "254277437bcd5eb6ae64b9b3cba4e1d97b51e9589659ca260e024e5037677f98"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch6/trivial_reshape.toy",
+      "sha256": "e6645a4bf6724f329088dd966938fa415d31b09cc319d377e29208f93209e2ca"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/affine-lowering.mlir",
+      "sha256": "111c01aab96c2c23a0f93ff62f4cfff641d4cd16dc67efe99467655f9dd5efdf"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/ast.toy",
+      "sha256": "fd873b85bdcccc8008b26ea724e42b36209516b5eded9dadf55916f86541d5c1"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/codegen.toy",
+      "sha256": "ad1ee8e64aef7f5ae07b39a2e2488ea8a16fdc998db480cf7c30d33edbc24b97"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/empty.toy",
+      "sha256": "da0b65697cdac403ce5cc191aef8e10eb3c92a164b4e101d9bb32fce8ee351aa"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/invalid.mlir",
+      "sha256": "e140752f07e1386331866899b3b7b36593cad7c946fefd19faa81eb20e02d1d6"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/jit.toy",
+      "sha256": "6910d8180dad01d340eee4f4661ea299f007750fd5fc34b279a1e9d1bd7261bc"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/lit.local.cfg",
+      "sha256": "b1e232bde62cefc97ad3192891aedf8328f9e468d7d20ce1b80178065ddda530"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/llvm-lowering.mlir",
+      "sha256": "19314adaab224049c792a976c26fdf9f37b960d1362fc83304daa23994d33ae8"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/scalar.toy",
+      "sha256": "a7fc4bddd8b90c4a936f89ffe1d8cbb3f90176fc5e364ff9f56923783185fc4a"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/shape_inference.mlir",
+      "sha256": "19e29b62d5b94e011d87a70ded115f8a6999888dd25704ec8a79ae1ff8fc75c4"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/struct-ast.toy",
+      "sha256": "b15150b89d49c46b73848c3453dfed91ee60897b91c46ac1c8552aa12fac6b84"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/struct-codegen.toy",
+      "sha256": "3bce8038ee4f75b47a8d8d972af430264454b9a8fe870964bcfedc779a0535df"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/struct-opt.mlir",
+      "sha256": "ea3341071432f922f585bb88e0cb268f3973d0dc025e496135a6d08911134cf5"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/transpose_transpose.toy",
+      "sha256": "efd7e4bccf938d7ab053abaef96f16c5701ce87d1723a43ac2c7fb77a7016e7a"
+    },
+    {
+      "path": "mlir/test/Examples/Toy/Ch7/trivial_reshape.toy",
+      "sha256": "65d3e15f1b8315ee02f3aecbfbeec930408a12de66fe8ec9181203b57955db9d"
+    },
+    {
+      "path": "LICENSE.TXT",
+      "sha256": "8d85c1057d742e597985c7d4e6320b015a9139385cff4cbae06ffc0ebe89afee"
+    },
+    {
+      "path": "mlir/CMakeLists.txt",
+      "sha256": "d20b5b8fc35ec1f4f280af086f8aaac597e5ab1cf4a3de6111046449342ce122"
+    },
+    {
+      "path": "llvm/CMakeLists.txt",
+      "sha256": "04d287a5731d45d254a2555cb0f65a57a5413aff44604a43604ec01c3a7b920e"
+    }
+  ]
+}
