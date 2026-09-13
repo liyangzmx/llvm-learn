@@ -8,6 +8,8 @@ Git 保存校订正文、配套图示、差异记录和验证工具。源 PDF、
 
 [全书脚注与参考资料汇总](inside-compiler-refs.md)按章节整理全部88条脚注，包含资料链接、校订后的书目信息、说明性注释及原脚注标识。
 
+阅读前可使用[逐章导读](guide/README.md)补齐背景、预备知识并确定关注点；读后可用[逐章精华笔记](notes/README.md)复习概念、公式、接口与关键算法。[跨章知识串联](notes/cross-chapter.md)将 IR 表示、变换、存储、硬件与数学证明联系起来。
+
 最后一份 `insider-compiler-ch14-end.pdf` 包含第四部分导读、第 14 章、第 15 章与附录，共 52 页。用户已确认这就是整书最后的扫描内容。处理这份最后扫描件的批次没有修改此前第 1～13 章、第二／第三部分导读正文及原始 OCR，[749 项哈希检查](issues/evidence/ch14-end/preservation-check.json)可追溯。第 1 章此前的来源替换历史仍保留于[文件核验记录](issues/source-files.md)。随后按“Markdown 为主要校订读本”的原则，有针对性地修正第 1、10、15 章及附录，见[本次差异与检查](issues/evidence/reading-edition/README.md)。
 
 | 章节 | 校订正文 | 来源 PDF | PDF 页码 | 原书页码 | 校订记录 |
