@@ -9,6 +9,7 @@
 <!-- manual-lab:ch8-setup -->
 
 ```sh
+# 各节复用前面生成的输入；非预期错误后停止，避免误读旧文件。
 set -euo pipefail
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
@@ -71,10 +72,12 @@ flowchart LR
 <!-- manual-lab:ch8-teaching-models -->
 
 ```sh
+# 教学模型穷举小图并检查迭代边界，不模拟目标硬件执行时间。
 python3 "$BOOK_INPUT/models.py" > "$CODEGEN_LAB/models.json"
 python3 - "$CODEGEN_LAB/models.json" <<'PYCODE'
 import json, pathlib, sys
 r = json.loads(pathlib.Path(sys.argv[1]).read_text())
+# 这里的压力只按单位权重 SSA 临时值计算，不能与目标 pressure set 直接等同。
 p = r['ssa_boundary_pressure']
 print('拓扑顺序数、最小/最大边界压力：', p['all_topological_orders'], p['minimum'], p['maximum'])
 print('单发射开始周期：', r['single_issue_edge_latency']['issue_cycles'])
@@ -107,9 +110,11 @@ Linearize 是简单 DAG 线性化器，注册名 `linearize`，不是 MachineSch
 ; loads past one another; they are not moved across the final store to %p.
 define i64 @schedule(ptr %p, ptr %q, ptr %r) {
 entry:
+  ; 三条普通 load 可互相换序；最后的 store 仍需满足数据和潜在别名约束。
   %a = load i64, ptr %p, align 8
   %b = load i64, ptr %q, align 8
   %c = load i64, ptr %r, align 8
+  ; x 与 y 两条计算链暂时独立，调度器可在它们之间穿插执行。
   %x = mul i64 %a, 7
   %y = add i64 %b, 11
   %z = xor i64 %x, %y
@@ -127,6 +132,7 @@ entry:
 
 ```sh
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/dependencies.ll"
+# 固定输入、v1、O2 与停止点，只改变策略，比较才有明确对象。
 for scheduler in linearize fast list-burr source list-hybrid list-ilp; do
   "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 -fast-isel=false \
     "-pre-RA-sched=$scheduler" -verify-machineinstrs \
@@ -139,6 +145,7 @@ import pathlib, re, sys
 out = pathlib.Path(sys.argv[1])
 for name in ['linearize', 'fast', 'list-burr', 'source', 'list-hybrid', 'list-ilp']:
     text = (out/f'dag-{name}.mir').read_text()
+    # 去掉 YAML 元信息，仅检查实际机器指令 body 中的访存和返回。
     body = re.search(r'^body:\s+\|\n(.*?)(?=^\.\.\.)', text, re.M | re.S)[1]
     assert body.count('LDD ') == 3 and 'STD ' in body and 'RET' in body
     print(name, '三个 LDD、STD 和 RET 检查通过')
@@ -222,6 +229,7 @@ sed -n '/^body:/,/^\.\.\.$/p' "$CODEGEN_LAB/dag-list-burr.mir"
 python3 - "$CODEGEN_LAB/models.json" <<'PYCODE'
 import json, pathlib, sys
 pressure = json.loads(pathlib.Path(sys.argv[1]).read_text())['ssa_boundary_pressure']
+# 每个集合是该指令之前仍需保留的值，不是为指令分配的物理寄存器表。
 for label in ['broad', 'compact']:
     print(label)
     for step in pressure[label]:
@@ -291,6 +299,7 @@ flowchart TD
 <!-- manual-lab:ch8-bpf-machine-scheduler -->
 
 ```sh
+# 显式启用 MIR 调度，与前面的 -pre-RA-sched 所选 DAG 调度器区分开。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 -fast-isel=false \
   -enable-misched=true -verify-machineinstrs -debug-only=machine-scheduler \
   -stop-after=machine-scheduler "$BOOK_INPUT/dependencies.ll" \
@@ -298,6 +307,7 @@ flowchart TD
 python3 - "$CODEGEN_LAB/bpf-misched.log" <<'PYCODE'
 import pathlib, re, sys
 log = pathlib.Path(sys.argv[1]).read_text()
+# 查数据、内存和输出依赖，避免只用 def-use 边解释所有重排限制。
 assert all(x in log for x in ['Data Latency=', 'Memory', 'Out  Latency=', 'Pressure'])
 for line in log.splitlines():
     if any(x in line for x in ['RegionPolicy:', 'Max Pressure:', 'Data Latency=', 'Out  Latency=', 'Memory']):
@@ -333,14 +343,17 @@ LLVM 支持 itinerary 和较新的调度模型。旧 itinerary 用阶段、功�
 <!-- manual-lab:ch8-tablegen-schedule-model -->
 
 ```sh
+# 解析完整教学 target，单独的 WriteRes 片段没有足够上下文。
 "$LLVM_BUILD/bin/llvm-tblgen" -I "$LLVM_SRC/llvm/include" -dump-json \
   "$BOOK_INPUT/schedule-model.td" -o "$CODEGEN_LAB/schedule-model.json"
 python3 - "$CODEGEN_LAB/schedule-model.json" <<'PYCODE'
 import json, pathlib, sys
 records = json.loads(pathlib.Path(sys.argv[1]).read_text())
+# SchedRW 按定义和使用操作数关联记录，确认 EXIn 确实用于 MUL 的输入。
 rw = [x['def'] for x in records['DemoMUL']['SchedRW']]
 advance = [v for v in records.values() if isinstance(v, dict) and 'ReadAdvance' in v.get('!superclasses', []) and v.get('Cycles') == 1]
 assert rw == ['MULOut', 'EXIn', 'OrdinaryRead']
+# ReadAdvance 只针对匹配的生产者写记录，不能套到所有数据依赖上。
 assert any(v['ValidWrites'][0]['def'] == 'ALUOut' for v in advance)
 print('DemoMUL SchedRW:', rw)
 print('EXIn 对 ALUOut 的 ReadAdvance=1；假设选用该模型时边延迟 max(0, 2-1)=1')
@@ -357,6 +370,7 @@ def ISSUE : FuncUnit;
 def ALU : FuncUnit;
 def CSR : FuncUnit;
 // DemoItineraries 中的一项：
+// TimeInc 从当前阶段开始计时；0 可表示下一阶段与本阶段同周期开始。
 InstrItinData<II_CSRrr,
   [InstrStage<1, [ISSUE], 0>, InstrStage<1, [ALU], 2>,
    InstrStage<1, [CSR], 0>], [4, 4]>
@@ -369,11 +383,13 @@ InstrItinData<II_CSRrr,
 **代码清单 8-3　WriteRes、ReadAdvance 及资源模型**
 
 ```tablegen
+// 写记录描述结果何时可用；读记录描述消费者何时需要某个输入。
 def ALUOut : SchedWrite;
 def MULOut : SchedWrite;
 def EXIn : SchedRead;
 def OrdinaryRead : SchedRead;
 def DemoModel : SchedMachineModel {
+  // 这是教学机器每周期可发射的微操作数约束，不是指令结果延迟。
   let IssueWidth = 1;
   let CompleteModel = 0;
 }
@@ -381,6 +397,7 @@ let SchedModel = DemoModel in {
   def UnitALU : ProcResource<1>;
   def : WriteRes<ALUOut, [UnitALU]> { let Latency = 2; }
   def : WriteRes<MULOut, [UnitALU]> { let Latency = 4; }
+  // 只对 ALUOut 生产的结果允许提前一周期读取，相当于描述一种旁路。
   def : ReadAdvance<EXIn, 1, [ALUOut]>;
   def : ReadAdvance<OrdinaryRead, 0>;
 }
@@ -394,6 +411,7 @@ r3 = ADD r1, r2
 r5 = MUL r3, r4
 
 // 完整教学 TD 中的关联：
+// SchedRW 先写后读；MUL 的 EXIn 只关联第一个显式输入。
 def DemoADD : BinOp<[ALUOut, OrdinaryRead, OrdinaryRead]>;
 def DemoMUL : BinOp<[MULOut, EXIn, OrdinaryRead]>;
 ```
@@ -407,6 +425,7 @@ def DemoMUL : BinOp<[MULOut, EXIn, OrdinaryRead]>;
 ```tablegen
 def II_ALUrr : InstrItinClass;
 // DemoItineraries 中的一项：
+// 省略 TimeInc 时按当前阶段 Cycles 前进；操作数周期表另行描述值可用时间。
 InstrItinData<II_ALUrr,
   [InstrStage<1, [ISSUE]>, InstrStage<1, [ALU]>], [2, 2, 2]>
 ```
@@ -431,6 +450,7 @@ InstrItinData<II_ALUrr,
 
 ```c
 void test(int a, int *x, int *y) {
+  // b 后面被多次使用；调度改变其产生和最后使用之间的距离，就会影响活跃范围。
   int b = a * x[0] + y[0];
   int c = b + x[1];
   int d = c * y[1];
@@ -443,6 +463,7 @@ void test(int a, int *x, int *y) {
 <!-- manual-lab:ch8-rv32-small-pressure -->
 
 ```sh
+# 前端 IR 带 target-cpu 属性；前后端都固定 E31，避免只改 llc 参数却仍使用另一模型。
 "$LLVM_BUILD/bin/clang" --target=riscv32-unknown-elf -march=rv32im \
   -mabi=ilp32 -mcpu=sifive-e31 -O2 -fno-discard-value-names \
   -S -emit-llvm "$BOOK_INPUT/pressure.c" -o "$CODEGEN_LAB/pressure.ll"
@@ -462,6 +483,7 @@ for stop in ['before', 'after']:
     body = re.search(r'^body:\s+\|\n(.*?)(?=^\.\.\.)', text, re.M | re.S)[1]
     assert 'MUL ' in body and 'MULW' not in body and 'ADDW' not in body
 log = (out/'rv32-pre-after.log').read_text()
+# 先检查区域策略是否启用压力追踪，不能为未追踪的区域编造压力统计。
 assert 'ShouldTrackPressure=0' in log
 print('\n'.join(x for x in log.splitlines() if 'RegionPolicy:' in x or 'RegionInstrs:' in x))
 PYCODE
@@ -471,10 +493,13 @@ PYCODE
 
 **代码清单 8-7　RV32 machine-scheduler 后的实际 MIR body**
 
+此 MIR 输出节选已加中文阅读注释，原指令顺序和操作数保持不变。
+
 ```yaml
 bb.0.entry:
     liveins: $x10, $x11, $x12
 
+    ; 这是分配前 MIR：%N 仍为虚拟寄存器，本例 $xN 来自 ABI 参数寄存器。
     %1:gpr = COPY $x11
     %3:gpr = LW %1, 0 :: (load (s32) from %ir.x, !tbaa !6)
     %0:gpr = COPY $x10
@@ -483,9 +508,11 @@ bb.0.entry:
     %5:gpr = LW %2, 0 :: (load (s32) from %ir.y, !tbaa !6)
     %6:gpr = nsw ADD %4, %5
     %7:gpr = LW %1, 4 :: (load (s32) from %ir.arrayidx2, !tbaa !6)
+    ; 此 load 与前面的独立计算可以穿插，但其使用者必须等待值可用。
     %9:gpr = LW %2, 4 :: (load (s32) from %ir.arrayidx4, !tbaa !6)
     %8:gpr = nsw ADD %6, %7
     %10:gpr = nsw MUL %8, %9
+    ; %6 仍在这里使用，因此不能在上一次使用后就认定它已不再活跃。
     %11:gpr = nsw ADD %8, %6
     %12:gpr = nsw ADD %11, %10
     SW %12, %2, 8 :: (store (s32) into %ir.arrayidx8, !tbaa !6)
@@ -498,6 +525,7 @@ bb.0.entry:
 
 ```c
 int dot4(const int *x, const int *y) {
+  // 增加独立计算可扩大调度区域，但也可能让更多中间结果同时活跃。
   int a = x[0] * y[0];
   int b = x[1] * y[1];
   int c = x[2] * y[2];
@@ -528,6 +556,7 @@ GPR=6
   -mabi=ilp32 -mcpu=sifive-e31 -O2 -fno-discard-value-names \
   -S -emit-llvm "$BOOK_INPUT/pressure-large.c" -o "$CODEGEN_LAB/pressure-large.ll"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/pressure-large.ll"
+# CPU 与原例相同，仅扩大输入区域，观察压力追踪的大小启发式。
 "$LLVM_BUILD/bin/llc" -mtriple=riscv32-unknown-elf -mcpu=sifive-e31 \
   -mattr=+m -O2 -enable-misched=true -verify-machineinstrs \
   -debug-only=machine-scheduler -stop-after=machine-scheduler \
@@ -538,6 +567,7 @@ import pathlib, re, sys
 log = pathlib.Path(sys.argv[1]).read_text()
 assert 'ShouldTrackPressure=1' in log and 'Max Pressure:' in log
 print('\n'.join(x for x in log.splitlines() if 'RegionPolicy:' in x or 'RegionInstrs:' in x))
+# 此 Max Pressure 来自调度开始前的扫描，不是最终输出序列的实测峰值。
 print(re.search(r'Max Pressure:.*?(?=Live In:)', log, re.S)[0])
 PYCODE
 ```
@@ -560,6 +590,7 @@ PostRASchedulerList 在寄存器分配之后对机器指令做自顶向下列表
 
 ```c
 int g_val = 1;
+// 跨多个乘法保留 x，便于观察优化后表达式与物理寄存器使用之间的关系。
 int MUL(int x, int y) {
   int a = y * x;
   int z = g_val * x;
@@ -577,6 +608,7 @@ int MUL(int x, int y) {
   -mabi=ilp32 -mcpu=sifive-e31 -O2 -fno-discard-value-names \
   -S -emit-llvm "$BOOK_INPUT/postra.c" -o "$CODEGEN_LAB/postra.ll"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/postra.ll"
+# 两个 post-RA 实现互斥启用，便于把结果归因于所选调度器。
 "$LLVM_BUILD/bin/llc" -mtriple=riscv32-unknown-elf -mcpu=sifive-e31 \
   -mattr=+m -O2 -post-RA-scheduler=true -enable-post-misched=false \
   -verify-machineinstrs -debug-only=post-RA-sched,machine-scheduler \
@@ -586,6 +618,7 @@ python3 - "$CODEGEN_LAB/rv32-post-tdlist.mir" <<'PYCODE'
 import pathlib, re, sys
 mir = pathlib.Path(sys.argv[1]).read_text()
 body = re.search(r'^body:\s+\|\n(.*?)(?=^\.\.\.)', mir, re.M | re.S)[1]
+# 只检查 body，确认分配已完成；模块内的 IR 文本仍可能合法包含 %N。
 assert '$x10' in body and 'MUL ' in body and not re.search(r'%\d', body)
 print(body)
 PYCODE
@@ -595,16 +628,21 @@ PYCODE
 
 **代码清单 8-9　显式 PostRASchedulerList 后的实际 RV32 MIR**
 
+此 MIR 输出节选已加阅读注释，便于辨认物理寄存器和隐式返回依赖。
+
 ```yaml
 bb.0.entry:
     liveins: $x10, $x11
 
+    ; 高/低重定位片段共同形成全局地址，必须连同符号一起理解。
     renamable $x12 = LUI target-flags(riscv-hi) @g_val
     renamable $x12 = LW killed renamable $x12, target-flags(riscv-lo) @g_val :: (dereferenceable load (s32) from @g_val, !tbaa !6)
     renamable $x11 = ADDI killed renamable $x11, 1
+    ; 同一个物理寄存器既读又写；重排必须保留旧值读取和新值定义的顺序。
     renamable $x10 = MUL killed renamable $x10, renamable $x10
     renamable $x11 = MUL killed renamable $x11, killed renamable $x12
     renamable $x10 = MUL killed renamable $x10, killed renamable $x11
+    ; 返回值通过隐式使用保活，不能因没有显式输入列表就删掉最终定义。
     PseudoRET implicit $x10
 ```
 
@@ -625,6 +663,7 @@ PostMachineScheduler 复用 MachineScheduler 框架和 `ScheduleDAGMI`，策略�
 <!-- manual-lab:ch8-postra-misched -->
 
 ```sh
+# 使用同一份 postra.ll，仅切换到 PostMachineScheduler 及其停止点。
 "$LLVM_BUILD/bin/llc" -mtriple=riscv32-unknown-elf -mcpu=sifive-e31 \
   -mattr=+m -O2 -post-RA-scheduler=false -enable-post-misched=true \
   -verify-machineinstrs -debug-only=post-RA-sched,machine-scheduler \
@@ -685,6 +724,7 @@ stage 根据选定开始周期相对调度首周期计算，不能无条件取�
 
 ```python
 def serial(x):
+    # 每个元素对应一次独立迭代，用作流水结构的结果基准。
     return [2 * (v + 1) for v in x]
 ```
 
@@ -694,8 +734,10 @@ def serial(x):
 def pipelined(x):
     n = len(x)
     result = [None] * n
+    # 空输入不执行 prologue，避免额外访问 x[0]。
     if n:
         a = x[0] + 1                  # prologue: A_0
+        # 先消费上一迭代的 a 再更新它；Python 这里验证值关系，并不实际并行发射。
         for i in range(1, n):
             result[i - 1] = 2 * a     # kernel: B_(i-1)
             a = x[i] + 1              # kernel: A_i
@@ -733,12 +775,14 @@ b1:                                               ; preds = %b0
 b2:                                               ; preds = %b1
   br label %b3
 
+; 四份展开工作共享这个回边；PHI 同时接收初值与上次迭代的累计值。
 b3:                                               ; preds = %b3, %b2
   %v3 = phi i32 [ %v48, %b3 ], [ 0, %b2 ]
   %v4 = phi i32 [ %v46, %b3 ], [ 0, %b2 ]
   %v5 = phi i32 [ %v49, %b3 ], [ 0, %b2 ]
   %v6 = getelementptr inbounds [576 x i32], ptr %a0, i32 0, i32 %v5
   %v7 = load i32, ptr %v6, align 4, !tbaa !0
+  ; 第一个下标 1 前进一个完整的 [576 x i32] 对象，不是只前进一个 i32。
   %v8 = getelementptr inbounds [576 x i32], ptr %a0, i32 1, i32 %v5
   %v9 = load i32, ptr %v8, align 4, !tbaa !0
   %v10 = add nsw i32 %v9, %v7
@@ -795,6 +839,7 @@ b3:                                               ; preds = %b3, %b2
 b4:                                               ; preds = %b3
   br label %b5
 
+; 合并大循环与直接进入尾循环的路径，恢复剩余迭代的起点和累计状态。
 b5:                                               ; preds = %b4, %b1
   %v51 = phi i32 [ 0, %b1 ], [ %v49, %b4 ]
   %v52 = phi i32 [ 0, %b1 ], [ %v48, %b4 ]
@@ -805,6 +850,7 @@ b5:                                               ; preds = %b4, %b1
 b6:                                               ; preds = %b5
   br label %b7
 
+; 尾部循环每次处理一项；它与前面的展开循环要分别判断软件流水是否成功。
 b7:                                               ; preds = %b7, %b6
   %v55 = phi i32 [ %v67, %b7 ], [ %v52, %b6 ]
   %v56 = phi i32 [ %v65, %b7 ], [ %v53, %b6 ]
@@ -828,6 +874,7 @@ b7:                                               ; preds = %b7, %b6
 b8:                                               ; preds = %b7
   br label %b9
 
+; 把不同退出路径上的累计值合并后写回，不能只检查循环内的算术。
 b9:                                               ; preds = %b8, %b5, %b0
   %v70 = phi i32 [ 0, %b0 ], [ %v52, %b5 ], [ %v67, %b8 ]
   %v71 = phi i32 [ 0, %b0 ], [ %v53, %b5 ], [ %v65, %b8 ]
@@ -861,6 +908,7 @@ runner 在 `pipeliner` 前后保存完整 MIR，还生成最终汇编并执行 F
 
 ```sh
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/swp-bad-sched.ll"
+# 固定 v60 及实验性展开器，前后快照才对应本章已验证的同一次流水线配置。
 for stop in before after; do
   "$LLVM_BUILD/bin/llc" -mtriple=hexagon -mcpu=hexagonv60 -O2 \
     -enable-pipeliner -enable-aa-sched-mi -pipeliner-experimental-cg=true \
@@ -871,6 +919,7 @@ done
 python3 - "$CODEGEN_LAB/hexagon-sms-before.mir" "$CODEGEN_LAB/hexagon-sms-after.mir" <<'PYCODE'
 import pathlib, re, sys
 bodies = [re.search(r'^body:\s+\|\n(.*?)(?=^\.\.\.)', pathlib.Path(p).read_text(), re.M | re.S)[1] for p in sys.argv[1:]]
+# MIR 变化只是变换发生的证据；最终 packet 布局还要用下一块 FileCheck 检查。
 assert bodies[0] != bodies[1]
 print('pipeliner 前后 body 行数：', len(bodies[0].splitlines()), len(bodies[1].splitlines()))
 PYCODE
@@ -879,6 +928,8 @@ PYCODE
 两个完整 YAML 文件保留在临时目录，body 确实变化。下面的清单展示同一输入的前后状态，后续还要检查最终汇编与实际 II 日志。
 
 **代码清单 8-13　pipeliner 前的实际 Hexagon MIR body**
+
+此 MIR 输出节选已加阅读注释，原块名、指令与依赖操作数未改动。
 
 ```yaml
 bb.0.b0:
@@ -914,6 +965,7 @@ bb.0.b0:
     %73:intregs = COPY %72
     J2_loop0r %bb.3, %73, implicit-def $lc0, implicit-def $sa0, implicit-def $usr
 
+  ; 展开循环：多个读写及累计 PHI 共同限制了可调度空间。
   bb.3.b3 (machine-block-address-taken):
     successors: %bb.3(0x7c000000), %bb.4(0x04000000)
 
@@ -980,12 +1032,14 @@ bb.0.b0:
     %71:intregs = COPY %13
     J2_loop0r %bb.6, %71, implicit-def $lc0, implicit-def $sa0, implicit-def $usr
 
+  ; 每次处理一项的尾循环；其 PHI 携带跨迭代依赖，是本次成功流水化的对象。
   bb.6.b7 (machine-block-address-taken):
     successors: %bb.7(0x04000000), %bb.6(0x7c000000)
 
     %15:intregs = PHI %14, %bb.5, %22, %bb.6
     %17:intregs = PHI %11, %bb.5, %20, %bb.6
     %18:intregs = PHI %12, %bb.5, %19, %bb.6
+    ; intregs 是寄存器类，%N 仍是虚拟寄存器；此时还不是最终硬件分配。
     %63:intregs = L2_loadri_io %15, 0 :: (load (s32) from %ir.lsr.iv1, !tbaa !0)
     %64:intregs = L2_loadri_io %15, 2304 :: (load (s32) from %ir.cgep23, !tbaa !0)
     %65:intregs = nsw A2_add %64, %63
@@ -1009,6 +1063,8 @@ bb.0.b0:
 ```
 
 **代码清单 8-14　pipeliner 后的实际 Hexagon MIR body**
+
+此 MIR 输出节选已加阅读注释；新增块的角色是解释，不是原始工具打印的注释。
 
 ```yaml
 bb.0.b0:
@@ -1111,6 +1167,7 @@ bb.0.b0:
     %71:intregs = COPY %13
     %114:intregs = A2_addi %71, -1
 
+  ; 新增的前置块先准备流水需要的值，并处理迭代数较少的路径。
   bb.9.b7:
     successors: %bb.6(0x40000000), %bb.11(0x40000000)
 
@@ -1128,6 +1185,7 @@ bb.0.b0:
     J2_jumpf %113, %bb.11, implicit-def $pc
     J2_jump %bb.6, implicit-def $pc
 
+  ; 稳态循环：新增 PHI 保存不同流水阶段之间传递的值。
   bb.6.b7 (machine-block-address-taken):
     successors: %bb.11(0x04000000), %bb.6(0x7c000000)
 
@@ -1150,6 +1208,7 @@ bb.0.b0:
     ENDLOOP0 %bb.6, implicit-def $pc, implicit-def $lc0, implicit $sa0, implicit $lc0
     J2_jump %bb.11, implicit-def $pc
 
+  ; 离开稳态循环后，合并最后一轮值与短路径值，为排空和最终结果做准备。
   bb.11.b7:
     successors: %bb.10(0x80000000)
 
@@ -1161,6 +1220,7 @@ bb.0.b0:
     %105:intregs = A2_or %101, %102
     J2_jump %bb.10, implicit-def $pc
 
+  ; 在汇入原退出块前完成剩余累计值；不能把新增块视为多执行一次原循环。
   bb.10.b7:
     successors: %bb.7(0x80000000)
 
@@ -1199,12 +1259,14 @@ No schedule found, return
   -enable-pipeliner -enable-aa-sched-mi -pipeliner-experimental-cg=true \
   -verify-machineinstrs -debug-only=pipeliner "$BOOK_INPUT/swp-bad-sched.ll" \
   -o "$CODEGEN_LAB/hexagon-sms.s" 2> "$CODEGEN_LAB/hexagon-sms.log"
+# 使用输入自带的模式检查关键汇编布局，不要求所有寄存器号和排版逐字相同。
 "$LLVM_BUILD/bin/FileCheck" "$BOOK_INPUT/swp-bad-sched.ll" \
   --input-file "$CODEGEN_LAB/hexagon-sms.s"
 python3 - "$CODEGEN_LAB/hexagon-sms.s" "$CODEGEN_LAB/hexagon-sms.log" <<'PYCODE'
 import pathlib, sys
 asm, log = (pathlib.Path(p).read_text() for p in sys.argv[1:])
 assert 'loop0(' in asm and 'endloop0' in asm
+# 分别检查两个循环的成功/失败记录，不能把某个 II 推广到整个函数。
 assert 'Schedule Found? 1 (II=3)' in log
 assert 'Schedule Found? 0 (II=20)' in log
 for line in log.splitlines():

@@ -1,9 +1,9 @@
 {
-  "time_utc": "2026-09-13T16:05:11.108375+00:00",
+  "time_utc": "2026-09-13T16:19:18.384937+00:00",
   "bash": "/bin/bash",
   "llvm_build": "/opt/llvm-project/build",
   "llvm_source": "/opt/llvm-project",
-  "output_directory": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b",
+  "output_directory": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g",
   "chapters": [
     {
       "chapter": 1,
@@ -13,35 +13,35 @@
         {
           "label": "ch1-setup",
           "line": 55,
-          "sha256": "713a46e2edc341f0a534463fe1d412cc45c1a315d888e4c5b95a441e775e22da"
+          "sha256": "a3781839e4260b53d0ce9083e4d36031997d77bbd8fd79aaabfd8f434349da86"
         },
         {
           "label": "ch1-tool-versions",
-          "line": 94,
-          "sha256": "117fa24007b961d832f6837198327a7dd160e5ca57e992747e9ac729d446e520"
+          "line": 102,
+          "sha256": "deb0c435a910900e8f8b9bffa98126e8e4a1295cbaede97cc1981b5b838bc5db"
         },
         {
           "label": "ch1-pass-registry",
-          "line": 108,
+          "line": 118,
           "sha256": "eefa94d29913ee71a63b1671e32fa4536fb9d589dc7a22974e21a9be42c7706b"
         },
         {
           "label": "ch1-compile-and-execute",
-          "line": 124,
-          "sha256": "fc8aaf91a0c75b18303dbd7207ed048362762a859216405e67116e8e616decb0"
+          "line": 134,
+          "sha256": "d6a14e978ab756fe2e8590f3763d8bd3d08aec219ec971cb85c7143fda8d9ca4"
         },
         {
           "label": "ch1-host-jit",
-          "line": 172,
-          "sha256": "d2bf0199193230d956c67ead6e8f50795431ad9de0f980e2ad59aa23800a8f0f"
+          "line": 195,
+          "sha256": "465f648a5c95e18ed41c6c18d8d27fa1d5cae7a8cb7d43ffbb6270379826f857"
         }
       ],
-      "script_sha256": "14a190b4e1cf000a28f6fd5164f193bf1e9428b045593a61508a49eb715967c6",
+      "script_sha256": "9ec692161ffd5d1cbd4434191ddcdaab9ceef2e32e8efd1f61708556a1ba9059",
       "returncode": 0,
-      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch1.stdout",
-      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch1.stderr",
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch1.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch1.stderr",
       "commands_unchanged_during_run": true,
-      "duration_seconds": 2.224
+      "duration_seconds": 2.136
     },
     {
       "chapter": 2,
@@ -51,55 +51,55 @@
         {
           "label": "ch2-setup",
           "line": 23,
-          "sha256": "e17aae0e01e6c04e6c920969cc97fd75e5ee810d201b699741e64950e3acbc7b"
+          "sha256": "f6959a522b16de40cbea31a6427b210e0ae928493a2b780a0829567859c1444a"
         },
         {
           "label": "ch2-clang-ast",
-          "line": 55,
-          "sha256": "709eb3d1c6a91a40c9e38bf3b2a14817276512a00bd290bc27e6c2fd405c69df"
+          "line": 58,
+          "sha256": "44a1f82faf47ef3d47bfa1ad5915077a95d642c79d7589a05e07a5effd52d93f"
         },
         {
           "label": "ch2-parse-and-emit-ir",
-          "line": 89,
-          "sha256": "2c80cac9ba9ce81450767fd10678c756e1f3ceaa3bfb07e2fd0d9f5ec8cefc4f"
+          "line": 93,
+          "sha256": "a43ee4d484082d8ed45b294263794e192c322c945a95d5f782bb986925aa7f9f"
         },
         {
           "label": "ch2-mem2reg",
-          "line": 140,
-          "sha256": "9734438f4fb36981743c2ec9eb1968633a6515581c95ff5dd0b2967a91d8718f"
+          "line": 151,
+          "sha256": "2d2532de9576f786bf7f51c8514fe3aacf42dadf781c12c698faa458f2dd6654"
         },
         {
           "label": "ch2-cfg-dot",
-          "line": 193,
-          "sha256": "98e175cfe5a3c9324eb56641656e4b11a80c2b7dcd17bf65897b994d10e316a7"
+          "line": 208,
+          "sha256": "9edaa31d13234fc67c62604e211c37f1b31233347f7b14df23dbdcca93724b21"
         },
         {
           "label": "ch2-machine-phi-elimination",
-          "line": 510,
-          "sha256": "df23829b1fc46c92b7e0682761f8b5ce173235ffcc38732d52a8754c15203abf"
+          "line": 535,
+          "sha256": "890033786670c646b7af90b066c4c616649d905f99eb156db07a0c29ca178bfb"
         },
         {
           "label": "ch2-copy-models",
-          "line": 534,
-          "sha256": "70f5153a67c9b3bf985f74a1b07687971a2173d4c0f4f3d415fac688857fec5a"
+          "line": 560,
+          "sha256": "dcd1198305023a2838267e09f3ce09dac9792ab61bc416515442dea2e5b6f811"
         },
         {
           "label": "ch2-mlir-edge-values",
-          "line": 607,
-          "sha256": "f1ae734bebf0deace13be37846056c4f66dd78d61beb1cc06f26f581da547854"
+          "line": 638,
+          "sha256": "a6193fde4fa003429b073e2aa481080dcdcbe75f4da55c57dc71fe67f9b8ae55"
         },
         {
           "label": "ch2-verifier-negative-and-select",
-          "line": 645,
-          "sha256": "46b4651ee300648a6e1b2ab83b4d7c3e4604b8343f370bc3a65a2480e1536751"
+          "line": 680,
+          "sha256": "29cc975836273323aca550c3f07377cb3aa0c309a8f35abc1a08f3f1854aef7d"
         }
       ],
-      "script_sha256": "c45fe3254d69ae41369dc49a07ab461cc9586f4982e44d3a9a041dfe396d0017",
+      "script_sha256": "c0ff253e02390bc5d9058657493c11f73c05b24f49dbec61062cfb73197b76f7",
       "returncode": 0,
-      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch2.stdout",
-      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch2.stderr",
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch2.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch2.stderr",
       "commands_unchanged_during_run": true,
-      "duration_seconds": 4.475
+      "duration_seconds": 4.459
     },
     {
       "chapter": 3,
@@ -109,35 +109,35 @@
         {
           "label": "ch3-setup",
           "line": 10,
-          "sha256": "aba67a1d5d0d31893b67601d5b3f6c160f50af6d79db1a5a272cc70c1008405a"
+          "sha256": "ab09f019ca2cd3b3f8de100121887526c23460633b5ef2e554bc48c9e2053de9"
         },
         {
           "label": "ch3-finite-models",
-          "line": 98,
-          "sha256": "9df1182beb2697805317d8c8b7963447a6e887bfb76820f49db22c3bfdf21b73"
+          "line": 100,
+          "sha256": "57cfb768f342ab23228e32f49bce14cc615a2c1ed2fb45dca24b2406cdc821d2"
         },
         {
           "label": "ch3-mop-mfp-model",
-          "line": 316,
-          "sha256": "6c2e36ea276b67a3535998818477856c539751118ac7c05c3d19eb235c2dc19d"
+          "line": 321,
+          "sha256": "7813b07adedc05a9a9edd8485b74f8f0b30a1204291e8b9dfa5ff2d1cc75a5df"
         },
         {
           "label": "ch3-dataflow-tables",
-          "line": 450,
-          "sha256": "c0d2893a931d4fa8395c98fac0941534bfe04f48623bb32c03f4dfe517dfcd6b"
+          "line": 456,
+          "sha256": "4f815fb2426fd62e3cee7f16517a7f6f389cc2fb55274b6995c06511bdde68c9"
         },
         {
           "label": "ch3-clang-sccp",
-          "line": 531,
-          "sha256": "7e47e642171bc8d714aefc765f032ec104969dbe7711f92dde44c52a06060933"
+          "line": 538,
+          "sha256": "2099af591abbc8897d0dac0207d47b9fcaea3ab68ceeeed3ce3f7efbabdfe042"
         }
       ],
-      "script_sha256": "9f6e8b0b11d9519dcf14d300f93bccb025871670e5a2752ba488179235b1da1f",
+      "script_sha256": "26398aa6dd400ffd1a0691135e791d5f6098da7efe9501d57d2bc8a2f3e4ab2a",
       "returncode": 0,
-      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch3.stdout",
-      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch3.stderr",
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch3.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch3.stderr",
       "commands_unchanged_during_run": true,
-      "duration_seconds": 1.181
+      "duration_seconds": 1.221
     },
     {
       "chapter": 4,
@@ -147,35 +147,35 @@
         {
           "label": "ch4-setup",
           "line": 10,
-          "sha256": "2e512d24d415c093fb509e15bf3d51ce532ed158cc8a2a04d67a47b240051a35"
+          "sha256": "b0dd6b066f476c78772c4325ccc234f5d86c24c02c2d47223516cdb16693e41a"
         },
         {
           "label": "ch4-domtree-frontier",
-          "line": 87,
-          "sha256": "f33ec12ac56ddca6e169a0a5faa5048fc6ad001e0b473ea0240c3d4653106cff"
+          "line": 89,
+          "sha256": "c506b5c0b0e04377c091cf8990b9b239c905270b31d245fa3386e82ba69f611b"
         },
         {
           "label": "ch4-postdom-roots",
-          "line": 124,
-          "sha256": "b5935fdae26ca737b75e067491182f0711f77b73e5997dcc8b5ffa1321a8dfd5"
+          "line": 127,
+          "sha256": "959eeb1ed0929e7ba64feadbc3dbce86d381bb85795d0ee667def77f205eefdd"
         },
         {
           "label": "ch4-finite-graph-models",
-          "line": 233,
-          "sha256": "d60ddbddf854fa4db8d25d6b2e95e5d19710973cf2569ad23dfd7717d6db4562"
+          "line": 240,
+          "sha256": "7991c075558dc7134465f92e24bd7b6e35583f8ee34ef5c712a3aa9e9bb2963b"
         },
         {
           "label": "ch4-iterated-frontier-phis",
-          "line": 282,
-          "sha256": "b65e3c2af8994edc881b86c0545a0b4421c16634d97582a4bed42b6df50e82ba"
+          "line": 293,
+          "sha256": "a055bc585272f9f21f4046980b2566f7fe337fde282418bac83af12ed107309d"
         }
       ],
-      "script_sha256": "88649db7a0e1add841327efea43fd39bb3b528a5d1c661b63a72e5be4d43a294",
+      "script_sha256": "5ccfe8c9856b5b69d99a1196505254b2cea14923ec8e50fde125adaa4e803f7e",
       "returncode": 0,
-      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch4.stdout",
-      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch4.stderr",
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch4.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch4.stderr",
       "commands_unchanged_during_run": true,
-      "duration_seconds": 1.179
+      "duration_seconds": 1.236
     },
     {
       "chapter": 5,
@@ -185,35 +185,35 @@
         {
           "label": "ch5-setup",
           "line": 18,
-          "sha256": "5e35d5e42445c49b4cba79a3024f56ac55b5b6a261149eaffe6ad2fe1d547625"
+          "sha256": "d633bcc5df723f8f4b3a67eed15e8cbcf0a3924a3a5c089610799f523e0b1551"
         },
         {
           "label": "ch5-loopinfo",
-          "line": 122,
-          "sha256": "4bf16035f6c131f202252007ff51fe1f2342ebf33648bc39edb6ce627d51965c"
+          "line": 124,
+          "sha256": "385d2e76ed65b7dd5ce43a2413a0d5133a34f53988503358638f7a4a42afb459"
         },
         {
           "label": "ch5-loop-simplify",
-          "line": 189,
-          "sha256": "6e32ca3b25b1e7401d61d75bef41a98ad364c425889cb9c4531f2c2b580ce532"
+          "line": 192,
+          "sha256": "65517fdf73a51adc5f12648cf9b1020d23e45d18fbea23c72010e2405e4bb788"
         },
         {
           "label": "ch5-loop-rotate",
-          "line": 247,
-          "sha256": "65dd6571e75390dab0dcd9d67827d1526049df9aee233de442eefe5e44f02022"
+          "line": 253,
+          "sha256": "c342e56d30f754a47639a09c62d4c75cf2de255e1769b708d8072571ccbd599d"
         },
         {
           "label": "ch5-lcssa",
-          "line": 339,
-          "sha256": "5e2a6fd7544fc7125f360d4f43b908973e3cea8bbb8dcbdaf8a90152dd801ef9"
+          "line": 356,
+          "sha256": "64d95b69fd45ec64e3e571d5d9f617af4eea0b6188199a112a163ecaa44e9860"
         }
       ],
-      "script_sha256": "f5a1eb1de3c7c28cb7e697fc493778ff6e4efaf46169b7d2373c224a2e014e62",
+      "script_sha256": "b30af16f87fb89ac13a5d4515d9833b18351108b4be688df509898d16a1a7079",
       "returncode": 0,
-      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch5.stdout",
-      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch5.stderr",
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch5.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch5.stderr",
       "commands_unchanged_during_run": true,
-      "duration_seconds": 1.228
+      "duration_seconds": 1.172
     },
     {
       "chapter": 6,
@@ -223,60 +223,60 @@
         {
           "label": "ch6-setup",
           "line": 12,
-          "sha256": "c6ac48cee74c3585705c6438462dc58bdbce719a1503476cd373e4257a17e7f6"
+          "sha256": "c563e832860a8c1970d28dde514f2a8611bd5bcd10f66beef4c4cefa075e05bd"
         },
         {
           "label": "ch6-language-records",
-          "line": 82,
-          "sha256": "dff41fbb2964e1c8f080cf50e5340986aa103a9b1fa888cb2aa57595818a9404"
+          "line": 84,
+          "sha256": "716c48d837acff52c4d5aa05f8f26727dad277b5534f1cc84ed135c8ba1aac49"
         },
         {
           "label": "ch6-values-and-negative-cases",
-          "line": 153,
-          "sha256": "a40859b9a480a7c23525ccc656d408e82b5ad9ca0943cf313697ffa3a10c5bbb"
+          "line": 157,
+          "sha256": "dc659de4ee9f40d8b761f4e10bd30926ce0fe8035ea69086845c085edc10695d"
         },
         {
           "label": "ch6-def-class",
-          "line": 218,
+          "line": 227,
           "sha256": "1091e300d5723aeefe87c07d8d7ee20ab3e29881883d7b4054e133e56556bcad"
         },
         {
           "label": "ch6-multiclass-expansion",
-          "line": 282,
-          "sha256": "43e8e0c7c977336eee416369a30617d473905ec64338c59d9d59a02feca3cb06"
+          "line": 294,
+          "sha256": "39a8b56aa08b3b893720e199f0264200da1f2777f9b4690ad04a6f975a9022ce"
         },
         {
           "label": "ch6-bpf-source-and-records",
-          "line": 437,
-          "sha256": "ddf3c0c04f2e9ebc9f0a4267be7a39050a0485adc09cee668af65971702cf27e"
+          "line": 455,
+          "sha256": "7e54413028c45952db1e0de4ac9910bc79229462d854d025e60b6ccb1462f880"
         },
         {
           "label": "ch6-dag-isel-generator",
-          "line": 511,
-          "sha256": "2b8c519398525742cf8825db09e075a39cad879d2941b86b3dd95b63bbbfccf0"
+          "line": 537,
+          "sha256": "de53f7859e0d5d7a03e3e264b0631929e473004b56f99eb72de52980f6a433e6"
         },
         {
           "label": "ch6-call-pattern-records",
-          "line": 646,
-          "sha256": "05fe4652534e16666aa0b9ab8f9d2c67150f887d9cb96679867d89f0e2718c92"
+          "line": 682,
+          "sha256": "94d309b2b5e14f3c2ed10418954c0db2d58a71fcbba3e7606b894a1c95082c18"
         },
         {
           "label": "ch6-complex-pattern-and-generators",
-          "line": 769,
-          "sha256": "d86a2da65f85d88c7b943c0fbd0b60b6c78e6e3241caf590b6811e68a7108802"
+          "line": 816,
+          "sha256": "4611da796a7e66db85c4d57dfe3dec7c8340351835a276f1e6093ae582353385"
         },
         {
           "label": "ch6-working-tree-comparison",
-          "line": 800,
-          "sha256": "75b7adad0c693a5c96b8d0554cb6d29ee444b8f89ba0e9f64ed79f591445a5f8"
+          "line": 852,
+          "sha256": "d5af0eaa762713363c55b7ee0b1604288881bd7cf68806c25a593c8dbc701d5c"
         }
       ],
-      "script_sha256": "a425ff48573db47a28a942e5cb34d67ccb338743efa8e31905c714df22e4a8ed",
+      "script_sha256": "5f5abe11682034bbeda82d958c41695500c54cbb2ebd95b56991991387578b0f",
       "returncode": 0,
-      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch6.stdout",
-      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch6.stderr",
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch6.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch6.stderr",
       "commands_unchanged_during_run": true,
-      "duration_seconds": 18.57
+      "duration_seconds": 18.706
     },
     {
       "chapter": 7,
@@ -286,70 +286,70 @@
         {
           "label": "ch7-setup",
           "line": 9,
-          "sha256": "a11979f2ee5269c2b5aea427ee1ea3482921e4096e9b4abe83691b44c3f7dc3f"
+          "sha256": "1598d69c9906b89b6072205e74b0e38de56b0b71f7c26557544f3bf414583ccc"
         },
         {
           "label": "ch7-clang-callee",
-          "line": 101,
-          "sha256": "e5daf57547f5da78ef8b2fb3665db58ac24a809c82d3eb8565a73f1c3a35f721"
+          "line": 105,
+          "sha256": "ec27b26d7621bbd799537b7556178afd30502cc6961f1507fd0df74cf93c259f"
         },
         {
           "label": "ch7-bpf-v1-selection",
-          "line": 176,
-          "sha256": "2fd33e4a7d430329b28939e63fe3911be98b9846b631f315836970ce6c4523a1"
+          "line": 188,
+          "sha256": "ea1d2ec9ebfa6287109e27872ef17f805b0b52d1150af6f72b1880751d887d01"
         },
         {
           "label": "ch7-bpf-type-legalization",
-          "line": 253,
-          "sha256": "1477bd3656b6fad72907d851e7c3fb7ab09db878fd1c8cd3ffd435845c66926e"
+          "line": 273,
+          "sha256": "93761bb2dee0a9811fdd0ba94a71eee4f5194182182dc704b8b93fa144f94ac3"
         },
         {
           "label": "ch7-bpf-softfloat-negative",
-          "line": 334,
-          "sha256": "a604afb48cb450b3f5c363884ffcfc793cf97e0a7bc063dd7862315e89300642"
+          "line": 358,
+          "sha256": "0ce2437d8fc40230fc8d281ecd5fa0b1ad5791c966383dfe51d22e3ea4a0706d"
         },
         {
           "label": "ch7-tablegen-dag-matcher",
-          "line": 365,
-          "sha256": "f4ea679436025911e407d7b8410c8285aba4a2b87ee9a9d5de0f04e722d3b328"
+          "line": 391,
+          "sha256": "9877c043356a132e0e424af10751a66e5d1de7324b22074f09be0f1b32f16b3f"
         },
         {
           "label": "ch7-dag-to-mir",
-          "line": 484,
-          "sha256": "833a4f2f1f89cd3a67b0f4f2f7e7a4e9299bc028fe409aad847bfaaaa8bf131e"
+          "line": 520,
+          "sha256": "225c65cb57aaba6564bf83ce45b5a7e78ceefff4f09d5d328f0025283d4243e3"
         },
         {
           "label": "ch7-fastisel",
-          "line": 614,
-          "sha256": "d25ea6b0c15f713b45eeee908f48cc2cde72a54b8f607b32d66dc65563cf8051"
+          "line": 666,
+          "sha256": "865637cce052163a6ba58e73245b4b7c0eee327c8a6ebf7e26d45c90a7c38aa9"
         },
         {
           "label": "ch7-gi-irtranslator",
-          "line": 723,
-          "sha256": "0562d7f5f79a42d9ea056c8f54100b66912d9a42202b6035d04ff3bde1aceb9a"
+          "line": 778,
+          "sha256": "2fa28e9e7acd989b641226705c9905238b1dc38aed2e41b1e079abf4b89b1617"
         },
         {
           "label": "ch7-gi-legalizer",
-          "line": 778,
-          "sha256": "a6c4e19b8ffc789b27df154db3a5d188383709345ac7e3d9b4202f4ad7a6cd77"
+          "line": 843,
+          "sha256": "dc68b87436450fef80ac0fbb6d595f292b0a825da1daffd99e59d788df8f36f9"
         },
         {
           "label": "ch7-gi-register-bank",
-          "line": 898,
-          "sha256": "a24cf204fca4e200232d73b3495cb9ecb069dd116d7a93e7edf197e67b4ae224"
+          "line": 974,
+          "sha256": "d4a5fd9bb61fcd83787c70c78ecbc006b08ee2462b43bb5f5e5c5bfa854e33d5"
         },
         {
           "label": "ch7-gi-instruction-select",
-          "line": 971,
-          "sha256": "67fba49960d740f95c7fde5271e235da7828630fff22fa731651b6727b131953"
+          "line": 1054,
+          "sha256": "76390702ae6f16c82a40b4c5fe7887333b46eb79babcda3fe56be84ba63c0bf4"
         }
       ],
-      "script_sha256": "2728d923a947f371efee09beae769ea4836fea909e4e4342c4c5783dc8439955",
+      "script_sha256": "072f23a4662f2c2c413b896cfaf55e8148621a4719517d34ecbd8994a5c2dea9",
       "returncode": 0,
-      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch7.stdout",
-      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch7.stderr",
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch7.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch7.stderr",
       "commands_unchanged_during_run": true,
-      "duration_seconds": 13.815
+      "duration_seconds": 13.729
     },
     {
       "chapter": 8,
@@ -359,85 +359,85 @@
         {
           "label": "ch8-setup",
           "line": 9,
-          "sha256": "a27ef09a74c0a2406bc41218b1ce087ec47218dd2a723fa7b1b7d35743eeed22"
+          "sha256": "a91f87cdb390aac83ed5515731b0bc4f29ab9d150e49c65a9228f6a1faeb6543"
         },
         {
           "label": "ch8-teaching-models",
-          "line": 71,
-          "sha256": "0c79c7e48f56f666d1205c346b3782cbb77adfaa820017a67a28bf22032ce354"
+          "line": 72,
+          "sha256": "1c28aa122c2e062fd1749479c41d8abc0e4fcc43edc865d59f4e793662e75673"
         },
         {
           "label": "ch8-six-dag-schedulers",
-          "line": 126,
-          "sha256": "64e0d1d58958cbc0c2346650643ba2d53ca92276b5f93c423640756de9a890e1"
+          "line": 131,
+          "sha256": "b896f68eb5a8a564a186b7b4a5d5b36c34f81adfa00089aea29349e66a88c576"
         },
         {
           "label": "ch8-inspect-fast",
-          "line": 174,
+          "line": 181,
           "sha256": "5d468b4e9d8a07ab5ad7991e1524177bf4043d2b5145dffa140f3872aa9dfd86"
         },
         {
           "label": "ch8-inspect-burr",
-          "line": 218,
-          "sha256": "89ba2abc5dad056a4579a259d4c303b53b26ef391c8add4fa190bf3fe0de4d14"
+          "line": 225,
+          "sha256": "be89bda2ef1c55707dee130d31088fb953860d27ac924f8f2b95800130a90c9d"
         },
         {
           "label": "ch8-inspect-source",
-          "line": 242,
+          "line": 250,
           "sha256": "a5c02da2eca811bf7b0707c64f24d6a1d783bb3af23a29519b2b5e92d27795d2"
         },
         {
           "label": "ch8-inspect-hybrid-ilp",
-          "line": 258,
+          "line": 266,
           "sha256": "3ab5d1298e4cfcbaedae14d56bf9250bb3e4f45ffad57535174751d35ec4f999"
         },
         {
           "label": "ch8-bpf-machine-scheduler",
-          "line": 291,
-          "sha256": "587c4e3c80cd71b466a72f3eab11e4b3c48decc98334fa86f873bd43f2773df0"
+          "line": 299,
+          "sha256": "f40f3ca2f2767240bda757bf7b756de94596eb116bcb1918f30ae6371120dfe4"
         },
         {
           "label": "ch8-tablegen-schedule-model",
-          "line": 333,
-          "sha256": "6e7919b5f2ee59e7bf06d045c9a7dc5152e2a6cf1b214cfe7459d48e5a8295cc"
+          "line": 343,
+          "sha256": "41ef8793d62020fdec8f5975686a5fbadba7fabac9471cb412b357638be5c214"
         },
         {
           "label": "ch8-rv32-small-pressure",
-          "line": 443,
-          "sha256": "c4a01718d550e4317cf5b1f05ddfd5d421e4595d061c479be63cee492eccc5ae"
+          "line": 463,
+          "sha256": "915617c9effad98568ac56d111a5a713b3f18bd3bc8d4e9ef25dfc8b4838f39c"
         },
         {
           "label": "ch8-rv32-large-pressure",
-          "line": 524,
-          "sha256": "d076867af0a46a9d4f46f1fe4602672d9c2cb8cc23d888ff5946aba349ea963d"
+          "line": 552,
+          "sha256": "b5580e67baaa8ddf93bb8d7ba07d26d74ef9fb6f2babe94cf1e4f55f8094fbe8"
         },
         {
           "label": "ch8-postra-tdlist",
-          "line": 573,
-          "sha256": "e1da49857c8e9659b1cf7dc65e1e81b945758646b2247ec21a1bf881748adcc2"
+          "line": 604,
+          "sha256": "6686f63d4d3bd5c347c1c11d9e7455ef43a233c0005b7521af3fbca31eab0aa5"
         },
         {
           "label": "ch8-postra-misched",
-          "line": 625,
-          "sha256": "5164c374cdecca28cc7648f56d3c5b9414b57d6b3952d31d57fc96d5ec2e331c"
+          "line": 663,
+          "sha256": "c06238c2df425bcfb3f844f95eb4f94062e7e504a0d8f64d318971fba0db0d1d"
         },
         {
           "label": "ch8-hexagon-pipeliner-mir",
-          "line": 860,
-          "sha256": "3b5d8c7e6e10dae7f8fe58abc624eb2acb9b42cd0534a47210d18396df4866fd"
+          "line": 907,
+          "sha256": "f969f13cee1c17bc4c8cad793051138902745fb233c61f054740292c2ed0fa8f"
         },
         {
           "label": "ch8-hexagon-filecheck",
-          "line": 1195,
-          "sha256": "0c987fcefd973b67eb8c99518297a9da6226e3d0b98e2befaee1be95f3cb5306"
+          "line": 1255,
+          "sha256": "11fc1e009698858410b09c7b19bf2c078c56342baf9ea4ed519805adf53d5b6c"
         }
       ],
-      "script_sha256": "9ed9ed1fa37188ae01642469a6925273ec9a76b93a077b273a9754abe7686448",
+      "script_sha256": "2575d18008627c1a174f585e16c2193c52ca286572318dd6d04973eaec6ff359",
       "returncode": 0,
-      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch8.stdout",
-      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch8.stderr",
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch8.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch8.stderr",
       "commands_unchanged_during_run": true,
-      "duration_seconds": 7.409
+      "duration_seconds": 7.237
     },
     {
       "chapter": 9,
@@ -447,55 +447,55 @@
         {
           "label": "ch9-setup",
           "line": 23,
-          "sha256": "6a97723797621a22bc9256dc85104c5bdadc275760b3fca10d6b4181826c611b"
+          "sha256": "9ee8bc0b0bbc5774ed976fb40fe98dfc49656e9ed490d16e20a5ebc7b4bebd31"
         },
         {
           "label": "ch9-taildup",
-          "line": 155,
-          "sha256": "fc9819d6ce8427b502193a482d4ae2077b84e1f76af419ec696320bb846dde72"
+          "line": 162,
+          "sha256": "a72574ef3dba7d8f8c25f2aed29b37c26e8c05d6d48aa1efb927bc619a39320d"
         },
         {
           "label": "ch9-phi",
-          "line": 192,
-          "sha256": "db2006d513991de44bc96d8780cba26da3341b30db94c3f2315d5ff2744f2ad7"
+          "line": 200,
+          "sha256": "890444b48a03603b878a1c84221c38607d2440c6e0550d90a181af9f81a626c9"
         },
         {
           "label": "ch9-stack-coloring",
-          "line": 368,
-          "sha256": "50f8de96e0eb34bed98acb71a31f58c677711ff673ed84d0851bb7ff3c3cfcb5"
+          "line": 387,
+          "sha256": "5844598474434dedaa026273e4ccd7af76854ba22361cfc343be11292634add6"
         },
         {
           "label": "ch9-dead-mi",
-          "line": 427,
-          "sha256": "08980fabec525b5b9568c3373665cc56dd41410c5451ebdadfcbc50cdadf181b"
+          "line": 449,
+          "sha256": "7d8a618817a51edc6a8a58a6d053bedc17519a8352ba77ceaae7fd5215684a39"
         },
         {
           "label": "ch9-if-conversion",
-          "line": 578,
-          "sha256": "02785dc943f23ca9bda4106b495503d481436f76e2bde58338f866c01210056d"
+          "line": 611,
+          "sha256": "6f8035c9f2dd26c407b3d0ec6832755e10eb9527c078df2c96a650d7d1378ba0"
         },
         {
           "label": "ch9-licm",
-          "line": 619,
-          "sha256": "376f0acdbf47f299b9ab0eea0d0a4ec8465da8861739b826cc7d82c331349763"
+          "line": 655,
+          "sha256": "f82baceca9b13a8370fbec16492e0ea0d32fe1a4425684bd40d84f0a1f0f66aa"
         },
         {
           "label": "ch9-cse",
-          "line": 675,
-          "sha256": "a99cfdcd747288dafae0d50f8739663180956443fae4b6575b7a8ffa09d0bbef"
+          "line": 718,
+          "sha256": "d9f90726d10b4ec9328092b54a240bd25823a42571786d2c6b51fea4a10bc67f"
         },
         {
           "label": "ch9-machine-sink",
-          "line": 710,
-          "sha256": "a75c2945dcad5799ca719de27441dd5aafcff41266365872a8c6e52e4e495bbb"
+          "line": 754,
+          "sha256": "ced4052a57b1648e57ceadde07795e4a2e0f2dee760950fb276b4b7434da8b77"
         }
       ],
-      "script_sha256": "c9b9576dd2b7d3125bc8ac7f33273ee410d0e81f5c897c05a1a35a030d196421",
+      "script_sha256": "f3ec28f7b1e1b439b3f9af5e7c38b29f7d02e8ed300258660453da82f7a1245f",
       "returncode": 0,
-      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch9.stdout",
-      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch9.stderr",
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch9.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch9.stderr",
       "commands_unchanged_during_run": true,
-      "duration_seconds": 2.148
+      "duration_seconds": 2.098
     },
     {
       "chapter": 10,
@@ -505,65 +505,65 @@
         {
           "label": "ch10-setup",
           "line": 9,
-          "sha256": "aa3db40f9876d2d01c1934307ff02600c860157486c67fdecef9562b45398a11"
+          "sha256": "d78749ec441d7802b355b96a54dbe7a7a8adb2be6e9635668025b755008956e5"
         },
         {
           "label": "ch10-sum-stages",
-          "line": 245,
-          "sha256": "89ae3f0a5534d66f02459a7fcfb4a74cd1d0e6bd392b1237f642efeb8a5a99a3"
+          "line": 255,
+          "sha256": "e24fb29eac8f1187d15fe1a740458797ee21925dce3eacc4daad34269d346b7d"
         },
         {
           "label": "ch10-x86-two-address",
-          "line": 704,
-          "sha256": "57f322a19716acbdf43588d148183efc7917e18446dd444e0c3f0e57ec7fe26b"
+          "line": 729,
+          "sha256": "cd7b4f2ef0b75f9f2c31237cb5a8c4a543b3aca340117053715732e5006dac72"
         },
         {
           "label": "ch10-sum-debug",
-          "line": 752,
-          "sha256": "22c380b517cf9c19cd89d112e8f48fc4da6c3b613f75f58a91e2265ff0a93ff4"
+          "line": 780,
+          "sha256": "162b94e296ec34729d9a94046c89f7fa27c7fc12252ae0b6b73c50b24c0710d5"
         },
         {
           "label": "ch10-fast",
-          "line": 1061,
-          "sha256": "2df3a8d903063e98cae23e6cac0144bffc95974318d6284b8fe7200e0921f1ec"
+          "line": 1097,
+          "sha256": "aae5fd0eaf98a220bb692f9676884fb14148bcb5bc9cca4704f7e31cd14e0274"
         },
         {
           "label": "ch10-basic-trace",
-          "line": 1293,
-          "sha256": "5701f1684be1c1db201b14be0fc68c3c027f724a907e3a599d25981d665e9be9"
+          "line": 1336,
+          "sha256": "919dd85413fd78f6a0b4c1985da759d6f3cadce0a97d628e595e8b77a1c18547"
         },
         {
           "label": "ch10-mathematical-models",
-          "line": 1450,
-          "sha256": "2330a62f2c0f08a13574bf7903ab82f6337fe0bfa3a72db39efcf6f19739ecc8"
+          "line": 1494,
+          "sha256": "5ef0136e75d2b31971228e023dc34d8b97e6e04f1cb28df6e2fff95614abeb3c"
         },
         {
           "label": "ch10-greedy-trace",
-          "line": 1651,
-          "sha256": "a17f9b15318707fe3fb43ffe63077be8887431a3de93a98f2817c7e3b0fa3048"
+          "line": 1697,
+          "sha256": "68d02c76b7fba01655fc6e94d0afc8c97427da426a2218ae950336036581d350"
         },
         {
           "label": "ch10-pbqp-trace",
-          "line": 1864,
-          "sha256": "7f93ec82983379cefbeb086ff630c94d6ca687b6031e65b9a7f3895a81c837d8"
+          "line": 1913,
+          "sha256": "9a420b058f1f71250e76843cfb575dbefaeb48e2ed880babbdb81f8815744668"
         },
         {
           "label": "ch10-allocator-artifacts",
-          "line": 1948,
-          "sha256": "b4b1db29796e1736cce54c78664d9c66cb0fbe96feb757ba0a8a57ccf14ef559"
+          "line": 1998,
+          "sha256": "ac83c7518b38c9a405bf5c3f0cd3b2df204afb7f4262d5d2f40d625d2e5609f0"
         },
         {
           "label": "ch10-semantics",
-          "line": 1988,
-          "sha256": "48837d6d7525af007a606a71605c54d9757bc24f773cf333dbc845b513ea1f7d"
+          "line": 2040,
+          "sha256": "9ae12c85c7e1ae6bae8b25247aa09c3c6d580ef98c6bb6ca4df831a373d78561"
         }
       ],
-      "script_sha256": "27f6008b38656c49d0e5fa715819506e33dc5d577d5ca0b65b2e7f379db6d3e4",
+      "script_sha256": "32da826509a7cc9ea96cf21a35e1e32cde39fd30ddc49d7c22bf27920392d68d",
       "returncode": 0,
-      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch10.stdout",
-      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch10.stderr",
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch10.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch10.stderr",
       "commands_unchanged_during_run": true,
-      "duration_seconds": 3.319
+      "duration_seconds": 3.267
     },
     {
       "chapter": 11,
@@ -573,60 +573,60 @@
         {
           "label": "ch11-setup",
           "line": 25,
-          "sha256": "ac137fe76c9fe0f655ff049fed96eb4c42a0941c9d432bc96c156586ea9253c6"
+          "sha256": "15c15b4f2a065e3f1a14eefc07f7a7106258a059bf756f83836d03c239bc4614"
         },
         {
           "label": "ch11-pei",
-          "line": 78,
-          "sha256": "08b312a9574c50374cab1314b33a91d9c44b692effd4c4d6941e71cda101723f"
+          "line": 87,
+          "sha256": "e0d37534449958985dcfe9cda803c1d3b87e1222b455b02eedc3d70598c92de8"
         },
         {
           "label": "ch11-postra-sink",
-          "line": 134,
-          "sha256": "03952cd788df73150e20682ad48287ccda77061f76c6f8a632aa5e06359d4d9f"
+          "line": 150,
+          "sha256": "ae8f57c4fee367bde8ca725ef11cfdaa0b5747fd976295eefb7de9d2e47e2752"
         },
         {
           "label": "ch11-shrinkwrap",
-          "line": 191,
-          "sha256": "206fe917259b79ff229858e3a7d7925cd770e0150f0cbcf090bc5bacaa52eed3"
+          "line": 214,
+          "sha256": "edf1d39da760ce3e5ca5cb9cbeb3c6243c64d0e8758c7b2922daa50f3010feb6"
         },
         {
           "label": "ch11-branch-folder",
-          "line": 248,
-          "sha256": "41028fe91ae6a2faf729cd81c9e47a942d5ee7a61e438a092f4469870c4e8bc1"
+          "line": 272,
+          "sha256": "a3d56bb1066b2d8febc0067587473dcfeaa91b866cfae5b66089c16722171b5c"
         },
         {
           "label": "ch11-copy-propagation",
-          "line": 270,
-          "sha256": "2a52ee4e15b5e25a6dd8bd7eb5e6753e9f983d0e572d358d8677eb67c03c9728"
+          "line": 295,
+          "sha256": "a3ca25380b2c6a7fbbeb455030636f95b037241e8447cb3b7bd11b0bb0055813"
         },
         {
           "label": "ch11-llvm-library-api",
-          "line": 363,
-          "sha256": "84dfdc2d15f0a6b3bdafcc3d782fcd9c31b5b13ef742ae1bc7069d4eee026649"
+          "line": 390,
+          "sha256": "0fe045cdff30aec8cdea44d93d0332a3e69c6767b005b864090b8c7558f68813"
         },
         {
           "label": "ch11-outliner",
-          "line": 472,
-          "sha256": "dba53b989ccd1f76782710c6d54e6bbaba8c9bb5c5459b157d0c49a4d1ca5e73"
+          "line": 509,
+          "sha256": "09fb83ae5b421958562cca3fdedecaf6f07bba7a685ead5d28c7e0844ef3d7c8"
         },
         {
           "label": "ch11-mfs-hcs",
-          "line": 630,
-          "sha256": "a214c6f800cf82051a486aa0df633e6fc7c9fa639cb9172bd737144989fe084b"
+          "line": 678,
+          "sha256": "8f2e48ab9551d5a055b7e722012fd80277be303d3c9c1c6ce1aa89192a514c77"
         },
         {
           "label": "ch11-suffix-candidates",
-          "line": 738,
-          "sha256": "1cce566ee73586c453d3697c7500f638e1f8be522c261af0bcdd4d01ab471253"
+          "line": 788,
+          "sha256": "07d514700ef84eca9ba1d1be386811fcf62433624b5363262f567287825d3eb9"
         }
       ],
-      "script_sha256": "f233192c1a9d40114cc0e9df21784cdda638b8f76d277226b979d779a11b8d10",
+      "script_sha256": "410b97e5a1a7f06c275155b031c7ba73f5460d6cb13fdc8701132884d41c100d",
       "returncode": 0,
-      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch11.stdout",
-      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch11.stderr",
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch11.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch11.stderr",
       "commands_unchanged_during_run": true,
-      "duration_seconds": 3.4
+      "duration_seconds": 3.189
     },
     {
       "chapter": 12,
@@ -636,40 +636,40 @@
         {
           "label": "ch12-setup",
           "line": 7,
-          "sha256": "32ac436d4ee3f40523ec99c8479047d6c0468debf2221c037827144b25353a69"
+          "sha256": "292f6ae1cab9e13c7424af23f7b0fc32857fedf7e148841fb2e81d99659ba063"
         },
         {
           "label": "ch12-mcinst",
-          "line": 63,
-          "sha256": "64a5a7cf0e02cdc6d58426dacf294b88cd71c16eb1130e52e7f52de5a32c9fb4"
+          "line": 69,
+          "sha256": "31adf554507c00fe305bc62965b68359910a04de68ebe431fecf13c638a02d6d"
         },
         {
           "label": "ch12-clang-and-mir",
-          "line": 123,
-          "sha256": "ab4d5e742d91bdf598e48856549021a30d4c732093fe202b6506d6ae280d08c6"
+          "line": 131,
+          "sha256": "18c8ac7d53d7259c01df9605e1c3180efd9c57dd8aee88aa4ff4f3e9c9f846b5"
         },
         {
           "label": "ch12-mc-encoding",
-          "line": 172,
-          "sha256": "e08337f0ebc3ea8677d2ee01821bcfc65fc5806bc1f9173f5268b6a697ab4349"
+          "line": 187,
+          "sha256": "7a14d519bd2cdd4ca66c00ebfcc115b7115f7b854a51e61b542616a1cf078033"
         },
         {
           "label": "ch12-object-and-relocations",
-          "line": 319,
-          "sha256": "6ad2e1544d4f759e4fe5fe32cbe901a8ff3b811f5a208b0a09e0b3335fcb241c"
+          "line": 346,
+          "sha256": "08f0da48f1ce42cfbb4991ac6161c61b0bf3f80cd2bbebe1f230af6b434bcd27"
         },
         {
           "label": "ch12-assembly-roundtrip",
-          "line": 393,
-          "sha256": "80c2d7aa9e49907b5b919f464f581c468f8b37e946dbf70fb26ee14da5343a65"
+          "line": 425,
+          "sha256": "b5e2882b4a5360f4884117fa7dfefb3b078bf057fbd106060a500c31bf930c5c"
         }
       ],
-      "script_sha256": "c1be480467af50c177d9d81096d17a54d677e590619fa1d5b36d1efa02077712",
+      "script_sha256": "2fd4ca2cdc3e84062c0a8f2fc5006ce6232a0bbcf590c2cdbcb6242c7e8527bc",
       "returncode": 0,
-      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch12.stdout",
-      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch12.stderr",
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch12.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch12.stderr",
       "commands_unchanged_during_run": true,
-      "duration_seconds": 0.731
+      "duration_seconds": 0.738
     },
     {
       "chapter": 13,
@@ -679,40 +679,40 @@
         {
           "label": "ch13-setup",
           "line": 9,
-          "sha256": "251310e5dc660975f9221995504f27364fd6d0d5c83a4e3df7a4809da133fb19"
+          "sha256": "bb2e73431d9be23bfb1749d8cc6f5521d8dd272246becc83176522099a8084fa"
         },
         {
           "label": "ch13-tablegen",
-          "line": 105,
-          "sha256": "be64b922e1e5395eea327463666f6caa6db435324751ecfd3167eb905ed348c8"
+          "line": 107,
+          "sha256": "07053a1708856d82cae4b87aed3eb910ce20ed13915c07bcc1eb3cc80916507b"
         },
         {
           "label": "ch13-select",
-          "line": 141,
-          "sha256": "1f52d3c9539b924504c0460c19ac36acb4c68a3990c0ac17c651b3c119fb9d8c"
+          "line": 151,
+          "sha256": "21a32ae9b70a8f184da894d0029678e6a9646cf1ebe0069f8e860e4a27515f5c"
         },
         {
           "label": "ch13-assembly",
-          "line": 160,
-          "sha256": "168b12742e761a2827757b13f2dc59cd0fd69c613bc38582df0190a4ea3677b5"
+          "line": 173,
+          "sha256": "7c2213e515ea4a792330a6a8d44c0fe6439b465f56585beabde10244690525cf"
         },
         {
           "label": "ch13-unsupported-arguments",
-          "line": 174,
-          "sha256": "d19df5f126b127fa7db47290b7673a725be29a393293b84922fb018132c99e85"
+          "line": 188,
+          "sha256": "29b809ebb73d5703309dd36f3257b61d356ba5b73409d6f3edaf509a2caff2bf"
         },
         {
           "label": "ch13-objects",
-          "line": 191,
-          "sha256": "1a9180b354089945fa0893781c8ea037664a7a74a509fe1b54770da24c4ecbdb"
+          "line": 208,
+          "sha256": "20a0f73ead03125163bf61e4ab56ba3cbd717816389755cfd93832755b9680e4"
         }
       ],
-      "script_sha256": "7eeee3123e30cc322a77dc3ad6e361a87631b3a7000bd50f5188ded01be5ae35",
+      "script_sha256": "01cee7869c2298bd3794e3541f9febeb10979d8ce8579a7ab1bcbedb34b337dd",
       "returncode": 0,
-      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch13.stdout",
-      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch13.stderr",
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch13.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-pju98c8g/ch13.stderr",
       "commands_unchanged_during_run": true,
-      "duration_seconds": 14.124
+      "duration_seconds": 13.224
     }
   ],
   "passed": true,

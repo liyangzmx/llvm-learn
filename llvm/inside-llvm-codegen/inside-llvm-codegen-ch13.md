@@ -8,10 +8,12 @@
 
 <!-- manual-lab:ch13-setup -->
 ```sh
+# 沿用已有路径设置；源码、构建目录、教材输入各有自己的用途。
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
 BOOK_INPUT="$BOOK_ROOT/experiments/ch13"
+# 生成的 .inc、MIR、汇编和对象都写入本次实验目录。
 CODEGEN_LAB=$(mktemp -d)
 ```
 
@@ -104,21 +106,29 @@ BPF 将 R10 作为帧指针，R11 是 LLVM 后端使用的伪栈指针；二者�
 
 <!-- manual-lab:ch13-tablegen -->
 ```sh
+# 同一个 TD 输入交给五种生成器，各自产生不同用途的 C++ .inc 文件。
+# -I 提供 include 搜索目录；它不会把 Book 注册为 llc 的可用目标。
 for generator in register-info instr-info asm-writer emitter dag-isel; do
   "$LLVM_BUILD/bin/llvm-tblgen" \
     -I "$LLVM_SRC/llvm/include" "-gen-$generator" \
     "$BOOK_ROOT/experiments/ch13/Book.td" \
     -o "$CODEGEN_LAB/BookGen-$generator.inc"
 done
+# JSON 是展开后的 TableGen 记录，用来直接核对编码字段。
 "$LLVM_BUILD/bin/llvm-tblgen" -I "$LLVM_SRC/llvm/include" \
   --dump-json "$BOOK_INPUT/Book.td" -o "$CODEGEN_LAB/Book-records.json"
 python3 - "$CODEGEN_LAB/Book-records.json" <<'PY'
 import json, sys
+# Inst 的列表按低位到高位排列；每项是固定的位，或操作数的某一位。
 bits = json.load(open(sys.argv[1]))['ADDrr']['Inst']
+# 为 add r1, r2, r3 代入目的、左输入、右输入的寄存器编码。
 values = {'dst': 1, 'lhs': 2, 'rhs': 3}
+# 固定位直接使用；变量位右移到最低位再 & 1，最后移回指令的第 i 位。
+# 各项占据不同的位，因此求和就能拼出完整的 16 位指令字。
 word = sum((b if isinstance(b, int) else
             (values[b['var']] >> b['index']) & 1) << i
            for i, b in enumerate(bits))
+# assert 是实验自检：不符合预期就报错，不能继续当作成功结果。
 assert word == 0x16c0
 print(f'add r1,r2,r3: {word:#06x}')
 PY
@@ -140,12 +150,15 @@ PY
 
 <!-- manual-lab:ch13-select -->
 ```sh
+# 先确认输入是结构合法的 LLVM IR，再观察目标相关的选择结果。
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output \
   "$BOOK_ROOT/experiments/ch13/backend.ll"
+# 停在 finalize-isel 后，此时可以看机器指令，但尚未完成寄存器分配。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 \
   -verify-machineinstrs -stop-after=finalize-isel \
   "$BOOK_ROOT/experiments/ch13/backend.ll" \
   -o "$CODEGEN_LAB/selected.mir"
+# -n 显示行号，方便回到完整 MIR 查看操作数和所在基本块。
 rg -n 'ADD_rr|COPY|RET' "$CODEGEN_LAB/selected.mir"
 ```
 
@@ -159,6 +172,7 @@ rg -n 'ADD_rr|COPY|RET' "$CODEGEN_LAB/selected.mir"
 
 <!-- manual-lab:ch13-assembly -->
 ```sh
+# 去掉停止点，继续完成寄存器分配、栈帧处理和汇编发射。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 \
   -verify-machineinstrs "$BOOK_ROOT/experiments/ch13/backend.ll" \
   -o "$CODEGEN_LAB/backend.s"
@@ -173,12 +187,15 @@ ABI 的拒绝路径同样需要实验。[six-arguments.ll](experiments/ch13/six-
 
 <!-- manual-lab:ch13-unsupported-arguments -->
 ```sh
+# if 判断的是退出状态；本例编译成功才是异常，因此 then 中显式报错。
+# 2> 保存 stderr 中的诊断，后面检查是否确实因为栈参数不受支持而失败。
 if "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 \
   "$BOOK_ROOT/experiments/ch13/six-arguments.ll" \
   -o "$CODEGEN_LAB/unsupported.s" 2> "$CODEGEN_LAB/unsupported.stderr"; then
   echo '错误：本例预期拒绝栈参数，却编译成功' >&2
   exit 1
 fi
+# -F 按字面字符串查找；任意其他错误都不能替代这个预期诊断。
 rg -F 'stack arguments are not supported' "$CODEGEN_LAB/unsupported.stderr"
 ```
 
@@ -190,13 +207,16 @@ runner 检查非零退出码及该诊断。TD 中出现 `CCAssignToStack` 后备
 
 <!-- manual-lab:ch13-objects -->
 ```sh
+# bpfel / bpfeb 分别生成小端 / 大端对象，其他配置和输入保持一致。
 for triple in bpfel bpfeb; do
   "$LLVM_BUILD/bin/llc" "-mtriple=$triple" -mcpu=v1 -O2 \
     -verify-machineinstrs -filetype=obj \
     "$BOOK_ROOT/experiments/ch13/backend.ll" \
     -o "$CODEGEN_LAB/$triple.o"
+  # 对象头确认目标及端序；重定位表说明 external 还需后续解析。
   "$LLVM_BUILD/bin/llvm-readobj" --file-headers --relocations \
     "$CODEGEN_LAB/$triple.o"
+  # 从对象实际存储的字节解码，便于与 IR 和汇编层逐一对照。
   "$LLVM_BUILD/bin/llvm-objdump" -d "$CODEGEN_LAB/$triple.o"
 done
 ```
@@ -221,12 +241,14 @@ done
 **代码清单 13-1：目标初始化接口的形状。** 下列为声明示意，实际目标函数及生成清单由其构建和实现提供。
 
 ```cpp
-extern "C" void LLVMInitializeBPFTargetInfo();
-extern "C" void LLVMInitializeBPFTarget();
-extern "C" void LLVMInitializeBPFTargetMC();
-extern "C" void LLVMInitializeBPFAsmPrinter();
-extern "C" void LLVMInitializeBPFAsmParser();
-extern "C" void LLVMInitializeBPFDisassembler();
+// extern "C" 使用 C 语言链接约定；这里仅声明接口，尚未调用或实现它们。
+// 各入口把对应能力登记到 LLVM 的注册表，工具再按用途查找这些能力。
+extern "C" void LLVMInitializeBPFTargetInfo();    // 目标身份以及 triple 的匹配。
+extern "C" void LLVMInitializeBPFTarget();        // 创建 TargetMachine 的工厂。
+extern "C" void LLVMInitializeBPFTargetMC();      // 指令、寄存器等 MC 层组件。
+extern "C" void LLVMInitializeBPFAsmPrinter();    // 从机器函数发射汇编/MC 事件。
+extern "C" void LLVMInitializeBPFAsmParser();     // 读入汇编文本的能力。
+extern "C" void LLVMInitializeBPFDisassembler();  // 把指令字节解码为 MC 指令。
 ```
 
 通用调用封装见 [TargetSelect.h](/opt/llvm-project/llvm/include/llvm/Support/TargetSelect.h)，C 接口声明见 [llvm-c/Target.h](/opt/llvm-project/llvm/include/llvm-c/Target.h)。`InitializeAllTargets` 不会替代所有其他初始化函数；小型 MC 工具和完整代码生成器可以依用途初始化不同组件。

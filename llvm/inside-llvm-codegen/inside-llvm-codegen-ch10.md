@@ -9,11 +9,14 @@
 <!-- manual-lab:ch10-setup -->
 
 ```sh
+# 开启严格检查，使未处理的命令/管道失败与未定义变量尽早暴露。
 set -euo pipefail
+# 可提前 export 覆盖默认路径；各阶段使用同一套 LLVM 构建。
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
 BOOK_INPUT="$BOOK_ROOT/experiments/ch10"
+# 每次创建独立目录，保留前后阶段文件供比较，实验输入保持只读。
 CODEGEN_LAB=$(mktemp -d)
 export BOOK_INPUT CODEGEN_LAB
 "$LLVM_BUILD/bin/llc" --version
@@ -174,6 +177,7 @@ Basic、Greedy 和 PBQP 都可使用优化分配路径，区别在分配器策�
 
 ```c
 int sum() {
+    // res 是跨迭代累加值，i 是循环计数器；后端必须保留各自到下一次使用。
     int res = 0;
     for (int i = 0; i < 10; i++) {
         res += i;
@@ -189,7 +193,9 @@ define i32 @sum() {
 entry:
   br label %for.cond
 for.cond:
+  ; 首次进入取 0，回边取上次迭代的 %inc；PHI 的选择依据是入边。
   %i.0 = phi i32 [ 0, %entry ], [ %inc, %for.inc ]
+  ; 累加器也沿回边传递；两条 PHI 表示同时选择，不能当作顺序覆盖。
   %res.0 = phi i32 [ 0, %entry ], [ %add, %for.inc ]
   %cmp = icmp slt i32 %i.0, 10
   br i1 %cmp, label %for.body, label %for.end
@@ -210,6 +216,8 @@ LLVM IR 寄存器始终遵循 SSA。使用 alloca/load/store 表示可变局部�
 
 **代码清单 10-3 finalize-isel后的MIR**
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```text
 bb.0.entry:
     successors: %bb.1(0x80000000)
@@ -221,6 +229,7 @@ bb.0.entry:
 
     %0:gpr = PHI %4, %bb.0, %3, %bb.3
     %1:gpr = PHI %4, %bb.0, %2, %bb.3
+    ; BPF 使用 64 位 GPR；左移再算术右移，将 i32 计数器符号扩展后比较。
     %5:gpr = SLL_ri %0, 32
     %6:gpr = SRA_ri %5, 32
     JSGT_ri killed %6, 9, %bb.4
@@ -238,6 +247,7 @@ bb.0.entry:
     JMP %bb.1
 
   bb.4.for.end:
+    ; %1 是虚拟累加器；R0 是 ABI 规定的物理返回寄存器。
     $r0 = COPY %1
     RET implicit $r0
 ```
@@ -245,6 +255,7 @@ bb.0.entry:
 <!-- manual-lab:ch10-sum-stages -->
 
 ```sh
+# 每个停止点从同一 IR 重新编译，便于追踪 PHI、COPY、虚拟寄存器与栈偏移的变化。
 for name in sum bubble; do
   "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/$name.ll" -o "$CODEGEN_LAB/$name.bc"
   "$LLVM_BUILD/bin/opt" -passes=verify "$CODEGEN_LAB/$name.bc" -disable-output
@@ -275,6 +286,7 @@ sed -n '/^body:/,$p' "$CODEGEN_LAB/sum-register-coalescer.mir"
 > 伪 MIR，含占位符。
 
 ```text
+; sub1 来自 IMPLICIT_DEF：没有确定值，不代表整个复合寄存器的 sub0 都无效。
 %0 = some definition
 %1 = IMPLICIT_DEF
 %2 = REG_SEQUENCE %0, sub0, %1, sub1
@@ -457,6 +469,7 @@ LLVM 的机器指令不统一限制为“三地址且最多两输入一输出”
 > 二地址变换伪代码。
 
 ```text
+; 先复制是为满足两地址约束：ADD 的结果位置必须与一个输入位置相同。
 %a = COPY %b
 %a = ADD %a, %c
 ```
@@ -483,6 +496,7 @@ eBPF 中 ADD 指令对应的 TD 代码片段如代码清单 10-9 所示：
 > LLVM18 TableGen 源码节选，依赖周边定义。
 
 ```tablegen
+// 绑定的是操作数位置；分配器最终必须为 $dst 和 $src2 选择同一物理寄存器。
 let Constraints = "$dst = $src2" in {
   let isAsCheapAsAMove = 1 in {
     defm ADD : ALU<BPF_ADD, 0, "+=", add>;
@@ -498,6 +512,7 @@ let Constraints = "$dst = $src2" in {
 
 ```tablegen
 multiclass ALU<BPFArithOp Opc, int off, string OpcodeStr, SDNode OpNode> {
+  // rr 接收寄存器输入，ri 接收立即数；outs/ins 描述机器指令的数据流。
   def _rr : ALU_RR<BPF_ALU64, Opc, off,
                    (outs GPR:$dst),
                    (ins GPR:$src2, GPR:$src),
@@ -508,6 +523,7 @@ multiclass ALU<BPFArithOp Opc, int off, string OpcodeStr, SDNode OpNode> {
                    (ins GPR:$src2, i64imm:$imm),
                    "$dst "#OpcodeStr#" $imm",
                    [(set GPR:$dst, (OpNode GPR:$src2, i64immSExt32:$imm))]>;
+  // 下面改用 GPR32 与 BPF_ALU，对应 32 位运算形式。
   def _rr_32 : ALU_RR<BPF_ALU, Opc, off,
                    (outs GPR32:$dst),
                    (ins GPR32:$src2, GPR32:$src),
@@ -568,7 +584,10 @@ multiclass ALU<BPFArithOp Opc, int off, string OpcodeStr, SDNode OpNode> {
 
 > x86 AT&T 汇编示例，已用 llvm-mc 组装并反汇编；没有进行硬件执行或性能测量。
 
+以下汇编中的中文注释是阅读说明，不属于原始工具输出。
+
 ```asm
+# AT&T 语法按源、目的排列；addl 覆盖 EDI，随后把结果送到返回寄存器 EAX。
 addl     %esi, %edi
 movl     %edi, %eax
 ret
@@ -580,7 +599,10 @@ ret
 
 > x86 AT&T 汇编示例，已用 llvm-mc 组装并反汇编；没有进行硬件执行或性能测量。
 
+以下汇编中的中文注释是阅读说明，不属于原始工具输出。
+
 ```asm
+# LEA 只计算地址表达式的数值，不读取内存；此处可把和直接写入 EAX。
 leal (%rsi,%rdi), %eax
 ret
 ```
@@ -619,6 +641,7 @@ REG_SEQUENCE 将各输入放入目标寄存器指定的子寄存器。对于合�
 > 子寄存器伪 MIR，ssub0/ssub1 是示意名。
 
 ```text
+; undef 修饰旧 %dst 的未写部分，不是说本次写入的 %v1 没有定义。
 undef %dst.ssub0 = COPY %v1
 %dst.ssub1 = COPY %v2
 ```
@@ -640,6 +663,7 @@ INSERT_SUBREG 在保留原值其他部分的基础上替换指定子寄存器。
 > tied 操作数改写伪代码。
 
 ```text
+; 若 vreg1 在后面还要使用，先 COPY 才能让破坏性更新不覆盖原值。
 vreg0 = COPY vreg1
 vreg0 = opcode vreg0, imm/vreg
 ```
@@ -651,6 +675,7 @@ vreg0 = opcode vreg0, imm/vreg
 > 可交换操作的改写伪代码。
 
 ```text
+// 可交换输入时选择更合适的一方作为 tied 输入，可能减少复制或缩短活跃范围。
 vreg0 = COPY vreg2
 vreg0 = opcode vreg0(tied), vreg1 // 仅在 opcode 可合法交换输入时成立
 ```
@@ -704,6 +729,7 @@ bb.0.entry:
 <!-- manual-lab:ch10-x86-two-address -->
 
 ```sh
+# 汇编为对象再反汇编，确认 ADD 与 LEA 的真实操作数和编码，不能只看伪指令形状。
 for name in add-x86 lea-x86; do
   "$LLVM_BUILD/bin/llvm-mc" --triple=x86_64-unknown-linux-gnu --filetype=obj \
     "$BOOK_INPUT/$name.s" -o "$CODEGEN_LAB/$name.o"
@@ -724,6 +750,8 @@ SlotIndexes 为机器指令、bundle与块边界提供有序位置。调试指�
 清单10-19来自 `sum-trace.stderr` 第一次机器指令打印，保留最前面的索引，用以对应下一节的区间。
 
 **代码清单 10-19 SlotIndexes编号（节选）**
+
+阅读提示：`16B`、`32B` 等是 SlotIndex 位置，不是机器码字节地址；寄存器定义位置与区间端点应按同一索引体系比较。
 
 ```text
 # Machine code for function sum: NoPHIs, TracksLiveness, TiedOpsRewritten
@@ -752,6 +780,7 @@ SlotIndexes 为机器指令、bundle与块边界提供有序位置。调试指�
 <!-- manual-lab:ch10-sum-debug -->
 
 ```sh
+# Debug 构建把分配过程写到 stderr；汇编和轨迹分开保存，便于对照值的活跃区间。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
   -debug-only=regalloc,machine-block-freq "$BOOK_INPUT/sum.ll" \
   -o "$CODEGEN_LAB/sum.s" 2> "$CODEGEN_LAB/sum-trace.log"
@@ -769,6 +798,8 @@ LiveIntervals 为每个虚拟寄存器构造一组半开 segment，而不是只�
 因此两个虚拟区间在文本上不相交只是可共用寄存器的一个条件，还须满足寄存器类、别名、固定regunit、regmask及指令约束。提前写坏或子寄存器覆盖必须在正确槽和lane上比较。
 
 **代码清单 10-20 初始活跃区间，spill weight尚未计算**
+
+阅读提示：`[a,b)` 左闭右开，表示值从 a 活跃到 b 之前；冒号后的编号区分同一寄存器区间中的不同值，不能直接当作物理寄存器编号。
 
 ```text
 %0 [96r,256r:0) 0@96r  weight:0.000000e+00
@@ -840,6 +871,7 @@ void bubbleSort(int a[], int length) {
     for (i = 0; i < length -1; ++i ) {
         for (j = 0; j < length - i -1; ++j) {
             if(a[j] > a[j+1]) {
+                // temp 暂存被覆盖的旧元素，只在本次交换内活跃。
                 int temp = a[j];
                 a[j] = a[j+1];
                 a[j+1] = temp;
@@ -872,6 +904,8 @@ VirtRegRewriter使用映射替换虚拟操作数，解析子寄存器、更新�
 
 `sum-virtregrewriter.mir`中的函数体不再有虚拟寄存器定义，最终汇编为：
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```asm
 .text
 	.file	"sum.ll"
@@ -881,6 +915,7 @@ VirtRegRewriter使用映射替换虚拟操作数，解析子寄存器、更新�
 sum:                                    # @sum
 	.cfi_startproc
 # %bb.0:                                # %entry
+# R1 保存 i，R0 保存 res；R2 只承担比较前的符号扩展。
 	r1 = 0
 	r0 = 0
 LBB0_1:                                 # %for.cond
@@ -891,6 +926,7 @@ LBB0_1:                                 # %for.cond
 	if r2 s> 9 goto LBB0_3
 # %bb.2:                                # %for.body
                                         #   in Loop: Header=BB0_1 Depth=1
+# 两个循环携带的值在回边前更新；最后通过 R0 返回累加结果。
 	r0 += r1
 	r1 += 1
 	goto LBB0_1
@@ -1061,6 +1097,7 @@ bb.0.entry:
 <!-- manual-lab:ch10-fast -->
 
 ```sh
+# fast 配合 optimize-regalloc=0 使用快速分配路径；PEI 截面展示最终的栈访问。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
   -regalloc=fast -optimize-regalloc=0 -stop-before=regallocfast \
   "$BOOK_INPUT/sum.ll" -o "$CODEGEN_LAB/sum-fast-regallocfast.mir"
@@ -1139,6 +1176,7 @@ void bubbleSort(int arr[], int n) {
         // 最后 i 个元素已经放好。
         for (j = 0; j < n - i - 1; j++) {
             if (arr[j] > arr[j + 1]) {
+                // 调用会破坏 caller-saved 寄存器；跨调用仍需使用的循环状态必须保住。
                 swap(&arr[j], &arr[j + 1]);
             }
         }
@@ -1159,6 +1197,7 @@ define dso_local void @bubbleSort(ptr %arr, i32 %n) {
 entry:
   br label %outer.cond
 outer.cond:
+  ; 外层 i 与内层 j 各有自己的回边；不要把两个 PHI 当作同一个计数器。
   %i = phi i32 [ 0, %entry ], [ %i.next, %outer.inc ]
   %outer.limit = sub nsw i32 %n, 1
   %outer.test = icmp slt i32 %i, %outer.limit
@@ -1173,6 +1212,7 @@ inner.cond:
   br i1 %inner.test, label %compare, label %inner.end
 compare:
   %index = sext i32 %j to i64
+  ; GEP 按 i32 元素大小计算地址，不在这一步读取数组元素。
   %lhs = getelementptr inbounds i32, ptr %arr, i64 %index
   %lhs.value = load i32, ptr %lhs, align 4
   %next = add nsw i32 %j, 1
@@ -1187,6 +1227,7 @@ do.swap:
   %swap.next = add nsw i32 %j, 1
   %swap.next.index = sext i32 %swap.next to i64
   %swap.rhs = getelementptr inbounds i32, ptr %arr, i64 %swap.next.index
+  ; 调用后仍需使用 arr、n、i、j；其机器值必须满足调用的寄存器破坏约束。
   call void @swap(ptr %swap.lhs, ptr %swap.rhs)
   br label %after.swap
 after.swap:
@@ -1217,6 +1258,8 @@ declare dso_local void @swap(ptr, ptr)
 3）若该区间的所有有效定义经检查都可平凡重新物化，则总权重乘以 0.5；仅有某一条指令带属性不足以对整个区间折半。
 
 **代码清单 10-27 Basic实际分配顺序与活跃区间（含spill产生的短区间）**
+
+阅读提示：`weight` 是分配器的溢出代价权重，`INF` 在这里表示不可再按普通候选溢出的区间；日志顺序不是源码变量的声明顺序。
 
 ```text
 selectOrSplit GPR:%15 [224r,240r:2)[240r,272r:0)[272r,288r:1) 0@240r 1@272r 2@224r  weight:INF w=INF
@@ -1293,6 +1336,7 @@ ABI允许swap破坏R0～R5；不能根据它只有两个参数就删除R3～R5�
 <!-- manual-lab:ch10-basic-trace -->
 
 ```sh
+# 保存本章输入的临时副本；Basic 的权重选择和溢出日志可与后面的 Greedy/PBQP 比较。
 cp "$BOOK_INPUT/bubble.ll" "$CODEGEN_LAB/bubble.ll"
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
   -regalloc=basic -optimize-regalloc=1 \
@@ -1450,6 +1494,7 @@ LLVM 18 的具体实现位于 `SpillPlacement.cpp`。节点 `Value` 实际取 `{
 <!-- manual-lab:ch10-mathematical-models -->
 
 ```sh
+# 检查有限 Hopfield/PBQP 数学样例；这不是在运行 LLVM 的 SpillPlacement 实现。
 python3 -B "$BOOK_INPUT/models.py" > "$CODEGEN_LAB/models.json"
 cat "$CODEGEN_LAB/models.json"
 ```
@@ -1584,6 +1629,7 @@ def ACCRC : RegisterClass<"PPC", [v512i1], 128, (add ACC0, ACC1, ACC2, ACC3,
   // to assign these registers first. This is done because the ACC registers
   // must represent 4 advacent vector registers. For example ACC1 must be
   // VS4 - VS7.
+  // ACC 与四个向量寄存器重叠；优先分配可避免先被零散的向量区间占住。
   let AllocationPriority = 31;
 
   // We want to allocate these registers even before we allocate
@@ -1651,6 +1697,7 @@ Enqueuing %43
 <!-- manual-lab:ch10-greedy-trace -->
 
 ```sh
+# 观察区间拆分的代价比较，区分保持寄存器与在边界插入存取的方案。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
   -regalloc=greedy -optimize-regalloc=1 \
   -debug-only=regalloc,regalloc-pbqp,spill-code-placement,edge-bundles \
@@ -1805,6 +1852,8 @@ D02 = [[5,4], [4,3]]
 
 **代码清单 10-32 第一轮PBQP节点成本（实际图文件）**
 
+阅读提示：每个节点代表待分配的虚拟寄存器，选项 0 是溢出，其余选项才映射到允许的物理寄存器；节点编号本身不是硬件寄存器号。
+
 ```text
 0 (GPR:%6): [ 1.332566e+01, 1.000000e+00, 1.000000e+00, 1.000000e+00, 1.000000e+00 ]
 1 (GPR:%7): [ 1.171968e+01, 1.000000e+00, 1.000000e+00, 1.000000e+00, 1.000000e+00 ]
@@ -1864,6 +1913,7 @@ VREG %41 -> R6
 <!-- manual-lab:ch10-pbqp-trace -->
 
 ```sh
+# 禁用 PBQP 合并以保持本节模型一致；图中成本和选项可与最终溢出决定对应。
 # PBQP 图文件名由输入模块名派生；输入副本和工作目录都设在实验临时目录。
 (
   cd "$CODEGEN_LAB"
@@ -1948,6 +1998,7 @@ done
 <!-- manual-lab:ch10-allocator-artifacts -->
 
 ```sh
+# 固定输入和目标，只切换分配器；同时保留汇编、对象与 PEI 后的栈槽信息。
 for alloc in fast basic greedy pbqp; do
   if [ "$alloc" = fast ]; then optimize_ra=0; else optimize_ra=1; fi
   ALLOC_FLAGS=(-regalloc="$alloc" -optimize-regalloc="$optimize_ra")
@@ -1968,6 +2019,7 @@ python3 -B - "$CODEGEN_LAB" <<'PY_CHECK'
 from pathlib import Path
 import re, sys
 out = Path(sys.argv[1])
+# 四元组依次是静态指令数、spill 槽数、64 位栈加载数、64 位栈存储数；不是运行耗时。
 expected = {"fast": (67,10,18,10), "basic": (53,1,2,1),
             "greedy": (56,1,1,1), "pbqp": (53,1,2,1)}
 for alloc, want in expected.items():
@@ -1988,6 +2040,7 @@ PY_CHECK
 <!-- manual-lab:ch10-semantics -->
 
 ```sh
+# 解释器检查有限测试输入的结果；它不执行本节生成的 BPF 机器码。
 # check.ll 提供 swap 定义及 main；拼接前移除 bubble.ll 中同名声明。
 {
   cat "$BOOK_INPUT/sum.ll"

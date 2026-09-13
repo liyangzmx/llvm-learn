@@ -12,11 +12,13 @@
 <!-- manual-lab:ch6-setup -->
 
 ```sh
+# 遇到非预期失败就停止，避免后文继续读取不完整的生成文件。
 set -euo pipefail
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
 BOOK_INPUT="$BOOK_ROOT/experiments/ch6"
+# 为本次运行单独保存生成物，便于与源文件区分。
 CODEGEN_LAB=$(mktemp -d)
 printf '本章临时输出目录：%s\n' "$CODEGEN_LAB"
 "$LLVM_BUILD/bin/llvm-tblgen" --version
@@ -82,12 +84,14 @@ TokVarName ::= "$" ualpha (ualpha | "0"..."9")*
 <!-- manual-lab:ch6-language-records -->
 
 ```sh
+# JSON 适合按字段检查；print-records 更适合人工阅读继承展开后的记录。
 "$LLVM_BUILD/bin/llvm-tblgen" --dump-json "$BOOK_INPUT/language.td" \
   -o "$CODEGEN_LAB/language.json"
 "$LLVM_BUILD/bin/llvm-tblgen" --print-records "$BOOK_INPUT/language.td" \
   -o "$CODEGEN_LAB/language.records.txt"
 python3 - "$CODEGEN_LAB/language.json" <<'PYJSON'
 import json, sys
+# Values 是记录名；这里读取求值后的字段，不会执行 code 字符串中的 C++。
 v = json.load(open(sys.argv[1]))["Values"]
 for key in ("negative", "hexadecimal", "binary", "body"):
     print(key, repr(v[key]))
@@ -156,9 +160,11 @@ SliceElement  ::=  Value | Value "..." Value | Value "-" Value | Value TokIntege
 python3 - "$CODEGEN_LAB/language.json" <<'PYJSON'
 import json, sys
 v = json.load(open(sys.argv[1]))["Values"]
+# bits 的 JSON 数组按低位到高位列出，与 TD 大括号的书写方向不同。
 for key in ("a", "slice", "joined", "direct_arguments"):
     print(key, v[key])
 PYJSON
+# 负例必须失败；把命令放进 if，才能在 set -e 下检查预期诊断。
 for name in bad-field bad-bits; do
   case "$name" in
     bad-field) expected='unknown' ;;
@@ -184,6 +190,7 @@ TableGen 最主要的目的之一是生成记录，然后后端基于记录进�
 **代码清单 6-5 def 示例**
 
 ```text
+// def 创建一个可被后续记录引用的具体实例，不是运行时对象分配。
 def record_example {
     int a=1;
     string b="def example";
@@ -201,8 +208,10 @@ def record_example {
 ```text
 class TestInst {
     string asmname;
+    // 未给初值的位仍是 ?；后面的局部赋值不会自动补零。
     bits<32> encoding;
 }
+// ADD 继承字段；let 在实例中指定高六位操作码。
 def ADD: TestInst {
     let asmname="add";
     let encoding{31...26}=1;
@@ -234,6 +243,7 @@ cat "$CODEGEN_LAB/records.txt"
 **代码清单 6-7 使用 multiclass 和 defm 同时定义多个记录示例**
 
 ```text
+// 模板参数在实例化时成为字段值，生成器随后读取这些字段。
 class Instr<bits<4> op, string desc> {
     bits<4> opcode = op;
     string name = desc;
@@ -243,6 +253,7 @@ multiclass RegInstr {
     def rm : Instr<0b0000,"rm">;
 }
 
+// defm 将前缀与内部 rr/rm 名称组合，批量生成两个具体记录。
 defm MyBackend_:RegInstr;
 ```
 
@@ -252,6 +263,7 @@ defm MyBackend_:RegInstr;
 
 ```tablegen
 // 等价展开示意：要求已经定义清单 6-7 中的 Instr 类。
+// 这里只展示展开后的记录关系；它不是另一套生成指令的算法。
 def MyBackend_rr : Instr<0b1111, "rr">;
 def MyBackend_rm : Instr<0b0000, "rm">;
 ```
@@ -285,6 +297,7 @@ def MyBackend_rr {     // Instr
 python3 - "$CODEGEN_LAB/language.json" <<'PYJSON'
 import json, sys
 records = json.load(open(sys.argv[1]))
+# 用派生关系找记录，不依赖记录在打印文件中的先后位置。
 print(records["!instanceof"]["Instr"])
 for name in ("MyBackend_rm", "MyBackend_rr"):
     print(name, records[name]["name"], records[name]["opcode"])
@@ -344,6 +357,7 @@ class Instruction : InstructionEncoding {
 // BPFInstrFormats.td：标准指令编码占 8 字节。
 class InstBPF<dag outs, dag ins, string asmstr, list<dag> pattern>
   : Instruction {
+  // Inst 是编码位容器；位域含义由后端约定，不能按宿主整数端序猜字节布局。
   field bits<64> Inst;
   field bits<64> SoftFail = 0;
   let Size = 8;
@@ -354,9 +368,11 @@ class InstBPF<dag outs, dag ins, string asmstr, list<dag> pattern>
   BPFOpClass BPFClass;
   let Inst{58-56} = BPFClass.Value;
 
+  // outs/ins 声明显式 def/use；并不直接描述模式匹配的源指令和目标指令。
   dag OutOperandList = outs;
   dag InOperandList = ins;
   let AsmString = asmstr;
+  // Pattern 描述要识别的 DAG 计算；当前 Instruction 记录提供生成的机器 opcode。
   let Pattern = pattern;
 }
 
@@ -402,11 +418,13 @@ multiclass ALU<BPFArithOp Opc, int off, string OpcodeStr, SDNode OpNode> {
                    (ins GPR:$src2, GPR:$src),
                    "$dst "#OpcodeStr#" $src",
                    [(set GPR:$dst, (OpNode i64:$src2, i64:$src))]>;
+  // 立即数模式还要求能表示为符号扩展的 32 位编码，不能匹配任意 i64 常量。
   def _ri : ALU_RI<BPF_ALU64, Opc, off,
                    (outs GPR:$dst),
                    (ins GPR:$src2, i64imm:$imm),
                    "$dst "#OpcodeStr#" $imm",
                    [(set GPR:$dst, (OpNode GPR:$src2, i64immSExt32:$imm))]>;
+  // GPR32 限制 32 位寄存器形式；这是另一条记录，不是运行时分支。
   def _rr_32 : ALU_RR<BPF_ALU, Opc, off,
                    (outs GPR32:$dst),
                    (ins GPR32:$src2, GPR32:$src),
@@ -439,10 +457,12 @@ BPF 示例固定使用提交 `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`。runner
 ```sh
 BPF_BASELINE=3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff
 mkdir -p "$CODEGEN_LAB/llvm18-source"
+# 只读导出固定提交，避免把本地 TD 修改混入教材基线。
 git -C "$LLVM_SRC" archive --format=tar --output="$CODEGEN_LAB/llvm18-source.tar" \
   "$BPF_BASELINE" llvm/include llvm/lib/Target/BPF
 tar -xf "$CODEGEN_LAB/llvm18-source.tar" -C "$CODEGEN_LAB/llvm18-source"
 BPF_TD="$CODEGEN_LAB/llvm18-source/llvm/lib/Target/BPF/BPF.td"
+# 用 Bash 数组保存 include 参数，路径中有空格时也不被拆分。
 BPF_TD_INCLUDES=(-I "$CODEGEN_LAB/llvm18-source/llvm/include"
                  -I "$CODEGEN_LAB/llvm18-source/llvm/lib/Target/BPF")
 "$LLVM_BUILD/bin/llvm-tblgen" "${BPF_TD_INCLUDES[@]}" --print-records "$BPF_TD" \
@@ -452,6 +472,7 @@ BPF_TD_INCLUDES=(-I "$CODEGEN_LAB/llvm18-source/llvm/include"
 python3 - "$CODEGEN_LAB/bpf.json" <<'PYJSON'
 import json, sys
 records = json.load(open(sys.argv[1]))
+# 检查四个变体共享的大小和 tied 约束，而不依赖打印行号。
 for name in ("ADD_rr", "ADD_ri", "ADD_rr_32", "ADD_ri_32"):
     record = records[name]
     print(name, {k: record[k] for k in ("Size", "Constraints", "isAsCheapAsAMove")})
@@ -466,6 +487,8 @@ PYJSON
 
 **代码清单 6-12 生成 ADD_rr 记录的代码片段**
 
+此记录节选已加中文阅读注释，注释不属于生成器原始输出。
+
 ```text
 def ADD_rr {
     field bits<64> Inst = ...;
@@ -475,11 +498,14 @@ def ADD_rr {
     string DecoderMethod = "";
     bit hasCompleteDecoder = 1;
     string Namespace = "BPF";
+    // 显式目的和输入在这里分开；二地址重叠由 Constraints 另行描述。
     dag OutOperandList = (outs GPR:$dst);
     dag InOperandList = (ins GPR:$src2, GPR:$src);
     string AsmString = "$dst += $src";
     EncodingByHwMode EncodingInfos = ?;
+    // set 的目的绑定到 $dst；同名变量把匹配到的源值带到目标指令操作数。
     list<dag> Pattern = [(set GPR:$dst, (add i64:$src2, i64:$src))];
+    // Uses/Defs 是隐式物理寄存器列表；空列表不表示指令没有显式输入输出。
     list<Register> Uses = [];
     list<Register> Defs = [];
     int CodeSize = 0;
@@ -511,6 +537,7 @@ def ADD_ri_32 {
 <!-- manual-lab:ch6-dag-isel-generator -->
 
 ```sh
+# 这个生成器产出 DAG 匹配程序；不是把输入 IR 编译为目标代码。
 "$LLVM_BUILD/bin/llvm-tblgen" "${BPF_TD_INCLUDES[@]}" -gen-dag-isel "$BPF_TD" \
   -o "$CODEGEN_LAB/BPFGenDAGISel.inc"
 rg -n -m 8 'BPF::(FI_ri|ADD_ri|ADD_rr)' "$CODEGEN_LAB/BPFGenDAGISel.inc"
@@ -522,9 +549,13 @@ rg -n -m 8 'BPF::(FI_ri|ADD_ri|ADD_rr)' "$CODEGEN_LAB/BPFGenDAGISel.inc"
 
 **代码清单 6-13 包含 ADD_rr 的完整 ADD 匹配分支**
 
+以下生成代码已加中文阅读注释；匹配字节码和偏移保持原样。
+
 ```cpp
+// 阅读注释：以下是匹配表字节码；左侧数字是本次生成表的偏移。
 /*  2518*/ /*SwitchOpcode*/ 68, TARGET_VAL(ISD::ADD),// ->2589
 /*  2521*/  OPC_Scope, 11, /*->2534*/ // 2 children in Scope
+// 先尝试帧索引地址模式；RecordNode 保存候选值，检查动作才决定是否匹配。
 /*  2523*/   OPC_RecordNode, // #0 = $addr
 /*  2524*/   OPC_CheckTypeI64,
 /*  2525*/   OPC_CheckComplexPat1, /*#*/0, // SelectFIAddr:$addr #1 #2
@@ -539,6 +570,7 @@ rg -n -m 8 'BPF::(FI_ri|ADD_ri|ADD_rr)' "$CODEGEN_LAB/BPFGenDAGISel.inc"
 /*  2539*/    OPC_MoveChild1,
 /*  2540*/    OPC_CheckOpcode, TARGET_VAL(ISD::Constant),
 /*  2543*/    OPC_Scope, 11, /*->2556*/ // 2 children in Scope
+// 检查常量能否装入指令立即数字段，然后生成 ADD_ri。
 /*  2545*/     OPC_CheckPredicate0,  // Predicate_i64immSExt32
 /*  2546*/     OPC_MoveParent,
 /*  2547*/     OPC_CheckTypeI64,
@@ -557,6 +589,7 @@ rg -n -m 8 'BPF::(FI_ri|ADD_ri|ADD_rr)' "$CODEGEN_LAB/BPFGenDAGISel.inc"
                // Src: (add:{ *:[i32] } GPR32:{ *:[i32] }:$src2, (imm:{ *:[i32] })<<P:Predicate_i32immSExt32>>:$imm) - Complexity = 7
                // Dst: (ADD_ri_32:{ *:[i32] } GPR32:{ *:[i32] }:$src2, (imm:{ *:[i32] }):$imm)
 /*  2568*/    0, /*End of Scope*/
+// 立即数候选失败后可继续寄存器候选；失败不等于整个指令选择失败。
 /*  2569*/   /*Scope*/ 8, /*->2578*/
 /*  2570*/    OPC_CheckTypeI64,
 /*  2571*/    OPC_MorphNodeTo1None, TARGET_VAL(BPF::ADD_rr),
@@ -598,6 +631,7 @@ TableGen 工具链根据对上述 Pattern 的解释来生成对应的匹配规�
 **代码清单 6-14 BPFcall 节点匹配模板定义**
 
 ```text
+// $dst 是匹配绑定名：源模式取得调用目标，再传给输出指令。
 def : Pat<(BPFcall imm:$dst), (JAL imm:$dst)>;
 def : Pat<(BPFcall GPR:$dst), (JALX GPR:$dst)>;
 ```
@@ -608,8 +642,10 @@ def : Pat<(BPFcall GPR:$dst), (JALX GPR:$dst)>;
 
 ```text
 class Pattern<dag patternToMatch, list<dag> resultInstrs> {
+    // 输入保存要识别的 DAG 形态，输出列表保存替换后的指令模式。
     dag PatternToMatch = patternToMatch;
     list<dag> ResultInstrs = resultInstrs;
+    // 谓词用于限制适用的子目标特性或其他条件。
     list<Predicate> Predicates = [];
     int AddedComplexity = 0;
 }
@@ -649,6 +685,7 @@ def anonymous_7229 {
 python3 - "$CODEGEN_LAB/bpf.json" <<'PYJSON'
 import json, sys
 records = json.load(open(sys.argv[1]))
+# 按规则内容识别调用模式，避免依赖不稳定的 anonymous 编号。
 for name, record in records.items():
     if not isinstance(record, dict) or "PatternToMatch" not in record:
         continue
@@ -673,12 +710,14 @@ PYJSON
 bool BPFDAGToDAGISel::SelectAddr(SDValue Addr, SDValue &Base, SDValue &Offset) {
   // if Address is FI, get the TargetFrameIndex.
   SDLoc DL(Addr);
+  // 栈对象还未分配最终偏移；保留 TargetFrameIndex，交给后续栈帧阶段处理。
   if (auto *FIN = dyn_cast<FrameIndexSDNode>(Addr)) {
     Base = CurDAG->getTargetFrameIndex(FIN->getIndex(), MVT::i64);
     Offset = CurDAG->getTargetConstant(0, DL, MVT::i64);
     return true;
   }
 
+  // 尚未物化的目标符号不能在这个地址分解回调里当作普通基址。
   if (Addr.getOpcode() == ISD::TargetExternalSymbol ||
       Addr.getOpcode() == ISD::TargetGlobalAddress)
     return false;
@@ -686,6 +725,7 @@ bool BPFDAGToDAGISel::SelectAddr(SDValue Addr, SDValue &Base, SDValue &Offset) {
   // Addresses of the form Addr+const or Addr|const
   if (CurDAG->isBaseWithConstantOffset(Addr)) {
     auto *CN = cast<ConstantSDNode>(Addr.getOperand(1));
+    // 只有有符号 16 位偏移才能直接进入此寻址形式。
     if (isInt<16>(CN->getSExtValue())) {
       // If the first operand is a FI, get the TargetFI Node
       if (auto *FIN = dyn_cast<FrameIndexSDNode>(Addr.getOperand(0)))
@@ -698,6 +738,7 @@ bool BPFDAGToDAGISel::SelectAddr(SDValue Addr, SDValue &Base, SDValue &Offset) {
     }
   }
 
+  // 无法拆出可编码偏移时，保留整个地址作为基址，偏移取零。
   Base = Addr;
   Offset = CurDAG->getTargetConstant(0, DL, MVT::i64);
   return true;
@@ -709,6 +750,7 @@ bool BPFDAGToDAGISel::SelectAddr(SDValue Addr, SDValue &Base, SDValue &Offset) {
 **代码清单 6-18 ADDRri 的定义**
 
 ```text
+// 2 是回调输出的 Base/Offset 数量，不是地址 DAG 必须具有两个输入。
 def ADDRri : ComplexPattern<i64, 2, "SelectAddr", [], []>;
 ```
 
@@ -741,7 +783,9 @@ class LOADi64<BPFWidthModifer SizeOp, BPFModeModifer ModOp,
   : LOAD<SizeOp, ModOp, OpcodeStr,
          [(set i64:$dst, (OpNode ADDRri:$addr))]>;
 
+// 该记录只用于未启用 ALU32 的路径；启用时由其他记录选择。
 let Predicates = [BPFNoALU32] in {
+  // zextloadi32 读 32 位内存再零扩展，结果为 i64 不意味着读了 64 位。
   def LDW : LOADi64<BPF_W, BPF_MEM, "u32", zextloadi32>;
 }
 ```
@@ -750,12 +794,15 @@ let Predicates = [BPFNoALU32] in {
 
 **代码清单 6-21 解析后得到的 LDW 记录**
 
+此生成记录的中文注释是阅读说明，不属于原始生成文件。
+
 ```tablegen
 // 实际生成记录的相关字段，其余字段省略。
 def LDW {
   string Namespace = "BPF";
   list<Predicate> Predicates = [BPFNoALU32];
   dag OutOperandList = (outs GPR:$dst);
+  // MEMri 地址会被展开为基址与偏移，匹配中的 ADDRri 负责分解它。
   dag InOperandList = (ins MEMri:$addr);
   string AsmString = "$dst = *(u32 *)($addr)";
   list<dag> Pattern = [(set i64:$dst, (zextloadi32 ADDRri:$addr))];
@@ -772,9 +819,11 @@ def LDW {
 python3 - "$CODEGEN_LAB/bpf.json" <<'PYJSON'
 import json, sys
 records = json.load(open(sys.argv[1]))
+# 将回调名字、结果数与 LDW 的源模式关联起来阅读。
 print("ADDRri", {k: records["ADDRri"][k] for k in ("SelectFunc", "NumOperands")})
 print("LDW", json.dumps({k: records["LDW"][k] for k in ("Predicates", "Pattern")}))
 PYJSON
+# 指令描述和机器编码是两个不同生成器，均读取同一份 TD 描述。
 "$LLVM_BUILD/bin/llvm-tblgen" "${BPF_TD_INCLUDES[@]}" -gen-instr-info "$BPF_TD" \
   -o "$CODEGEN_LAB/BPFGenInstrInfo.inc"
 "$LLVM_BUILD/bin/llvm-tblgen" "${BPF_TD_INCLUDES[@]}" -gen-emitter "$BPF_TD" \
@@ -789,7 +838,10 @@ test -s "$CODEGEN_LAB/BPFGenMCCodeEmitter.inc"
 
 实际运行还生成了 BPFGenInstrInfo.inc 和 BPFGenMCCodeEmitter.inc。DAG 选择器中可直接看到以下调用：
 
+以下调用已加阅读注释，调用语句本身来自生成文件。
+
 ```cpp
+// 生成器把 SelectFunc 字符串变成直接调用，两个结果分别写入相邻槽位。
 return SelectAddr(N, Result[NextRes+0].first, Result[NextRes+1].first);
 ```
 
@@ -802,6 +854,7 @@ return SelectAddr(N, Result[NextRes+0].first, Result[NextRes+1].first);
 ```sh
 bpf_modes=(-gen-dag-isel -gen-instr-info -gen-emitter)
 bpf_files=(BPFGenDAGISel.inc BPFGenInstrInfo.inc BPFGenMCCodeEmitter.inc)
+# 固定工具和生成选项，仅更换 TD/include 来源，比较才有明确含义。
 for index in "${!bpf_modes[@]}"; do
   "$LLVM_BUILD/bin/llvm-tblgen" -I "$LLVM_SRC/llvm/include" \
     -I "$LLVM_SRC/llvm/lib/Target/BPF" "${bpf_modes[$index]}" \
@@ -817,6 +870,7 @@ done
 python3 - "$CODEGEN_LAB" <<'PYJSON'
 import hashlib, pathlib, sys
 out = pathlib.Path(sys.argv[1])
+# 哈希标识本次生成文件的内容；相同不代表整个 LLVM 工作区都相同。
 for name in ("BPFGenDAGISel.inc", "BPFGenInstrInfo.inc", "BPFGenMCCodeEmitter.inc"):
     for prefix in ("", "working-tree-"):
         path = out / (prefix + name)

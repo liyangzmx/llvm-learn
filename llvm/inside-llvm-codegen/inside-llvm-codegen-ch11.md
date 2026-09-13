@@ -25,11 +25,14 @@ flowchart TD
 <!-- manual-lab:ch11-setup -->
 
 ```sh
+# 开启严格检查，使未处理的命令/管道失败与未定义变量尽早暴露。
 set -euo pipefail
+# 可提前 export 覆盖默认路径；各阶段使用同一套 LLVM 构建。
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
 BOOK_INPUT="$BOOK_ROOT/experiments/ch11"
+# 每次创建独立目录，保留前后阶段文件供比较，实验输入保持只读。
 CODEGEN_LAB=$(mktemp -d)
 export BOOK_INPUT CODEGEN_LAB
 "$LLVM_BUILD/bin/llc" --version
@@ -50,6 +53,7 @@ PEI（Prologue/Epilogue Inserter）把抽象栈对象和调用约定要求落实
 
 ```c
 int square(int num) {
+    // 这个叶函数没有调用；O0 的栈访问用来观察前后序，不代表乘法本身必须用栈。
     return num * num;
 }
 ```
@@ -58,13 +62,18 @@ int square(int num) {
 
 **代码清单 11-2 AArch64 O0 的实际栈帧指令**
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```asm
 square:
+    // SP 向低地址移动以预留栈帧，仍保持 16 字节对齐。
     sub sp, sp, #16
+    // W0 是 32 位参数/返回寄存器；此处把参数暂存到帧内偏移 12 的槽。
     str w0, [sp, #12]
     ldr w8, [sp, #12]
     ldr w9, [sp, #12]
     mul w0, w8, w9
+    // 恢复进入函数前的 SP；RET 使用链接寄存器 X30 中的返回地址。
     add sp, sp, #16
     ret
 ```
@@ -78,6 +87,7 @@ BPF 是一个有用的反例。`frame.ll` 中有一个 8 字节 volatile 局部�
 <!-- manual-lab:ch11-pei -->
 
 ```sh
+# AArch64 汇编展示栈指针前后调整；BPF 的两个截面则展示抽象帧索引如何变成偏移。
 "$LLVM_BUILD/bin/clang" --target=aarch64-unknown-linux-gnu -O0 -S \
   "$BOOK_INPUT/square.c" -o "$CODEGEN_LAB/square.s"
 cat "$CODEGEN_LAB/square.s"
@@ -99,10 +109,13 @@ AArch64 输出含 SP 的 16 字节调整；BPF 输出把抽象栈索引解析为
 
 以下输入取自本章的 `postra-sink-a64.mir`。它与 LLVM AArch64 回归测试中的最小模式相同，并独立保存于实验目录。
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```text
 bb.0:
   liveins: $w0, $w1
   $w1 = SUBSWri $w1, 1, 0, implicit-def $nzcv
+  ; W19 的值仅在 bb.1 使用，放在入口会让另一条路径也执行这次复制。
   renamable $w19 = COPY killed $w0
   Bcc 11, %bb.1, implicit $nzcv
   B %bb.2
@@ -117,8 +130,11 @@ bb.2:
 
 实测 `-run-pass=postra-machine-sink` 把 COPY 移到 bb.1，bb.1 的 live-in 从 W19 改为 W0：
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```text
 bb.1:
+  ; 复制下沉后源 W0 必须活跃到 bb.1 入口，liveins 因而随之更新。
   liveins: $w0, $w1
   renamable $w19 = COPY killed $w0
   $w0 = ADDWrr $w1, $w19
@@ -134,6 +150,7 @@ bb.1:
 <!-- manual-lab:ch11-postra-sink -->
 
 ```sh
+# 同时保留可下沉的 AArch64 例子和未触发的 BPF 例子，观察目标钩子的限制。
 "$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -verify-machineinstrs \
   -run-pass=postra-machine-sink "$BOOK_INPUT/postra-sink-a64.mir" \
   -o "$CODEGEN_LAB/postra-sink-a64.mir"
@@ -158,6 +175,7 @@ extern int fun(int);
 int getSqrt(int a) {
     int res = 0;
     if (a > 10) {
+        // 只有这条路径发生调用；快速返回路径有机会避开保存返回地址的栈帧。
         res = fun(a);
     }
     return res;
@@ -168,16 +186,21 @@ int getSqrt(int a) {
 
 启用默认 ShrinkWrap 的主体是：
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```asm
 getSqrt:
     cmp w0, #11
     b.lt .LBB0_2
+    // ! 表示先更新 SP 再保存 FP/返回地址；BL 将覆盖 X30，故需先保存。
     stp x29, x30, [sp, #-16]!
     mov x29, sp
     bl fun
+    // 恢复两寄存器后再把 SP 加回 16；前后序仅覆盖发生调用的路径。
     ldp x29, x30, [sp], #16
     ret
 .LBB0_2:
+    // WZR 读出零；这条路径没有改变 SP，无须执行上述恢复序列。
     mov w0, wzr
     ret
 ```
@@ -191,6 +214,7 @@ getSqrt:
 <!-- manual-lab:ch11-shrinkwrap -->
 
 ```sh
+# 两组都禁用尾调用优化，避免尾调用省掉栈帧后掩盖 shrink wrapping 的作用。
 for variant in shrink no-shrink; do
   SHRINK_FLAGS=(-O2 -fno-optimize-sibling-calls)
   if [ "$variant" = no-shrink ]; then
@@ -248,6 +272,7 @@ BPF 实验 `branch.mir` 构造两个完全相同的 `R0=17; RET` 返回块。`-r
 <!-- manual-lab:ch11-branch-folder -->
 
 ```sh
+# 对比公共尾部是否合并、跳转是否重定向，不能只凭指令条数判断 CFG 正确性。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
   -run-pass=branch-folder "$BOOK_INPUT/branch.mir" -o "$CODEGEN_LAB/branch.mir"
 sed -n '/^body:/,$p' "$CODEGEN_LAB/branch.mir"
@@ -270,6 +295,7 @@ MachineCopyPropagation 跟踪物理寄存器 COPY 关系。如果源寄存器从
 <!-- manual-lab:ch11-copy-propagation -->
 
 ```sh
+# 检查 COPY 的数据源是否直接替代后续用途；物理寄存器别名和目标约束仍须满足。
 "$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -verify-machineinstrs \
   -run-pass=machine-cp "$BOOK_INPUT/copy-a64.mir" -o "$CODEGEN_LAB/copy-a64.mir"
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
@@ -340,6 +366,7 @@ while a legal profitable merge exists:
         for permitted split X = X1+X2:
             consider permitted reorderings of X1, X2, Y
         reject candidates moving the function entry from first position
+        # 分数综合分支权重和布局距离；正收益也必须先满足入口与布局约束。
         gain = score(candidate) - score(X) - score(Y)
         remember the candidate with largest positive gain
     apply best merge and update affected scores
@@ -363,6 +390,7 @@ return concatenated layout
 <!-- manual-lab:ch11-llvm-library-api -->
 
 ```sh
+# 从当前构建提取头文件、编译和链接选项，调用真实 LLVM API 检查布局与重复子串。
 export CXX="${CXX:-/usr/bin/clang++}"
 "$LLVM_BUILD/bin/llvm-config" --cxxflags --ldflags --libs transformutils --system-libs \
   > "$CODEGEN_LAB/llvm-flags.txt"
@@ -372,12 +400,14 @@ from pathlib import Path
 import os, shlex, subprocess
 out = Path(os.environ["CODEGEN_LAB"])
 flags = shlex.split((out / "llvm-flags.txt").read_text())
+# macOS 的本地构建可能依赖 Homebrew 系统库；只补搜索路径，不改变 LLVM API 输入。
 if Path("/opt/homebrew/lib").is_dir():
     flags += ["-L/opt/homebrew/lib"]
 cmd = [os.environ["CXX"], *flags,
        str(Path(os.environ["BOOK_INPUT"]) / "algorithms.cpp"),
        "-o", str(out / "algorithms")]
 (out / "algorithms-build-command.txt").write_text(shlex.join(cmd) + "\n")
+# check=True 在编译或链接失败时停止，避免误用旧的可执行文件。
 subprocess.run(cmd, cwd=out, check=True)
 PY_COMPILE
 "$CODEGEN_LAB/algorithms" > "$CODEGEN_LAB/algorithms.json"
@@ -402,6 +432,7 @@ int func1(int x) {
     return i;
 }
 int func2(int x) {
+    // 输入准备不同，但后部机器指令仍可能完全相同，从而成为抽取候选。
     int i = x + 51;
     i = i * i;
     i += 1;
@@ -436,7 +467,10 @@ func2:
 
 **代码清单 11-7 实际公共尾部**
 
+以下候选汇编中的中文注释用于解释抽取边界，不属于原始工具输出。
+
 ```asm
+# 此片段假定 EAX 已由调用位置准备好；RET 使它成为可共享的函数尾部。
 imull %eax, %eax
 orl $2, %eax
 retq
@@ -445,6 +479,8 @@ retq
 向 Clang 传入 `-mllvm -enable-machine-outliner=always`，实测生成一个公共函数，两个原函数各用一次尾跳转进入它。`always` 在这里扩大运行该 Pass 的函数范围，并不绕过目标合法性和净收益检查。
 
 **代码清单 11-8 实际公共代码提取结果**
+
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
 
 ```asm
 func1:
@@ -456,6 +492,7 @@ func2:
 	imull	%eax, %eax
 	incl	%eax
 	jmp	OUTLINED_FUNCTION_0
+# 原函数用 JMP 尾跳转到这里，不额外压入返回地址；RET 直接返回原调用者。
 OUTLINED_FUNCTION_0:
 	imull	%eax, %eax
 	orl	$2, %eax
@@ -472,6 +509,7 @@ SuffixTree 找到候选后，Outliner 还要处理重叠出现、目标约束、
 <!-- manual-lab:ch11-outliner -->
 
 ```sh
+# 显式开启机器码抽取，观察重复尾部是否变为共享代码及尾跳转。
 for variant in no-outliner outliner; do
   OUTLINER_FLAGS=(-O2)
   if [ "$variant" = outliner ]; then
@@ -505,6 +543,7 @@ BasicBlockSections 的 All/Labels 模式不必有 profile，List 模式读取聚
 @i = external global i32, align 4
 
 define i32 @foo(i32 %0, i32 %1) nounwind !prof !1 {
+    ; 条件为真时进入冷块 %6，!prof !2 按两条后继的顺序给出权重。
     %3 = icmp eq i32 %0, 0
     br i1 %3, label %6, label %4, !prof !2
 4:                                                ; preds = %2
@@ -515,6 +554,7 @@ define i32 @foo(i32 %0, i32 %1) nounwind !prof !1 {
     %8 = add nsw i32 %1, 1
     br label %9
 9:                                                ; preds = %6, %4
+    ; 合流处要接收冷路径算出的值；抽成函数时这类跨边界值需要参数或回传存储。
     %10 = phi i32 [ %1, %4 ], [ %8, %6 ]
     %11 = load i32, ptr @i, align 4
     %12 = add nsw i32 %10, %11
@@ -534,6 +574,8 @@ declare i32 @R1() cold nounwind
 MFS 实验用 `llc -O2 -mtriple=x86_64-unknown-linux-gnu -enable-split-machine-functions -x86-asm-syntax=intel`，产生以下汇编。保留 section 指令以显示区域分离。
 
 **代码清单 11-10 MFS 实际输出**
+
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
 
 ```asm
 .text
@@ -556,10 +598,12 @@ foo:
 	pop	rbx
 	ret
 .LBB_END0_2:
+# MFS 把冷块放入另一节，仍是同一机器函数；沿用原来的栈帧和 EBX。
 	.section	.text.split.foo,"ax",@progbits
 foo.cold:
 	call	R1@PLT
 	inc	ebx
+# 冷块直接跳回热区合流点，不建立一次新的函数调用。
 	jmp	.LBB0_2
 .LBB_END0_3:
 	.size	foo.cold, .LBB_END0_3-foo.cold
@@ -574,6 +618,8 @@ foo.cold:
 HCS 则先运行 `opt -passes=hotcoldsplit -hotcoldsplit-threshold=0`。阈值设为 0 是为了让这个小教学例子触发，不代表默认参数一定提取同样的短区域。输出 IR 新增 `internal void @foo.cold.1(i32,ptr)`，用输出指针传回修改后的值。随后用同一 X86 后端生成：
 
 **代码清单 11-11 HCS 后再生成机器代码的实际结果**
+
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
 
 ```asm
 .text
@@ -597,6 +643,7 @@ foo:
 	pop	rbx
 	ret
 .LBB0_2:
+# RSI 指向回传槽，EDI 携带输入值；新冷函数通过该槽交回计算结果。
 	lea	rsi, [rsp + 12]
 	mov	edi, ebx
 	call	foo.cold.1
@@ -607,6 +654,7 @@ foo:
 	.section	.text.unlikely.,"ax",@progbits
 	.p2align	4, 0x90
 	.type	foo.cold.1,@function
+# HCS 在 IR 层生成独立函数，因此这里有自己的调用约定和保存/恢复序列。
 foo.cold.1:
 	push	rbp
 	push	rbx
@@ -630,9 +678,11 @@ foo.cold.1:
 <!-- manual-lab:ch11-mfs-hcs -->
 
 ```sh
+# 同一 IR 分别走机器函数拆分和 IR 冷区抽取，比较节布局与新增调用边界。
 "$LLVM_BUILD/bin/llc" -mtriple=x86_64-unknown-linux-gnu -O2 -verify-machineinstrs \
   -enable-split-machine-functions -x86-asm-syntax=intel "$BOOK_INPUT/split.ll" \
   -o "$CODEGEN_LAB/mfs.s"
+# 降低抽取阈值是实验配置，用来稳定展示独立冷函数；不代表默认流水线总会这样做。
 "$LLVM_BUILD/bin/opt" -passes=hotcoldsplit -hotcoldsplit-threshold=0 -S \
   "$BOOK_INPUT/split.ll" -o "$CODEGEN_LAB/hcs.ll"
 "$LLVM_BUILD/bin/llc" -mtriple=x86_64-unknown-linux-gnu -O2 -verify-machineinstrs \
@@ -738,6 +788,7 @@ LLVM 18 的 `RepeatedSubstringIterator` 是专为候选枚举实现的接口，�
 <!-- manual-lab:ch11-suffix-candidates -->
 
 ```sh
+# 重复子串只是抽取候选；实际抽取还需要检查机器指令合法性与成本。
 # 读取 11.4.1 中已编译并运行的 LLVM API 实验结果。
 python3 -B - "$CODEGEN_LAB/algorithms.json" <<'PY_SUFFIX'
 import json, sys

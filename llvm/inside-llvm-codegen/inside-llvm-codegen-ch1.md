@@ -54,6 +54,9 @@ LLVM 的 verifier 检查表示的结构和类型约束，例如 PHI 前驱、操
 
 <!-- manual-lab:ch1-setup -->
 ```sh
+# ${变量:-默认值}：已有非空设置就沿用，否则使用冒号后面的路径。
+# export 让后面启动的 Python 等子进程也能读取这些设置。
+# LLVM_SRC 是源码；LLVM_BUILD 是构建产物；BOOK_ROOT 是教材和实验输入。
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
@@ -64,7 +67,11 @@ export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
 **代码清单 1-1：配置和按需增量构建。** 对已有构建目录执行 CMake 会更新配置；下面只列出本教材使用的工具目标，不执行安装，也不要求构建全部示例程序。
 
 ```sh
+# 查询当前 C 编译器的默认目标，给未指定 --target 的宿主实验使用。
 CODEGEN_HOST_TRIPLE=$(/usr/bin/cc -dumpmachine)
+# -S 指定源码目录，-B 指定构建目录；-D 设置 CMake 配置变量。
+# 行末的反斜杠把多行连成一条命令，后面不能再接注释或空格。
+# Debug/ASSERTIONS 支持后续调试观察；编译 12 路、链接 1 路限制并发。
 cmake -G Ninja \
   -S "$LLVM_SRC/llvm" \
   -B "$LLVM_BUILD" \
@@ -82,6 +89,7 @@ cmake -G Ninja \
   -DCMAKE_CXX_COMPILER=/usr/bin/c++ \
   -DCMAKE_INSTALL_PREFIX=/opt/llvm-project/install
 
+# 只请求这些工具目标；Ninja 会复用已有产物，并补齐必要依赖。
 cmake --build "$LLVM_BUILD" --parallel 12 --target \
   clang opt llc lli llvm-as llvm-dis llvm-tblgen FileCheck \
   llvm-mc llvm-objdump llvm-readobj llvm-config mlir-opt mlir-translate
@@ -93,9 +101,11 @@ cmake --build "$LLVM_BUILD" --parallel 12 --target \
 
 <!-- manual-lab:ch1-tool-versions -->
 ```sh
+# 使用完整路径，避免误用 PATH 中其他版本的 clang/llc/opt。
 "$LLVM_BUILD/bin/clang" --version
 "$LLVM_BUILD/bin/llc" --version
 "$LLVM_BUILD/bin/opt" --version
+# 查看这一套 LLVM 实际构建了哪些后端。
 "$LLVM_BUILD/bin/llvm-config" --targets-built
 ```
 
@@ -123,31 +133,44 @@ LLDB 可用于断点、单步和查看对象，但断点名称不是稳定 API�
 
 <!-- manual-lab:ch1-compile-and-execute -->
 ```sh
+# 每次新建一个输出目录，后面的文件名都相对于这次实验。
 CODEGEN_LAB=$(mktemp -d)
+# --target=bpfel 选择小端 BPF；-S -emit-llvm 组合输出文本 IR。
+# -Xclang 把紧随的选项交给 Clang 前端，阻止 O0 自动添加 optnone。
+# 保留值名便于对照源码；双引号保证带空格的路径仍是一个参数。
 "$LLVM_BUILD/bin/clang" --target=bpfel -O0 \
   -Xclang -disable-O0-optnone -fno-discard-value-names \
   -S -emit-llvm "$BOOK_ROOT/experiments/ch1/sum.c" \
   -o "$CODEGEN_LAB/sum.ll"
 
+# 把适合提升的局部内存变量转为 SSA 值；每个 Pass 后检查 IR 约束。
 "$LLVM_BUILD/bin/opt" -passes=mem2reg -verify-each -S \
   "$CODEGEN_LAB/sum.ll" -o "$CODEGEN_LAB/sum-ssa.ll"
+# llvm-as / llvm-dis 在文本 IR 与 bitcode 间转换，不生成 CPU 指令。
 "$LLVM_BUILD/bin/llvm-as" "$CODEGEN_LAB/sum-ssa.ll" \
   -o "$CODEGEN_LAB/sum.bc"
 "$LLVM_BUILD/bin/llvm-dis" "$CODEGEN_LAB/sum.bc" \
   -o "$CODEGEN_LAB/roundtrip.ll"
+# 只验证往返得到的 IR；-disable-output 不再写出另一份模块。
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output \
   "$CODEGEN_LAB/roundtrip.ll"
+# 使用 O2 的默认 IR 优化流水线；引号防止 shell 把 < 和 > 当作重定向。
 "$LLVM_BUILD/bin/opt" '-passes=default<O2>' -verify-each -S \
   "$CODEGEN_LAB/sum-ssa.ll" -o "$CODEGEN_LAB/sum-opt.ll"
 
+# llc 把 IR 降到目标指令；固定 BPF v1，先输出便于阅读的汇编。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 \
   -verify-machineinstrs "$CODEGEN_LAB/sum-opt.ll" \
   -o "$CODEGEN_LAB/sum.s"
+# 同一输入改为对象输出；MachineVerifier 检查机器指令阶段的约束。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 \
   -verify-machineinstrs -filetype=obj "$CODEGEN_LAB/sum-opt.ll" \
   -o "$CODEGEN_LAB/sum.o"
+# readobj 看对象头；objdump -d 将对象中的指令字节反汇编为文本。
 "$LLVM_BUILD/bin/llvm-readobj" --file-headers "$CODEGEN_LAB/sum.o"
 "$LLVM_BUILD/bin/llvm-objdump" -d "$CODEGEN_LAB/sum.o"
+# 分别解释执行优化前后 IR；main 的返回码检查 sum(10) 是否仍为 45。
+# 这里执行的是 IR，尚未装载刚才生成的 BPF 对象。
 "$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel \
   "$CODEGEN_LAB/sum.ll"
 "$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel \
@@ -171,8 +194,10 @@ runner 还让 Clang 按修复后的本机默认 triple 重新生成 `host.ll`，
 
 <!-- manual-lab:ch1-host-jit -->
 ```sh
+# 不指定 --target，按已配置的宿主默认 triple 重新生成一份 IR。
 "$LLVM_BUILD/bin/clang" -O0 -S -emit-llvm \
   "$BOOK_ROOT/experiments/ch1/sum.c" -o "$CODEGEN_LAB/host.ll"
+# 不强制解释器，让 lli 的 JIT 将宿主 IR 编译到本机并调用 main。
 "$LLVM_BUILD/bin/lli" "$CODEGEN_LAB/host.ll"
 ```
 

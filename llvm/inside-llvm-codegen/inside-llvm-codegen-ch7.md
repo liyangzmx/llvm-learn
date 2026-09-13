@@ -9,12 +9,14 @@
 <!-- manual-lab:ch7-setup -->
 
 ```sh
+# 后文按顺序复用中间文件；非预期失败后不要继续读取旧结果。
 set -euo pipefail
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
 BOOK_INPUT="$BOOK_ROOT/experiments/ch7"
 CODEGEN_LAB=$(mktemp -d)
+# 实际二进制的目标列表比 CMakeCache 更能说明当前工具支持什么。
 "$LLVM_BUILD/bin/llc" --version > "$CODEGEN_LAB/llc-version.txt"
 cat "$CODEGEN_LAB/llc-version.txt"
 printf '本章输出目录：%s\n' "$CODEGEN_LAB"
@@ -84,6 +86,7 @@ chain 保持所需顺序，不应把所有 load 人为串联；独立读操作�
 **代码清单 7-1　完整 C 输入 callee.c**
 
 ```c
+// 在本章固定的 BPF 数据模型中 long 为 64 位，返回值仍需遵守调用约定。
 long callee(long a, long b) {
   long c = a + b;
   return c;
@@ -91,6 +94,7 @@ long callee(long a, long b) {
 int caller(void) {
   long d = 1;
   long e = 2;
+  // 故意转为 32 位 int，便于观察窄结果与四字节内存对象。
   int f = callee(d, e);
   return f;
 }
@@ -101,6 +105,7 @@ int caller(void) {
 <!-- manual-lab:ch7-clang-callee -->
 
 ```sh
+# 固定 BPF v1 和 O0，保留局部栈对象，避免宿主 ABI 或优化掩盖 lowering。
 "$LLVM_BUILD/bin/clang" --target=bpfel -mcpu=v1 -O0 \
   -fno-discard-value-names -S -emit-llvm "$BOOK_INPUT/callee.c" \
   -o "$CODEGEN_LAB/callee.ll"
@@ -112,9 +117,12 @@ sed -n '/^define /,/^}/p' "$CODEGEN_LAB/callee.ll"
 
 **代码清单 7-2　Clang 18 生成的两个函数（属性定义见完整 callee.ll）**
 
+下面的生成 IR 节选已加中文阅读注释，指令与属性保持原样。
+
 ```llvm
 define dso_local i64 @callee(i64 noundef %a, i64 noundef %b) #0 {
 entry:
+  ; 阅读注释：这些是 IR 内存对象，最终是否占用机器栈要看后续变换。
   %a.addr = alloca i64, align 8
   %b.addr = alloca i64, align 8
   %c = alloca i64, align 8
@@ -122,6 +130,7 @@ entry:
   store i64 %b, ptr %b.addr, align 8
   %0 = load i64, ptr %a.addr, align 8
   %1 = load i64, ptr %b.addr, align 8
+  ; nsw 表示有符号溢出得到 poison，不要求插入硬件溢出检查。
   %add = add nsw i64 %0, %1
   store i64 %add, ptr %c, align 8
   %2 = load i64, ptr %c, align 8
@@ -138,6 +147,7 @@ entry:
   %0 = load i64, ptr %d, align 8
   %1 = load i64, ptr %e, align 8
   %call = call i64 @callee(i64 noundef %0, i64 noundef %1)
+  ; 截断定义返回给 int 的低 32 位；后面的访存也保持 i32 宽度。
   %conv = trunc i64 %call to i32
   store i32 %conv, ptr %f, align 4
   %2 = load i32, ptr %f, align 4
@@ -159,6 +169,7 @@ SelectionDAG 通常围绕一个基本块构建，跨块值通过虚拟寄存器�
 define i64 @choose(i1 %cond, ptr %p, ptr %q) {
 entry:
   br i1 %cond, label %yes, label %no
+; volatile 用于保留两条分支上的可观察读取，方便检查跨块值。
 yes:
   %a = load volatile i64, ptr %p, align 8
   br label %join
@@ -166,6 +177,7 @@ no:
   %b = load volatile i64, ptr %q, align 8
   br label %join
 join:
+  ; 每次只取实际进入 join 的那个前驱所对应的输入。
   %r = phi i64 [ %a, %yes ], [ %b, %no ]
   ret i64 %r
 }
@@ -177,6 +189,7 @@ join:
 
 ```sh
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/selection.ll"
+# finalize-isel 观察选择后的 MIR；禁用 FastISel，确保这里走 SelectionDAG。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O0 \
   -fast-isel=false -verify-machineinstrs -stop-after=finalize-isel \
   -debug-only=isel,isel-dump "$BOOK_INPUT/selection.ll" \
@@ -184,10 +197,12 @@ join:
 python3 - "$CODEGEN_LAB/bpf-v1.mir" "$CODEGEN_LAB/bpf-v1.log" <<'PYCODE'
 import pathlib, re, sys
 mir, log = (pathlib.Path(p).read_text() for p in sys.argv[1:])
+# 从完整 YAML 中按函数取 body，避免把别的函数的 opcode 当成本例证据。
 bodies = dict(re.findall(r'^name:\s+(\S+).*?^body:\s+\|\n(.*?)(?=^\.\.\.)', mir, re.M | re.S))
 assert 'ADD_rr' in bodies['add_reg']
 assert 'ADD_ri' in bodies['add_imm'] and ', 42' in bodies['add_imm']
 assert 'PHI' in bodies['choose']
+# EntryToken 节点有两个结果；常用的 getEntryNode() 只取结果 0 的 chain。
 assert 'ch,glue = EntryToken' in log
 print(bodies['choose'])
 print('ADD_rr / ADD_ri 42 / PHI / EntryToken 两结果检查通过')
@@ -198,11 +213,14 @@ PYCODE
 
 **代码清单 7-4　finalize-isel 后 choose 的实际 MIR body**
 
+下面 MIR 节选中的 `;` 中文注释为阅读说明，不属于工具原始输出。
+
 ```yaml
 bb.0.entry:
     successors: %bb.1(0x40000000), %bb.2(0x40000000)
     liveins: $r1, $r2, $r3
 
+    ; $rN 是 ABI 物理寄存器，%N:gpr 仍是待分配的虚拟寄存器。
     %5:gpr = COPY $r3
     %4:gpr = COPY $r2
     %3:gpr = COPY $r1
@@ -223,8 +241,10 @@ bb.0.entry:
     JMP %bb.3
 
   bb.3.join:
+    ; 每对操作数是“输入寄存器、前驱块”；这条 PHI 尚未被消除。
     %2:gpr = PHI %1, %bb.2, %0, %bb.1
     $r0 = COPY %2
+    ; 返回值的读取是隐式操作数，虽然不打印成普通显式参数，依赖仍需保留。
     RET implicit $r0
 ```
 
@@ -253,6 +273,7 @@ PHI 在此阶段仍存在。后续 PHI 消除会在 CFG 边上实现相应赋值
 <!-- manual-lab:ch7-bpf-type-legalization -->
 
 ```sh
+# 只改变 CPU 特性即可对照 ALU32，不能把差异误归因于 IR 访存类型改变。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v3 -O0 \
   -fast-isel=false -verify-machineinstrs -stop-after=finalize-isel \
   "$BOOK_INPUT/selection.ll" -o "$CODEGEN_LAB/bpf-v3.mir"
@@ -267,9 +288,11 @@ def bodies(name):
     return dict(re.findall(r'^name:\s+(\S+).*?^body:\s+\|\n(.*?)(?=^\.\.\.)', (out/name).read_text(), re.M | re.S))
 v1, v3, legal = (bodies(n) for n in ['bpf-v1.mir', 'bpf-v3.mir', 'bpf-legalization.mir'])
 assert 'ADD_rr ' in v1['add32'] and 'ADD_rr_32' not in v1['add32']
+# 检查三个内存操作仍是 s32，排除“寄存器提升导致访存扩大”的误解。
 assert v1['add32'].count('(s32)') == 3
 assert all(op in v3['add32'] for op in ['LDW32', 'ADD_rr_32', 'STW32'])
 assert all(op in legal['add16_signed'] for op in ['SLL_ri', 'SRA_ri', ', 48'])
+# 计数之外还检查比较/PHI 进位路径，避免只看到两个半字就漏掉进位。
 wide = legal['add128']
 assert wide.count('LDD ') == 4 and wide.count('STD ') == 2
 assert wide.count('ADD_rr ') == 3 and 'JUGT_rr ' in wide and 'PHI ' in wide
@@ -316,6 +339,7 @@ BPF 没有普通浮点除法指令。我们使用两个变量作为除数和被�
 ; Variable divisor avoids folding division by a constant into multiplication.
 define double @divide(double %x, double %y) {
 entry:
+  ; 变量除数使运算不能仅靠除常量的折叠而消失，才能观察 libcall 拒绝路径。
   %r = fdiv double %x, %y
   ret double %r
 }
@@ -335,6 +359,7 @@ entry:
 
 ```sh
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/softfloat.ll"
+# 该输入预期失败：if 捕获退出状态，避免 set -e 提前中断诊断检查。
 if "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O0 -fast-isel=false \
     "$BOOK_INPUT/softfloat.ll" -o "$CODEGEN_LAB/softfloat.s" \
     > "$CODEGEN_LAB/softfloat.stdout" 2> "$CODEGEN_LAB/softfloat.log"; then
@@ -347,6 +372,7 @@ fi
 python3 - "$CODEGEN_LAB/softfloat.log" <<'PYCODE'
 import pathlib, sys
 text = pathlib.Path(sys.argv[1]).read_text()
+# 同时检查运行库符号和“不支持”消息，不能把任意失败都算作验证成功。
 assert '__divdf3' in text and 'not supported' in text
 print(text)
 PYCODE
@@ -365,6 +391,7 @@ PYCODE
 <!-- manual-lab:ch7-tablegen-dag-matcher -->
 
 ```sh
+# TableGen 生成匹配程序，llc 日志则证明给定 DAG 实际走过哪条候选。
 "$LLVM_BUILD/bin/llvm-tblgen" -gen-dag-isel \
   -I "$LLVM_SRC/llvm/include" -I "$LLVM_SRC/llvm/lib/Target/BPF" \
   "$LLVM_SRC/llvm/lib/Target/BPF/BPF.td" \
@@ -376,6 +403,7 @@ assert 'MatcherTable' in table and 'BPF::ADD_ri' in table
 for line in table.splitlines():
     if any(op in line for op in ['BPF::FI_ri', 'BPF::ADD_ri', 'BPF::ADD_rr']):
         print(line)
+# 用运算形态定位日志，不把当前节点号或表偏移写死。
 match = re.search(r'ISEL: Starting selection on root node: t\d+: i64 = add .*?ISEL: Match complete!', log, re.S)
 assert match is not None
 print(match[0])
@@ -386,7 +414,10 @@ PYCODE
 
 **代码清单 7-7　实际生成的 ADD matcher 子表（节选）**
 
+下面生成的 C++ 匹配表已加中文阅读注释，字节码内容未改动。
+
 ```cpp
+// 阅读注释：这是生成的匹配字节码，不是按源代码顺序执行的机器指令。
 /*  2518*/ /*SwitchOpcode*/ 68, TARGET_VAL(ISD::ADD),// ->2589
 /*  2521*/  OPC_Scope, 11, /*->2534*/ // 2 children in Scope
 /*  2523*/   OPC_RecordNode, // #0 = $addr
@@ -397,12 +428,14 @@ PYCODE
              // Src: FIri:{ *:[i64] }:$addr - Complexity = 9
              // Dst: (FI_ri:{ *:[i64] } FIri:{ *:[i64] }:$addr)
 /*  2534*/  /*Scope*/ 53, /*->2588*/
+// 保存两个源操作数供成功候选使用；记录本身不是立即数合法性检查。
 /*  2535*/   OPC_RecordChild0, // #0 = $src2
 /*  2536*/   OPC_RecordChild1, // #1 = $imm
 /*  2537*/   OPC_Scope, 30, /*->2569*/ // 3 children in Scope
 /*  2539*/    OPC_MoveChild1,
 /*  2540*/    OPC_CheckOpcode, TARGET_VAL(ISD::Constant),
 /*  2543*/    OPC_Scope, 11, /*->2556*/ // 2 children in Scope
+// 只有符号扩展 32 位立即数满足约束，才能选这一 ADD_ri 形式。
 /*  2545*/     OPC_CheckPredicate0,  // Predicate_i64immSExt32
 /*  2546*/     OPC_MoveParent,
 /*  2547*/     OPC_CheckTypeI64,
@@ -423,6 +456,7 @@ PYCODE
 /*  2568*/    0, /*End of Scope*/
 /*  2569*/   /*Scope*/ 8, /*->2578*/
 /*  2570*/    OPC_CheckTypeI64,
+// 成功时将 add 根节点改成目标机器节点，并使用前面记录的两个操作数。
 /*  2571*/    OPC_MorphNodeTo1None, TARGET_VAL(BPF::ADD_rr),
                   MVT::i64, 2/*#Ops*/, 0, 1,
               // Src: (add:{ *:[i64] } i64:{ *:[i64] }:$src2, i64:{ *:[i64] }:$src) - Complexity = 3
@@ -438,6 +472,8 @@ PYCODE
 ```
 
 **代码清单 7-8　add_reg 的实际 DAG 计算节点**
+
+阅读提示：`i64,ch` 是同一个 CopyFromReg 的两个结果；加法只读取值结果，chain 另外维护必要顺序。
 
 ```text
 t2: i64,ch = CopyFromReg t0, Register:i64 %0
@@ -484,6 +520,7 @@ flowchart TD
 <!-- manual-lab:ch7-dag-to-mir -->
 
 ```sh
+# 同时保存 DAG 和 MIR，才能对照 chain/glue 约束如何在发射时被消化。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O0 \
   -fast-isel=false -verify-machineinstrs -stop-after=finalize-isel \
   -debug-only=isel,isel-dump "$CODEGEN_LAB/callee.ll" \
@@ -493,6 +530,7 @@ import pathlib, re, sys
 mir, log = (pathlib.Path(p).read_text() for p in sys.argv[1:])
 bodies = dict(re.findall(r'^name:\s+(\S+).*?^body:\s+\|\n(.*?)(?=^\.\.\.)', mir, re.M | re.S))
 assert all(op in bodies['caller'] for op in ['STW ', 'LDW ', '(s32)'])
+# 只提取“选择完成”阶段；初始 DAG 与最终 MIR 的对象不是同一层表示。
 selected = re.search(r'Selected selection DAG:.*?(?=Total amount of phi nodes)', log, re.S)
 assert selected is not None
 print(selected[0])
@@ -504,6 +542,8 @@ PYCODE
 输出对应清单 7-10、7-11；`caller` 的四字节对象也经过独立断言。完整 MIR YAML 可以留给后续 Pass 继续处理，正文的 body 节选则只供阅读。
 
 **代码清单 7-10　callee 的实际 Selected DAG**
+
+阅读提示：`tN:1` 选择节点的第 1 号结果；chain 表示顺序，glue 表示紧密调度关系，均不是硬件数据寄存器。日志文本保持原样。
 
 ```text
 Selected selection DAG: %bb.0 'callee:entry'
@@ -525,16 +565,20 @@ SelectionDAG has 20 nodes:
 
 **代码清单 7-11　callee 的实际 MIR body**
 
+此 MIR 输出节选已加阅读注释，`%stack.N` 和 `%N` 等原始操作数未修改。
+
 ```yaml
 bb.0.entry:
     liveins: $r1, $r2
 
     %1:gpr = COPY $r2
     %0:gpr = COPY $r1
+    ; %stack.N 是抽象帧对象，此时不能把它当成已经确定的物理栈偏移。
     STD %0, %stack.0.a.addr, 0 :: (store (s64) into %ir.a.addr)
     STD %1, %stack.1.b.addr, 0 :: (store (s64) into %ir.b.addr)
     %2:gpr = LDD %stack.0.a.addr, 0 :: (dereferenceable load (s64) from %ir.a.addr)
     %3:gpr = LDD %stack.1.b.addr, 0 :: (dereferenceable load (s64) from %ir.b.addr)
+    ; gpr 是寄存器类约束；%N 还不是选定的硬件寄存器。
     %4:gpr = nsw ADD_rr %2, killed %3
     STD killed %4, %stack.2.c, 0 :: (store (s64) into %ir.c)
     %5:gpr = LDD %stack.2.c, 0 :: (dereferenceable load (s64) from %ir.c)
@@ -553,6 +597,7 @@ AArch64 的 `ADDXrr` 来自 `AddSub` 多重类实例化，继承 `BaseAddSubRegP
 **代码清单 7-12　AArch64 ADD 的 TableGen 定义入口**
 
 ```tablegen
+// AddSub 多重类会展开出多种操作数形式；这里把通用 add 节点传给加法模式。
 defm ADD : AddSub<0, "add", "sub", add>;
 defm SUB : AddSub<1, "sub", "add">;
 ```
@@ -569,10 +614,14 @@ isPseudo = 1
 
 **代码清单 7-14　重新生成的 i64 ADD fast emitter**
 
+以下生成的发射器已加中文阅读注释，函数语句保持原样。
+
 ```cpp
 unsigned fastEmit_ISD_ADD_MVT_i64_rr(MVT RetVT, unsigned Op0, unsigned Op1) {
+  // 上层已按输入类型分派；这里再检查所需结果类型能否由该模式产生。
   if (RetVT.SimpleTy != MVT::i64)
     return 0;
+  // 生成器确定 opcode 与结果寄存器类，具体 MachineInstr 由公共辅助函数构造。
   return fastEmitInst_rr(AArch64::ADDXrr, &AArch64::GPR64RegClass, Op0, Op1);
 }
 ```
@@ -585,10 +634,13 @@ Register FastISel::fastEmitInst_rr(unsigned MachineInstOpcode,
                                    unsigned Op1) {
   const MCInstrDesc &II = TII.get(MachineInstOpcode);
 
+  // 为结果申请虚拟寄存器；此时尚未进行物理寄存器分配。
   Register ResultReg = createResultReg(RC);
+  // 输入也要满足目标指令的寄存器类，不能只给结果标一个类名。
   Op0 = constrainOperandRegClass(II, Op0, II.getNumDefs());
   Op1 = constrainOperandRegClass(II, Op1, II.getNumDefs() + 1);
 
+  // 有显式 def 时直接接收结果；否则从指令的隐式定义复制结果。
   if (II.getNumDefs() >= 1)
     BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, II, ResultReg)
         .addReg(Op0)
@@ -619,6 +671,7 @@ runner 对 `fastisel.ll` 的 i32/i64 加法显式设置 `-global-isel=false -fas
   "$LLVM_SRC/llvm/lib/Target/AArch64/AArch64.td" \
   -o "$CODEGEN_LAB/AArch64GenFastISel.inc"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/fastisel.ll"
+# abort=3 禁止 FastISel 静默回退；成功才可归因于本例的 FastISel 支持。
 "$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -mcpu=generic -O0 \
   -global-isel=false -fast-isel=true -fast-isel-abort=3 \
   -verify-machineinstrs -stop-after=finalize-isel -debug-only=isel \
@@ -628,6 +681,7 @@ python3 - "$CODEGEN_LAB/AArch64GenFastISel.inc" "$CODEGEN_LAB/fastisel.mir" <<'P
 import pathlib, re, sys
 inc, mir = (pathlib.Path(p).read_text() for p in sys.argv[1:])
 assert 'fastEmit_ISD_ADD' in inc and 'AArch64::ADDXrr' in inc
+# 同时看两个整数宽度的目标 opcode，而不是把退出码当作唯一路径证据。
 assert 'ADDWrr' in mir and 'ADDXrr' in mir
 print(re.search(r'unsigned fastEmit_ISD_ADD_MVT_i64_rr\(.*?^}', inc, re.M | re.S)[0])
 for body in re.findall(r'^body:\s+\|\n(.*?)(?=^\.\.\.)', mir, re.M | re.S):
@@ -672,6 +726,7 @@ int add32(int a, int b) { return a + b; }
 ```llvm
 define i32 @add32(i32 %a, i32 %b) {
 entry:
+  ; 源语言的有符号加法约束会继续传入 G_ADD 和所选机器指令。
   %r = add nsw i32 %a, %b
   ret i32 %r
 }
@@ -723,10 +778,12 @@ entry:
 <!-- manual-lab:ch7-gi-irtranslator -->
 
 ```sh
+# C 示例单独生成 IR 并做结构验证；下面四个阶段统一从固定的手写 IR 重放。
 "$LLVM_BUILD/bin/clang" --target=aarch64-unknown-linux-gnu -mcpu=generic -O1 \
   -S -emit-llvm "$BOOK_INPUT/globalisel.c" -o "$CODEGEN_LAB/globalisel-from-c.ll"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/globalisel-from-c.ll"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/globalisel.ll"
+# GlobalISel 失败即报错，避免将回退后的 SelectionDAG 输出误认成 GMIR 结果。
 "$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -mcpu=generic -O0 \
   -global-isel=true -global-isel-abort=1 -verify-machineinstrs \
   -stop-after=irtranslator "$BOOK_INPUT/globalisel.ll" \
@@ -738,12 +795,16 @@ sed -n '/^name:/p; /^body:/,/^\.\.\.$/p' "$CODEGEN_LAB/gi-irtranslator.mir"
 
 **代码清单 7-23　IRTranslator 完成后 add32 的实际 MIR**
 
+此 MIR 输出节选已加阅读注释，用来区分 LLT、bank 与目标操作码。
+
 ```yaml
 bb.1.entry:
     liveins: $w0, $w1
 
+    ; _(s32) 表示已有低层类型但尚无 bank；ABI 寄存器 COPY 已是目标相关信息。
     %0:_(s32) = COPY $w0
     %1:_(s32) = COPY $w1
+    ; 计算仍用通用 opcode，和目标 RET 伪指令同时存在是正常的中间状态。
     %2:_(s32) = nsw G_ADD %0, %1
     $w0 = COPY %2(s32)
     RET_ReallyLR implicit $w0
@@ -759,15 +820,19 @@ AArch64 的整数 G_ADD 合法类型包括 s32/s64；s16 可以通过 WidenScala
 
 **代码清单 7-24　add16 在合法化前的实际 MIR**
 
+此 MIR 输出节选已加阅读注释，便于辨认 ABI 扩展与实际运算位宽。
+
 ```yaml
 bb.1.entry:
     liveins: $w0, $w1
 
     %2:_(s32) = COPY $w0
+    ; ABI 在 w 寄存器上传值，截断恢复 IR 所要求的低 16 位。
     %0:_(s16) = G_TRUNC %2(s32)
     %3:_(s32) = COPY $w1
     %1:_(s16) = G_TRUNC %3(s32)
     %4:_(s16) = G_ADD %0, %1
+    ; 返回载体较宽；ANYEXT 没有要求高位按零或符号扩展。
     %5:_(s32) = G_ANYEXT %4(s16)
     $w0 = COPY %5(s32)
     RET_ReallyLR implicit $w0
@@ -778,6 +843,7 @@ bb.1.entry:
 <!-- manual-lab:ch7-gi-legalizer -->
 
 ```sh
+# 仍从同一 IR 开始，只将停止点后移，从而观察 Legalizer 带来的变化。
 "$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -mcpu=generic -O0 \
   -global-isel=true -global-isel-abort=1 -verify-machineinstrs \
   -stop-after=legalizer "$BOOK_INPUT/globalisel.ll" \
@@ -786,6 +852,7 @@ python3 - "$CODEGEN_LAB/gi-irtranslator.mir" "$CODEGEN_LAB/gi-legalizer.mir" <<'
 import pathlib, re, sys
 before, after = [dict(re.findall(r'^name:\s+(\S+).*?^body:\s+\|\n(.*?)(?=^\.\.\.)', pathlib.Path(p).read_text(), re.M | re.S))['add16'] for p in sys.argv[1:]]
 assert '(s16)' in before and 'G_ADD' in before
+# 按结果 LLT 检查宽加法，避免仅发现 G_ADD 就误判 s16 已合法化。
 assert re.search(r'\(s32\) = .*G_ADD', after)
 assert not re.search(r'\(s16\) = .*G_ADD', after)
 print('IRTranslator:', before, 'Legalizer:', after, sep='\n')
@@ -796,12 +863,15 @@ s16 加法被 s32 加法替代，转换 artifact 的清理可以在同一函数�
 
 **代码清单 7-25　add16 完成 Legalizer 后的实际 MIR**
 
+此 MIR 输出节选已加阅读注释；生成器原始输出没有这些中文行。
+
 ```yaml
 bb.1.entry:
     liveins: $w0, $w1
 
     %2:_(s32) = COPY $w0
     %3:_(s32) = COPY $w1
+    ; 宽加法保留原来的低 16 位结果，往返扩展/截断已被 artifact 清理。
     %8:_(s32) = G_ADD %2, %3
     $w0 = COPY %8(s32)
     RET_ReallyLR implicit $w0
@@ -823,6 +893,7 @@ bb.1.entry:
 **代码清单 7-27　往返清理的位级检查（完整 Python 片段）**
 
 ```python
+# 这里只比较有限位向量的低位关系，不模拟 LLVM 的完整 poison/undef 语义。
 mask = (1 << 16) - 1
 for wide in [0, 0x7fff, 0x8000, 0xffff, 0x12348000, 0xffff1234]:
     small = wide & mask
@@ -848,12 +919,15 @@ int or32(int a, int b) { return a | b; }
 
 **代码清单 7-29　寄存器 bank 选择前的实际 or32**
 
+此 MIR 输出节选已加阅读注释，当前阶段仍未选择 bank。
+
 ```yaml
 bb.1.entry:
     liveins: $w0, $w1
 
     %0:_(s32) = COPY $w0
     %1:_(s32) = COPY $w1
+    ; s32 说明值的位宽，不能据此判断已经分配了 GPR bank。
     %2:_(s32) = G_OR %0, %1
     $w0 = COPY %2(s32)
     RET_ReallyLR implicit $w0
@@ -862,6 +936,7 @@ bb.1.entry:
 **代码清单 7-30　AArch64 RegisterBank 定义**
 
 ```tablegen
+// bank 把相关寄存器类组织到同一寄存器存储域，不为虚拟寄存器选具体硬件编号。
 def GPRRegBank : RegisterBank<"GPR", [XSeqPairsClass]>;
 
 /// Floating Point/Vector Registers: B, H, S, D, Q.
@@ -887,6 +962,7 @@ ID 2: Cost 1, [result: FPR, lhs: FPR, rhs: FPR]
 **代码清单 7-32　给定假设下的成本演算（完整 Python）**
 
 ```python
+# 固定所有操作频率相同且 COPY 无法消除，才能使用这个简化成本和。
 frequency = 1
 gpr_cost = frequency * 1
 fpr_cost = frequency * (1 + 2 * 4 + 5)
@@ -898,6 +974,7 @@ assert (gpr_cost, fpr_cost) == (1, 14)
 <!-- manual-lab:ch7-gi-register-bank -->
 
 ```sh
+# 此停止点验证 bank 选择；还不能期待 G_OR 已换成目标 opcode。
 "$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -mcpu=generic -O0 \
   -global-isel=true -global-isel-abort=1 -verify-machineinstrs \
   -stop-after=regbankselect "$BOOK_INPUT/globalisel.ll" \
@@ -906,6 +983,7 @@ python3 - "$CODEGEN_LAB/gi-regbankselect.mir" <<'PYCODE'
 import pathlib, re, sys
 mir = pathlib.Path(sys.argv[1]).read_text()
 body = dict(re.findall(r'^name:\s+(\S+).*?^body:\s+\|\n(.*?)(?=^\.\.\.)', mir, re.M | re.S))['or32']
+# 同时保留通用 opcode 和 bank/LLT 信息，确认观察的是正确阶段。
 assert 'gpr(s32)' in body and 'G_OR' in body
 print(body)
 PYCODE
@@ -917,10 +995,13 @@ cat "$CODEGEN_LAB/teaching-models.json"
 
 **代码清单 7-33　RegBankSelect 后实际选择的 GPR bank**
 
+此 MIR 输出节选已加阅读注释，bank 与寄存器类需分阶段阅读。
+
 ```yaml
 bb.1.entry:
     liveins: $w0, $w1
 
+    ; gpr 是 bank，s32 是 LLT；下一阶段才会收紧成 gpr32 寄存器类。
     %0:gpr(s32) = COPY $w0
     %1:gpr(s32) = COPY $w1
     %2:gpr(s32) = G_OR %0, %1
@@ -940,12 +1021,14 @@ GlobalISel 能通过 `GINodeEquiv` 复用一部分 SelectionDAG 模式。这个�
 
 ```tablegen
 class GINodeEquiv<Instruction i, SDNode node> {
+  // 记录两套表示的 opcode 对应，供模式导入器生成 GlobalISel 匹配逻辑。
   Instruction I = i;
   SDNode Node = node;
 
   // SelectionDAG has separate nodes for atomic and non-atomic memory operations
   // (ISD::LOAD, ISD::ATOMIC_LOAD, ISD::STORE, ISD::ATOMIC_STORE) but GlobalISel
   // stores this information in the MachineMemoryOperand.
+  // opcode 对应还不够：内存原子性等条件需要额外检查。
   bit CheckMMOIsNonAtomic = false;
   bit CheckMMOIsAtomic = false;
 
@@ -971,6 +1054,7 @@ class GINodeEquiv<Instruction i, SDNode node> {
 <!-- manual-lab:ch7-gi-instruction-select -->
 
 ```sh
+# 最后观察目标选择后的 opcode；仍保留禁止 GI 回退的开关。
 "$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -mcpu=generic -O0 \
   -global-isel=true -global-isel-abort=1 -verify-machineinstrs \
   -stop-after=instruction-select "$BOOK_INPUT/globalisel.ll" \
@@ -979,6 +1063,7 @@ python3 - "$CODEGEN_LAB/gi-instruction-select.mir" <<'PYCODE'
 import pathlib, re, sys
 mir = pathlib.Path(sys.argv[1]).read_text()
 bodies = dict(re.findall(r'^name:\s+(\S+).*?^body:\s+\|\n(.*?)(?=^\.\.\.)', mir, re.M | re.S))
+# 对同一函数同时检查目标 opcode 出现和通用 opcode 消失。
 assert 'ADDWrr' in bodies['add32'] and 'G_ADD' not in bodies['add32']
 print(bodies['add32'])
 print(bodies['or32'])
@@ -989,13 +1074,17 @@ add32 变成 `ADDWrr`，or32 变成 `ORRWrr`，操作数被约束到具体寄存
 
 **代码清单 7-35　G_ADD 对应声明及实际选择结果**
 
+下面 TD 声明及 MIR 节选已加阅读注释，中文注释不属于生成输出。
+
 ```text
+// 这是 TableGen 的模式对应声明，不是在运行时重新创建 SelectionDAG。
 def : GINodeEquiv<G_ADD, add>;
 
 // 以下是 instruction-select 后 add32 的 MIR body
 bb.1.entry:
     liveins: $w0, $w1
 
+    ; gpr32 已是具体寄存器类；%0 依然是虚拟寄存器，不是物理 w0。
     %0:gpr32 = COPY $w0
     %1:gpr32 = COPY $w1
     %2:gpr32 = nsw ADDWrr %0, %1

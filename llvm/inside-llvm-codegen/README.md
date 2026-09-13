@@ -4,6 +4,8 @@
 
 先读 [第 1 章](inside-llvm-codegen-ch1.md) 设置环境，再阅读各章。`experiments/chN/` 提供完整输入和 runner；`review/experiments-chN.json` 保存检查条件与结果；各章的 `review/chN.md` 记录依据和适用范围。附录主要保留前一轮静态校订内容，正文的新实验结论以各章报告为准。
 
+正文代码中的中文注释用于辅助阅读，重点解释数据流、约束和操作目的。LLVM IR 和 MIR 的机器指令 body 使用 `;` 注释，C/C++、MLIR 和 TableGen 使用 `//`，Shell 和 Python 使用 `#`。带阅读注释的输出节选会在附近说明；实际工具输出保存在实验目录中。第一次阅读可先看注释，再对照相邻的输入、输出和验证说明。
+
 ## 章节索引
 
 | 章节 | 校订稿 | 原文 | 核查记录 |

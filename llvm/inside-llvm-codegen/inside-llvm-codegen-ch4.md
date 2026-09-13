@@ -10,11 +10,13 @@
 <!-- manual-lab:ch4-setup -->
 
 ```sh
+# -e 使普通命令失败时停止；-u 检查未定义变量，pipefail 使管道成员的失败可见。
 set -euo pipefail
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
 BOOK_INPUT="$BOOK_ROOT/experiments/ch4"
+# 输入保留在 BOOK_INPUT；所有中间文件放到独立临时目录，避免覆盖样例。
 CODEGEN_LAB=$(mktemp -d)
 printf '本章临时输出目录：%s\n' "$CODEGEN_LAB"
 "$LLVM_BUILD/bin/opt" --version
@@ -89,6 +91,7 @@ X 支配 P，却不支配 Y，因为存在入口→Z→Y，所以 Y∈DF(X)。
 ```sh
 "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/graph7.ll" -o "$CODEGEN_LAB/graph7.bc"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/graph7.bc"
+# 打印的是分析结果，不改写原 CFG；合并 stdout/stderr 后便于对照父子与边界关系。
 "$LLVM_BUILD/bin/opt" \
   '-passes=print<domtree>,print<domfrontier>,print<postdomtree>,verify<domtree>' \
   -disable-output "$CODEGEN_LAB/graph7.bc" > "$CODEGEN_LAB/graph7.analysis.txt" 2>&1
@@ -127,6 +130,7 @@ flowchart TD
 "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/postdom-roots.ll" \
   -o "$CODEGEN_LAB/postdom-roots.bc"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/postdom-roots.bc"
+# 只分析多出口和无限循环根；若执行此输入，某些路径不会返回。
 "$LLVM_BUILD/bin/opt" '-passes=print<postdomtree>' -disable-output \
   "$CODEGEN_LAB/postdom-roots.bc" > "$CODEGEN_LAB/postdom-roots.txt" 2>&1
 cat "$CODEGEN_LAB/postdom-roots.txt"
@@ -210,14 +214,17 @@ LLVM 18 `SemiNCAInfo::runSemiNCA` 的实际结构：
 ```text
 // 说明性伪代码，保留LLVM18中关键次序
 用 DFS 父节点初始化每个节点的 IDom 候选
+// 先求半支配：编号只描述既定 DFS 次序，不代表已经证明的支配关系。
 逆 DFS 顺序遍历非根节点 w:
     Semi[w] = ParentDFS[w]
     对每个反向邻居 n:
+        // eval 用路径压缩维护半支配候选；它不是直接查询 n 的最终 idom。
         u = eval(n, 当前处理边界)
         Semi[w] = DFS序较小的 Semi[w] 与 Semi[u]
 正 DFS 顺序遍历非根节点 w:
     candidate = 先前保存的 IDom[w]
     while DFSNum[candidate] > DFSNum[Semi[w]]:
+        // 沿已经建立的支配祖先关系上溯，而不是沿 CFG 的任意前驱移动。
         candidate = IDom[candidate]
     IDom[w] = candidate
 ```
@@ -233,6 +240,7 @@ LLVM 18 `SemiNCAInfo::runSemiNCA` 的实际结构：
 <!-- manual-lab:ch4-finite-graph-models -->
 
 ```sh
+# 用删点可达性等独立定义作参考，交叉检查有限图上的 semi、idom 和 DF。
 python3 "$BOOK_INPUT/runner.py" --output-dir "$CODEGEN_LAB/model-checks"
 python3 - "$CODEGEN_LAB/model-checks/results.json" <<'PYJSON'
 import json, sys
@@ -266,9 +274,12 @@ Join 边的定义：假设 x → y 是 CFG 上的一条边（这里是指直接�
 ```text
 DominanceFrontier(x) {
     DFx = {};
+    // 子树中的每个 z 都被 x 支配；其中也要包含 x 自己。
     foreach z in DomTreeSubtreeIncludingRoot(x) {
         foreach y in CFGSuccessors(z) {
+            // 检查从这片支配区域出去的 Join 边；level 是支配树深度，不是 CFG 距离。
             if (idom(y) != z && level(y) <= level(x))
+                // 同一汇合块可能由多条边发现，用集合避免重复加入。
                 DFx = DFx union {y};
         }
     }
@@ -284,6 +295,7 @@ DominanceFrontier(x) {
 ```sh
 "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/join-loop.ll" -o "$CODEGEN_LAB/join-loop.bc"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/join-loop.bc"
+# 分支先在 join 汇合，新 PHI 又成为定义；回到 header 时可能继续需要 PHI。
 "$LLVM_BUILD/bin/opt" '-passes=mem2reg,verify,print<domfrontier>' -S \
   "$CODEGEN_LAB/join-loop.bc" -o "$CODEGEN_LAB/join-loop.ssa.ll" \
   2> "$CODEGEN_LAB/join-loop.frontier.txt"

@@ -4,144 +4,144 @@
   "cases": [
     {
       "file": "inside-llvm-codegen-ch10.md",
-      "line": 187,
-      "ir_sha256": "486026d2967b36a02676d1c7ebafa68c056b99ad9de67c2b80e255ae3ae32ed1",
+      "line": 191,
+      "ir_sha256": "2b04fb0437004fc49f81c5373069f8d4366ff1703c57214ca70a2d62a214a191",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch10.md",
-      "line": 1157,
-      "ir_sha256": "5d83dfeadd6e011d853881285611920f2042cd4581706453d09e1f54f8b51816",
+      "line": 1195,
+      "ir_sha256": "b9077b4236591bc8126f93d695bf2a57d34d4a213b10a2128cb6630f2f0ec025",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch11.md",
-      "line": 504,
-      "ir_sha256": "7f86e7bb4198f0f0832e3b3dc5d508eb656d5cb7505fb61b335e5019b166fe08",
+      "line": 542,
+      "ir_sha256": "e6a49570f1543e95092b5aef3aad426d850a02134fb145a70d3da8278bcd274f",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch2.md",
-      "line": 108,
-      "ir_sha256": "023b7d8e1bf96d687ea53715707a635181c20824736cede9b10adc7fea9fbf78",
+      "line": 114,
+      "ir_sha256": "b88025857f99ac814919094927856ae0d3bfa714c501413774cfebc18246b01f",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch2.md",
-      "line": 125,
-      "ir_sha256": "a4acb03aa0556c09c24325d2dc30424e77277bd8fb7e1b1069df793a82d6524b",
+      "line": 136,
+      "ir_sha256": "3114e9974ae539d0a4ccbacc8dcb3dab54a10468b70303c9cb76f6f30116f0f0",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch2.md",
-      "line": 626,
-      "ir_sha256": "9e9f9239309e1b73a43beba9852890a9957302516e045bad6c52113027323ba2",
+      "line": 659,
+      "ir_sha256": "ece8a59ef28c36cab46d02aa1d8cdef30ffb632e1850e03f70f6c1a764c0e3d8",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch5.md",
-      "line": 276,
-      "ir_sha256": "1cbcd2036cbbcc322cb94c75d28b7d178a07c34565631160a4c33be9a6c27ae9",
+      "line": 285,
+      "ir_sha256": "53d4b435cba62a7e6607ec41b3385fba56c8684eec873361d6326cbec85963f0",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch5.md",
-      "line": 305,
-      "ir_sha256": "331575a35746af62650e3f65b6939454c3d86adc34d8c89e824683c9cbfa06c6",
+      "line": 318,
+      "ir_sha256": "75cc5086d7ae632dac3959a459e2e1bc3ff68255d0c99f657efb4cc9571a3235",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch7.md",
-      "line": 115,
-      "ir_sha256": "01de44115e7d408b39d8acef43aff229a7fa6a09f824b5d691b79322babd10a2",
+      "line": 122,
+      "ir_sha256": "1f43a567e4bdcc732292e5c40d27492ae038b8c73ea8d7ba44a643e77afb4146",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch7.md",
-      "line": 158,
-      "ir_sha256": "21dc74c01ce772e3979e936dfb380d0a301c778412084cb46b89c8e00916284e",
+      "line": 168,
+      "ir_sha256": "f3d7e07a18bf6995b804208311d53fe3ae9dd301a65b838c73ac347817136d7b",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch7.md",
-      "line": 315,
-      "ir_sha256": "b551371150900a3b51a021686a6a386a0079eba205b0d155dbd8060a8ab2f374",
+      "line": 338,
+      "ir_sha256": "22cd56102191b2fdbdc1eefdfb94bb15597f08df5de1d71bbfe7659868033be6",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch7.md",
-      "line": 672,
-      "ir_sha256": "530a9d3b287fdfa5b7c6996e8a9dd125be220c7814a3a85fa472afe0ab117f03",
+      "line": 726,
+      "ir_sha256": "13a9bfa441e622529a617e1feafbed0b482320d4c8a9f0e066571640cc913d68",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch8.md",
-      "line": 104,
-      "ir_sha256": "04d028374c1317890a2a4121d0da272b9a2a5ce23ccbc91e395e091631ae3efb",
+      "line": 107,
+      "ir_sha256": "29b3b87fb0031aa941d39f7a1eaa06c43e6ea6438c2e6df851a3f3353801f58e",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch8.md",
-      "line": 721,
-      "ir_sha256": "c96002e8b9da72855b6d09b618cf16d8c108ab1feac7789f05c908109e754f7b",
+      "line": 763,
+      "ir_sha256": "794a14335ef95aac95efd69a0bf5f22d023cf8dfbe24893426fe60e7e829fe7c",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch9.md",
-      "line": 111,
-      "ir_sha256": "42600413f21d0c01289e6228440d38ab38b1f37e92498789e25f9506f7756c2a",
+      "line": 116,
+      "ir_sha256": "6d5c8c8ad56e3280f474f67ebbdafe4138c9c713383077072e667b321c8904da",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch9.md",
-      "line": 254,
-      "ir_sha256": "5175834c25b985ce5da56291a6480620fd036b0ef732e0d4fec72ee3f1aab2df",
+      "line": 268,
+      "ir_sha256": "07ff0b4d48d9009c2d97f0889e71a58b9a1d657ca458d5d5882814bcd194ad08",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch9.md",
-      "line": 313,
-      "ir_sha256": "ca86d27ef1c23ae3cc094420eabc0c8d6d57017a2917c808a7babb61b9c44009",
+      "line": 329,
+      "ir_sha256": "62dd6424a2c044f18a3ae4bd31e24dd6338be0fd46da0aee6107ff31fde6bb06",
       "returncode": 0,
       "diagnostic": "",
       "passed": true
     },
     {
       "file": "inside-llvm-codegen-ch9.md",
-      "line": 637,
-      "ir_sha256": "8c4d477d682885c692aed29461d457ed10c764bdf5496e18d0ba0a611817a48b",
+      "line": 674,
+      "ir_sha256": "4cb91684036456b27d4b94fe293b57b8efd49e09cb7d4e18fa44ec84ce703b25",
       "returncode": 0,
       "diagnostic": "",
       "passed": true

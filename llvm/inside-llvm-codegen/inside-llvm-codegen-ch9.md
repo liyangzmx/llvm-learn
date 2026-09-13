@@ -23,11 +23,14 @@ flowchart TD
 <!-- manual-lab:ch9-setup -->
 
 ```sh
+# 开启严格检查，使未处理的命令/管道失败与未定义变量尽早暴露。
 set -euo pipefail
+# 可提前 export 覆盖默认路径；各阶段使用同一套 LLVM 构建。
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
 BOOK_INPUT="$BOOK_ROOT/experiments/ch9"
+# 每次创建独立目录，保留前后阶段文件供比较，实验输入保持只读。
 CODEGEN_LAB=$(mktemp -d)
 export BOOK_INPUT CODEGEN_LAB
 "$LLVM_BUILD/bin/llc" --version
@@ -48,6 +51,7 @@ printf '实验输出目录：%s\n' "$CODEGEN_LAB"
 
 ```cpp
 bool isEven(int x) {
+    // 两条路径分别定义结果，在公共返回点汇合；SSA 中可由 PHI 表达。
     bool result;
     if (x % 2 == 0)
         result = true;
@@ -98,6 +102,7 @@ bool isEven(int x, int y) {
     bool result = false;
     if (x % 2 == 0) result = true;
     else result = false;
+    // 此处两条分支都重新赋值，所以最终结果已不依赖上一组对 x 的判断。
     if (y % 3 == 0) result = true;
     else result = false;
     return result;
@@ -113,6 +118,7 @@ define dso_local noundef zeroext i1 @isEven(i32 noundef %x, i32 noundef %y) {
 entry:
     %x.addr = alloca i32, align 4
     %y.addr = alloca i32, align 4
+    ; 栈中的布尔值占一个字节；返回接口使用 i1，末尾需要截断。
     %returnValue = alloca i8, align 1
     store i32 %x, ptr %x.addr, align 4
     store i32 %y, ptr %y.addr, align 4
@@ -137,6 +143,7 @@ if.else4:                                        ; preds = %if.end
     store i8 0, ptr %returnValue, align 1
     br label %if.end5
 
+; 两个前驱共用此尾部，重复尾部时必须分别维护后续 CFG 入边。
 if.end:                                          ; preds = %if.else, %if.then
     %1 = load i32, ptr %y.addr, align 4
     %rem1 = srem i32 %1, 3
@@ -155,6 +162,7 @@ if.end5:                                         ; preds = %if.else4, %if.then3
 <!-- manual-lab:ch9-taildup -->
 
 ```sh
+# 先检查 IR；再只改变停止点或复制阈值，让基本块数量的差异有明确归因。
 "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/tail.ll" -o "$CODEGEN_LAB/tail.bc"
 "$LLVM_BUILD/bin/opt" -passes=verify "$CODEGEN_LAB/tail.bc" -disable-output
 for variant in before default size10; do
@@ -192,6 +200,7 @@ R0 = PHI(R1, R2)
 <!-- manual-lab:ch9-phi -->
 
 ```sh
+# 只运行 PHI 化简，观察同值 PHI 环是否消失；MIR 校验会检查变换后的结构。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
   -run-pass=opt-phis "$BOOK_INPUT/phi.mir" -o "$CODEGEN_LAB/phi.mir"
 sed -n '/^body:/,$p' "$CODEGEN_LAB/phi.mir"
@@ -209,6 +218,7 @@ sed -n '/^body:/,$p' "$CODEGEN_LAB/phi.mir"
 void bar(char *, int);
 void foo(int var) {
 A: {
+        // z 的块作用域先结束；存储能否复用还需后端掌握实际 lifetime 信息。
         char z[4096];
         bar(z, 0);
     }
@@ -220,6 +230,7 @@ A: {
         p = x;
     } else {
         bar(y, 1);
+        // p 指向数组内部，复用栈槽时必须保留这个相对偏移。
         p = y + 1024;
     }
 B:
@@ -233,6 +244,7 @@ z 的作用域在 A 后结束；x、y 中有一个地址经 p 到达 B，因此�
 
 ```c
 void foo(int var) {
+    // 理想化复用模型：仅在前文语义前提成立时，可让不冲突对象共享存储。
     char storage[4096];
     char *p;
     bar(storage, 0);
@@ -251,6 +263,8 @@ void foo(int var) {
 
 **代码清单 9-6 Clang 18 实际生成的完整 stack.ll**
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```llvm
 ; ModuleID = '/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/stack.c'
 source_filename = "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/stack.c"
@@ -265,6 +279,7 @@ entry:
   %y = alloca [4096 x i8], align 1
   call void @llvm.lifetime.start.p0(i64 4096, ptr nonnull %z) #3
   call void @bar(ptr noundef nonnull %z, i32 noundef 0) #3
+  ; 结束的是 z 对象的活跃存储期，不是执行释放内存的库函数。
   call void @llvm.lifetime.end.p0(i64 4096, ptr nonnull %z) #3
   %tobool.not = icmp eq i32 %var, 0
   br i1 %tobool.not, label %if.else, label %B
@@ -275,6 +290,7 @@ if.else:                                          ; preds = %entry
   br label %B
 
 B:                                                ; preds = %entry, %if.else
+  ; PHI 按实际进入 B 的前驱选择指针；它本身不读取数组内容。
   %p.0 = phi ptr [ %add.ptr, %if.else ], [ %x, %entry ]
   call void @bar(ptr noundef nonnull %p.0, i32 noundef 2) #3
   ret void
@@ -319,6 +335,7 @@ entry:
   call void @llvm.lifetime.start.p0(i64 4096, ptr nonnull %z)
   call void @bar(ptr noundef nonnull %z, i32 noundef 0)
   call void @llvm.lifetime.end.p0(i64 4096, ptr nonnull %z)
+  ; 此时 z 已结束，x/y 才开始；二者彼此仍有重叠，不能据此合成一个槽。
   call void @llvm.lifetime.start.p0(i64 4096, ptr %x)
   call void @llvm.lifetime.start.p0(i64 4096, ptr %y)
   %tobool.not = icmp eq i32 %var, 0
@@ -332,6 +349,7 @@ if.else:                                          ; preds = %entry
 B:                                                ; preds = %entry, %if.else
   %p.0 = phi ptr [ %add.ptr, %if.else ], [ %x, %entry ]
   call void @bar(ptr noundef nonnull %p.0, i32 noundef 2)
+  ; 最后一次 bar 返回后，两个对象都不再需要保留其值。
   call void @llvm.lifetime.end.p0(i64 4096, ptr %x)
   call void @llvm.lifetime.end.p0(i64 4096, ptr %y)
   ret void
@@ -350,6 +368,7 @@ declare void @llvm.lifetime.end.p0(i64 immarg, ptr nocapture)
 
 ```text
 entry:
+    # 提前算出地址不等于对象已活跃；判断还要追踪 lifetime 与实际访问。
     address1 = address_of(stack_object_1)
     address2 = address_of(stack_object_2)
     branch condition, loop, exit
@@ -368,6 +387,7 @@ exit:
 <!-- manual-lab:ch9-stack-coloring -->
 
 ```sh
+# 对比前端实际发出的 lifetime 与手工补全版本，观察哪些栈对象能共享槽。
 "$LLVM_BUILD/bin/clang" --target=aarch64-unknown-linux-gnu -O2 -S -emit-llvm \
   "$BOOK_INPUT/stack.c" -o "$CODEGEN_LAB/stack.ll"
 for point in before after; do
@@ -381,6 +401,7 @@ done
 sed -n '/^stack:/,/^body:/p' "$CODEGEN_LAB/stack-after.mir"
 sed -n '/^stack:/,/^body:/p' "$CODEGEN_LAB/stack-marked.mir"
 
+# 小型 BPF 例子继续观察 lifetime 标记的消除，以及 PEI 后的实际槽偏移。
 "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/lifetime.ll" -o "$CODEGEN_LAB/lifetime.bc"
 "$LLVM_BUILD/bin/opt" -passes=verify "$CODEGEN_LAB/lifetime.bc" -disable-output
 for point in before after pei; do
@@ -415,6 +436,7 @@ AArch64 的原始/标记版分别保留 3/2 个 4096 字节槽；BPF 顺序生�
 实验 `dce.mir` 输入的核心如下：
 
 ```text
+; %1 的计算只被 %2 使用，而 %2 没有用途；删除 %2 后还要继续消除 %1。
 %0:gpr = COPY $r1
 %1:gpr = ADD_ri %0, 7
 %2:gpr = COPY %1
@@ -427,6 +449,7 @@ RET implicit $r0
 <!-- manual-lab:ch9-dead-mi -->
 
 ```sh
+# 单独运行死机器指令消除，确认无用定义链被删而有副作用或返回所需值仍保留。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
   -run-pass=dead-mi-elimination "$BOOK_INPUT/dce.mir" -o "$CODEGEN_LAB/dce.mir"
 sed -n '/^body:/,$p' "$CODEGEN_LAB/dce.mir"
@@ -461,6 +484,7 @@ use(z, q);
 **代码清单 9-11 可安全推测执行时的数据选择形式**
 
 ```text
+# 这里会执行两边计算：只有额外执行安全，才能用 select 代替分支。
 zt = S1(); qt = S2();
 zf = S3(); qf = S4();
 z = select(A, zt, zf);
@@ -474,6 +498,7 @@ use(z, q);
 
 ```cpp
 int MUL(int x, int y, bool flag) {
+    // aaa 供两个分支复用；提前计算越多值，潜在的同时活跃值也越多。
     int aaa = y * x;
     int z = 0;
     int q = 0;
@@ -492,11 +517,14 @@ int MUL(int x, int y, bool flag) {
 
 **代码清单 9-13 EarlyIfConverter 之前的实际 MIR**
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```text
 bb.0.entry:
     successors: %bb.1(0x40000000), %bb.2(0x40000000)
     liveins: $edi, $esi, $edx
 
+    ; 本例三个实参来自 EDI/ESI/EDX；%9 保存决定分支的 flag。
     %9:gr32 = COPY $edx
     %8:gr32 = COPY $esi
     %7:gr32 = COPY $edi
@@ -519,6 +547,7 @@ bb.0.entry:
     %4:gr32 = nsw ADD32rr %7, %0, implicit-def dead $eflags
 
   bb.3.if.end:
+    ; PHI 根据前驱选择 z；下一条 PHI 同样选择 q，二者随后相乘。
     %5:gr32 = PHI %3, %bb.2, %1, %bb.1
     %6:gr32 = PHI %4, %bb.2, %2, %bb.1
     %10:gr32 = nsw IMUL32rr %5, %6, implicit-def dead $eflags
@@ -553,6 +582,8 @@ TEST32rr %9, %9, implicit-def $eflags
 
 **代码清单 9-16 显式启用 -x86-early-ifcvt 后的实际 MIR**
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```text
 bb.0.entry:
     liveins: $edi, $esi, $edx
@@ -565,7 +596,9 @@ bb.0.entry:
     %4:gr32 = nsw ADD32rr %7, %0, implicit-def dead $eflags
     %1:gr32 = nsw IMUL32rr %8, %7, implicit-def dead $eflags
     %2:gr32 = nsw IMUL32rr %7, %0, implicit-def dead $eflags
+    ; 两边算术已执行完，重新测试 flag，避免算术指令覆盖选择所需的 EFLAGS。
     TEST32rr %9, %9, implicit-def $eflags
+    ; 条件码 4 表示相等：flag 为零时选 %3，否则保留 %1；下一条同理。
     %5:gr32 = CMOV32rr %1, %3, 4, implicit $eflags
     %6:gr32 = CMOV32rr %2, %4, 4, implicit $eflags
     %10:gr32 = nsw IMUL32rr %5, %6, implicit-def dead $eflags
@@ -578,11 +611,13 @@ bb.0.entry:
 <!-- manual-lab:ch9-if-conversion -->
 
 ```sh
+# 禁用 O0 的 optnone 后仅做 mem2reg：暴露 SSA 值，同时尽量保留供后端观察的分支。
 "$LLVM_BUILD/bin/clang++" --target=x86_64-unknown-linux-gnu -O0 \
   -Xclang -disable-O0-optnone -S -emit-llvm "$BOOK_INPUT/if-conversion.cpp" \
   -o "$CODEGEN_LAB/if-raw.ll"
 "$LLVM_BUILD/bin/opt" -passes=mem2reg -S "$CODEGEN_LAB/if-raw.ll" \
   -o "$CODEGEN_LAB/if.ll"
+# enabled 显式打开 X86 前期 if-conversion，另两组用于区分默认禁用与 Pass 前状态。
 for variant in before disabled enabled; do
   case "$variant" in
     before) IFCVT_FLAGS=(-stop-before=early-ifcvt) ;;
@@ -605,6 +640,7 @@ sed -n '/^body:/,$p' "$CODEGEN_LAB/if-enabled.mir"
 
 ```c
 void fill(long *out, long a, long b) {
+    // a、b 不随迭代变化，乘法可考虑外提；out[i] 的逐次存储仍须保留。
     for (int i = 0; i != 10; ++i)
         out[i] = a * b;
 }
@@ -619,6 +655,7 @@ MachineLICM 按循环层次寻找候选，判断所有输入定义是否来自�
 <!-- manual-lab:ch9-licm -->
 
 ```sh
+# 直接从 MIR 运行循环外提，检查乘法的所在块，避免把 IR 优化的效果混入。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
   -run-pass=early-machinelicm "$BOOK_INPUT/licm.mir" -o "$CODEGEN_LAB/licm.mir"
 sed -n '/^body:/,$p' "$CODEGEN_LAB/licm.mir"
@@ -644,8 +681,11 @@ bb.0:
     br i1 %cond, label %bb.1, label %bb.2
 
 bb.1:
+    ; 加法交换输入后仍与支配本块的 %a 等价，因此可复用已有结果。
     %c = add i32 %y, %x
+    ; 计算冗余不代表这次内存写入冗余；CSE 不能随手删除存储副作用。
     store i32 %c, ptr %p1
+    ; %b 已完成相同的零扩展，后端可复用它对应的机器值。
     %d = zext i32 %a to i64
     store i64 %d, ptr %p2
     br label %bb.2
@@ -657,15 +697,18 @@ bb.2:
 
 以 RISCV64 generic、`-O2` 在 `machine-cse` 前后截取 MIR，ADDW/SLLI/SRLI 总数从 6 条变为 3 条。第二块的交换输入加法复用 `%0`，零扩展结果复用 `%10`；4 条 store 都仍然存在。这个 Pass 消除的是值计算，不据此认定有副作用的写操作也可删除。
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```text
-# 优化前 bb.1 中的核心计算
+; 优化前 bb.1 中的核心计算
 %11:gpr = ADDW %7, %6
 SW killed %11, %3, 0
+; 左移后逻辑右移会清除高 32 位，完成这里 i32 到 i64 的零扩展。
 %12:gpr = SLLI %0, 32
 %13:gpr = SRLI killed %12, 32
 SD killed %13, %4, 0
 
-# 优化后 bb.1 中只剩下复用结果的存储
+; 优化后 bb.1 中只剩下复用结果的存储
 SW %0, %3, 0
 SD %10, %4, 0
 ```
@@ -675,6 +718,7 @@ SD %10, %4, 0
 <!-- manual-lab:ch9-cse -->
 
 ```sh
+# 用 BPF 检查单 Pass，再用 RISC-V 完整流水线的前后截面观察零扩展等计算复用。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
   -run-pass=machine-cse "$BOOK_INPUT/cse.mir" -o "$CODEGEN_LAB/cse.mir"
 "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/cse.ll" -o "$CODEGEN_LAB/cse.bc"
@@ -710,6 +754,7 @@ BPF 的两个重复立即数加法合为一个；RISCV 的第二块复用早先�
 <!-- manual-lab:ch9-machine-sink -->
 
 ```sh
+# 检查定义是否移到唯一需要它的后继，以及相应的活跃寄存器信息是否更新。
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
   -run-pass=machine-sink "$BOOK_INPUT/sink.mir" -o "$CODEGEN_LAB/sink.mir"
 sed -n '/^body:/,$p' "$CODEGEN_LAB/sink.mir"

@@ -10,11 +10,13 @@
 <!-- manual-lab:ch3-setup -->
 
 ```sh
+# -e 使普通命令失败时停止；-u 检查未定义变量，pipefail 使管道成员的失败可见。
 set -euo pipefail
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
 BOOK_INPUT="$BOOK_ROOT/experiments/ch3"
+# 输入保留在 BOOK_INPUT；所有中间文件放到独立临时目录，避免覆盖样例。
 CODEGEN_LAB=$(mktemp -d)
 printf '本章临时输出目录：%s\n' "$CODEGEN_LAB"
 "$LLVM_BUILD/bin/opt" --version
@@ -98,6 +100,7 @@ Knaster–Tarski 定理：完备格上的单调自映射，其不动点集合在
 <!-- manual-lab:ch3-finite-models -->
 
 ```sh
+# 有限穷举交叉检查格和数据流方程；不能由有限样例推出一般定理。
 python3 "$BOOK_INPUT/runner.py" --output-dir "$CODEGEN_LAB/model-checks"
 python3 - "$CODEGEN_LAB/model-checks/results.json" <<'PYJSON'
 import json, sys
@@ -183,11 +186,11 @@ CFG 中存在三种结构，如图 3-2 所示。
 **代码清单 3-1 最小不动点伪代码**
 
 ```text
-v = (⊥, ⊥, ... , ⊥, ..., ⊥, ..., ⊥) //设置初值
+v = (⊥, ⊥, ... , ⊥, ..., ⊥, ..., ⊥) // 每一项是一个程序点的抽象状态；⊥不是源语言的未初始化值
 bool change = false;
 do { //迭代计算
-    temp = v;
-    v = F(v);
+    temp = v; // 保存本轮之前的完整状态，用于检查整个方程组是否稳定
+    v = F(v); // F 同时包含控制流汇合、语句转移和规定的边界条件
     if (temp == v) {
         change = false;
     } else {
@@ -210,6 +213,7 @@ do { //迭代计算
 
 ```text
 int x = 0;
+// 按数学整数解释：循环次数未知时，可能值集合会沿 {0}、{0,1}、… 增长。
 while (condition) {
     x++;
 }
@@ -264,6 +268,7 @@ MOP（Meet Over all Paths，沿用传统名称）在 CFG 的所有静态路径�
 
 ```text
 int t = 10;
+// 在本例的纯数学平方假设下条件恒真；不筛除边的静态模型仍可能合并 else。
 if (sqr(t) >= 0) {
     x = 0;
 } else {
@@ -318,6 +323,7 @@ flowchart TD
 ```sh
 python3 - "$CODEGEN_LAB/model-checks/results.json" <<'PYJSON'
 import json, sys
+# 读取非关系常量域的对照：先各路径求和与先汇合变量，精度并不相同。
 row = next(c for c in json.load(open(sys.argv[1]))["checks"] if c["name"] == "mop_vs_mfp")
 print(json.dumps(row, ensure_ascii=False))
 PYJSON
@@ -339,8 +345,8 @@ PYJSON
 int x = 0; // 定义之后若有后续使用，x的当前值活跃
 ……
 do {
-    x++;  // x的重定义点和使用点，x在此处活跃
-} while (x < 10); //x的使用点，x在此处活跃
+    x++;  // 先读取旧 x，再定义新 x；块内求 LiveUse 时也必须按这个顺序处理
+} while (x < 10); // 条件读取更新后的 x，使该新值在条件前活跃
 
 //如果x从此以后不再被使用，则可以认为x不再活跃
 ```
@@ -401,7 +407,7 @@ Def / LiveUse 依赖块内顺序。实验正向扫描指令：先将当前指令
 
 ```text
 s1 : y := 3
-s2 : x := y
+s2 : x := y // 此处的 y 来自 s1；到达定值记录的是定义点 s1
 ```
 
 对 s2 而言，s1 是 y 的到达定值。再看一个例子，如代码清单 3-6 所示。
@@ -410,7 +416,7 @@ s2 : x := y
 
 ```text
 s1 : y := 3
-s2 : y := 4
+s2 : y := 4 // 覆盖旧 y，截断 s1 的值到达 s3 的路径
 s3 : x := y
 ```
 
@@ -452,6 +458,7 @@ Gen 包含在块内产生且未被该块后续赋值杀死的**定义点**，Kil
 ```sh
 python3 - "$CODEGEN_LAB/model-checks/results.json" <<'PYJSON'
 import json, sys
+# 同一个 JSON 保存三种分析；其状态分量分别是变量集合、定义点集合、常量状态。
 names = {"liveness_table_3_3", "reaching_definitions_table_3_4", "dense_constant_table_3_5"}
 for row in json.load(open(sys.argv[1]))["checks"]:
     if row["name"] in names:
@@ -469,7 +476,7 @@ PYJSON
 
 ```text
 int x = 5;
-int y = x + 10;
+int y = x + 10; // 先传播 x=5，再把具体的 5+10 折叠为 15
 ```
 
 在清单 3-7 中，x 的值 5 可传播到 y=x+10，再把加法折叠为 15。这样可消除不再需要的计算或存储；最终是否需要寄存器、立即数装载或保留内存访问，还取决于用途和目标指令约束。常量传播传递已知值，常量折叠求值具体操作，二者常配合实现。
@@ -491,9 +498,9 @@ int i = 1;
 int flag = 0;
 while (i > 0 && !flag) {
     if (i == 1) {
-        flag = 1;
+        flag = 1; // 赋值覆盖旧状态；即使入口 flag 是 ⊤，该支路出口也确定为 1
     } else {
-        i++;
+        i++; // 不筛除不可执行边的密集模型仍分析这里；能否折叠取决于输入 i
     }
 }
 ```
@@ -531,14 +538,17 @@ while (i > 0 && !flag) {
 <!-- manual-lab:ch3-clang-sccp -->
 
 ```sh
+# 保留便于观察的初始控制流，同时允许 opt 对 O0 输入执行后续 Pass。
 "$LLVM_BUILD/bin/clang" --target=bpfel -O0 -Xclang -disable-O0-optnone \
   -fno-discard-value-names -S -emit-llvm "$BOOK_INPUT/constant.c" \
   -o "$CODEGEN_LAB/constant.before.ll"
 "$LLVM_BUILD/bin/llvm-as" "$CODEGEN_LAB/constant.before.ll" \
   -o "$CODEGEN_LAB/constant.before.bc"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/constant.before.bc"
+# 先提升内存变量；SCCP 联合传播值和可执行边，再由 SimplifyCFG 清理控制流。
 "$LLVM_BUILD/bin/opt" -passes=mem2reg,sccp,simplifycfg,verify -S \
   "$CODEGEN_LAB/constant.before.ll" -o "$CODEGEN_LAB/constant.sccp.ll"
+# 前后使用相同的 main 检查结果，不能只凭 IR 变短就认定语义保持。
 for ir in "$CODEGEN_LAB/constant.before.ll" "$CODEGEN_LAB/constant.sccp.ll"; do
   "$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel "$ir"
 done

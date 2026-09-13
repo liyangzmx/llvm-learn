@@ -23,11 +23,13 @@ flowchart LR
 <!-- manual-lab:ch2-setup -->
 
 ```sh
+# 检查失败即停止；预期失败的负例必须在后面的 if 中显式处理。
 set -euo pipefail
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
 BOOK_INPUT="$BOOK_ROOT/experiments/ch2"
+# 输入保留在 BOOK_INPUT；所有中间文件放到独立临时目录，避免覆盖样例。
 CODEGEN_LAB=$(mktemp -d)
 printf '本章临时输出目录：%s\n' "$CODEGEN_LAB"
 "$LLVM_BUILD/bin/opt" --version
@@ -46,6 +48,7 @@ AST（Abstract Syntax Tree，抽象语法树）按源语言构造组织表达式
 
 ```c
 int add(int a, int b) {
+    // 后面的 IR 将展示参数如何经内存槽进入这个加法；测试输入避免有符号溢出。
     return a + b;
 }
 ```
@@ -55,6 +58,7 @@ int add(int a, int b) {
 <!-- manual-lab:ch2-clang-ast -->
 
 ```sh
+# -Xclang 将选项交给 Clang 前端；这里只查看语法/语义树，不发射目标代码。
 "$LLVM_BUILD/bin/clang" --target=bpfel -Xclang -ast-dump -fsyntax-only \
   "$BOOK_INPUT/examples.c" > "$CODEGEN_LAB/examples.ast.txt"
 rg -n 'FunctionDecl|CompoundStmt|ReturnStmt|BinaryOperator|ImplicitCastExpr|ParmVarDecl' \
@@ -89,8 +93,10 @@ LLVM 中端的许多优化操作 LLVM IR；后端还会在 Machine IR 上优化�
 <!-- manual-lab:ch2-parse-and-emit-ir -->
 
 ```sh
+# llvm-as 将文本变成 bitcode；verifier 检查类型、支配与 PHI 等合法性。
 "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/add.ll" -o "$CODEGEN_LAB/add.bc"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/add.bc"
+# 禁止 O0 自动加 optnone，否则后续 mem2reg 可能跳过函数；保留名称便于跟踪值。
 "$LLVM_BUILD/bin/clang" --target=bpfel -O0 -Xclang -disable-O0-optnone \
   -fno-discard-value-names -S -emit-llvm "$BOOK_INPUT/examples.c" \
   -o "$CODEGEN_LAB/examples.before.ll"
@@ -106,13 +112,18 @@ LLVM 中端的许多优化操作 LLVM IR；后端还会在 Machine IR 上优化�
 > LLVM 18 使用 opaque pointer：地址写为 `ptr`，数据类型由 load/store 的 `i32` 指定。下面是完整可解析模块，已以 [add.ll](experiments/ch2/add.ll) 运行 llvm-as 和 verifier；它省略 Clang 的目标信息及属性，便于阅读。
 
 ```llvm
+; @add 是函数的全局名字；%0、%1 等名字表示函数内的局部 SSA 值。
 define i32 @add(i32 %0, i32 %1) {
+    ; %3/%4 是只定义一次的地址值；地址所指的内存仍可被 store 修改。
     %3 = alloca i32, align 4
     %4 = alloca i32, align 4
+    ; ptr 是指针类型；ptr %3 表示地址，写入的整数是前面的 i32 %0。
     store i32 %0, ptr %3, align 4
     store i32 %1, ptr %4, align 4
+    ; load 读取当前内存，产生新的 SSA 值；%5 不随之后的内存写入而改变。
     %5 = load i32, ptr %3, align 4
     %6 = load i32, ptr %4, align 4
+    ; nsw 约束有符号溢出产生 poison（可能继续传播的无效值），不会插入溢出检查。
     %7 = add nsw i32 %5, %6
     ret i32 %7
 }
@@ -124,14 +135,14 @@ define i32 @add(i32 %0, i32 %1) {
 
 ```llvm
 define i32 @add(i32 %0, i32 %1) {
-    %3 = alloca i32, align 4 ; 分配一个栈变量，类型是i32，4字节对齐，用SSA 值 %3表示变量地址
-    %4 = alloca i32, align 4 ; 分配一个栈变量，类型是i32，4字节对齐，用SSA 值 %4表示变量地址
-    store i32 %0, ptr %3, align 4 ; 将参数%0存放在%3的栈变量中
-    store i32 %1, ptr %4, align 4 ; 将参数%1存放在%4的栈变量中
-    %5 = load i32, ptr %3, align 4 ; 将%3的栈变量加载到SSA 值 %5中
-    %6 = load i32, ptr %4, align 4 ; 将%4的栈变量加载到SSA 值 %6中
-    %7 = add nsw i32 %5, %6 ; 将两个SSA 值 %5、%6进行相加，结果放在SSA 值 %7中
-    ret i32 %7 ; 返回%7
+    %3 = alloca i32, align 4 ; 为参数 a 建立内存槽；SSA 名字 %3 代表地址，不代表槽内整数
+    %4 = alloca i32, align 4 ; 参数 b 使用另一个内存槽，两个地址分别保持单赋值
+    store i32 %0, ptr %3, align 4 ; 写入 a 的值；store 修改内存而不重定义 %3
+    store i32 %1, ptr %4, align 4 ; 写入 b 的值；本例随后只会从此处读取
+    %5 = load i32, ptr %3, align 4 ; 取出 a；可提升时 mem2reg 能直接改用参数 %0
+    %6 = load i32, ptr %4, align 4 ; 取出 b；mem2reg 可用参数 %1 替代这次读取
+    %7 = add nsw i32 %5, %6 ; 用两个读取结果计算新值；nsw 的溢出后果是 poison
+    ret i32 %7 ; 返回当前结果，同时终结基本块
 }
 ```
 
@@ -140,8 +151,10 @@ define i32 @add(i32 %0, i32 %1) {
 <!-- manual-lab:ch2-mem2reg -->
 
 ```sh
+# mem2reg 将合适的局部内存提升为值；多条路径汇合时补 PHI，随后立即验证。
 "$LLVM_BUILD/bin/opt" -passes=mem2reg,verify -S \
   "$CODEGEN_LAB/examples.before.ll" -o "$CODEGEN_LAB/examples.ssa.ll"
+# 前后都运行同一个 main，比较值语义；解释执行不要求目标具备 BPF JIT。
 for ir in "$CODEGEN_LAB/examples.before.ll" "$CODEGEN_LAB/examples.ssa.ll"; do
   "$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel "$ir"
 done
@@ -179,7 +192,9 @@ flowchart TD
 
 ```c
 int factor(int n) {
+    // ret 累积已处理因子的乘积；n 是尚未乘完的最大因子。
     int ret = 1;
+    // n=0/1 时跳过循环，保留空乘积 1；其余输入还须避免 int 溢出。
     while (n > 1) {
         ret *= n;
         n--;
@@ -193,6 +208,7 @@ runner 实际用 Clang 生成 IR，并执行 `opt -passes=dot-cfg -disable-outpu
 <!-- manual-lab:ch2-cfg-dot -->
 
 ```sh
+# DOT 由 Pass 写入当前目录；子 shell 切换目录后不会改变后续命令的工作位置。
 (
   cd "$CODEGEN_LAB"
   "$LLVM_BUILD/bin/opt" -passes=dot-cfg -disable-output \
@@ -244,6 +260,7 @@ SSA（Static Single Assignment，静态单赋值）要求每个 SSA 名字只有
 ```text
 1：x = 1;
 2：y = x +1;
+// 此处覆盖 x 后，语句4应使用新值；语句2已使用过的旧值不受影响。
 3：x = 2;
 4：z = x +1;
 ```
@@ -253,6 +270,7 @@ SSA（Static Single Assignment，静态单赋值）要求每个 SSA 名字只有
 **代码清单 2-6 SSA 示例代码**
 
 ```text
+// 版本号区分静态定义点：每个使用直接指向自己应读取的定义。
 x1 = 1;
 y = x1 +1;
 x2 = 2;
@@ -284,7 +302,7 @@ SSA 的形式看起来比较简单，但是引入了重命名的变量会带来�
 4：} else {
 5：   y3 = x +2;
 6：}
-7：print(y); //这里是汇聚点
+7：print(y); // 故意保留未解决的使用：仅重命名定义，还没有为两条路径汇合值
 ```
 
 但是语句 7 则有新的问题，此处 y 的值既可能是 y2 也可能是 y3（取决于分支的执行路径），所以需要引入一个新的表达方式将 y2 和 y3 重新汇聚为一个变量—这个方式就是引入 φ（Phi）函数。φ 函数本质上是一个选择操作，指从不同的执行路径中选择执行结果，例如当 if 语句执行时 φ 函数的结果为 y2，当 else 语句执行时 φ 函数的结果为 y3。语句 7 的 φ函数表示如代码清单 2-9 所示。
@@ -292,6 +310,7 @@ SSA 的形式看起来比较简单，但是引入了重命名的变量会带来�
 **代码清单 2-9 φ 函数表示**
 
 ```text
+// 根据实际进入汇合块的前驱边取值，不要求另一路径的定义也执行。
 y4 = φ(if:y2, else:y3);
 ```
 
@@ -306,6 +325,7 @@ y4 = φ(if:y2, else:y3);
 4：} else {
 5：   y3 = x +2;
 6：}
+// 两个分支均已覆盖初始 y1，汇合只需选择 y2 或 y3。
 7：y4 = φ(if:y2,else:y3);
 8：print(y4);
 ```
@@ -346,11 +366,13 @@ entry:
     y1 = 0
     jump loop
 loop:
+    // 首次进入取初值；走回边时，两个 PHI 同时接收上一轮的结果。
     x2 = phi(entry: x1, loop: x3)
     y2 = phi(entry: y1, loop: y3)
     y3 = y2 + x2
     x3 = x2 + 1
     branch (x3 < 10), loop, exit
+// 退出边来自本轮循环体，最终累加结果是 y3，而不是循环入口的旧 y2。
 exit:
     print(y3)
 ```
@@ -402,7 +424,7 @@ flowchart TD
 ```text
 1：i = 0;
 2：do {
-3：   t = i;
+3：   t = i; // 保留更新前的值；最后一次退出仍要用它计算 y
 4：   i = i + 1;
 5：} while (i < 10);
 6：y = t + 1;
@@ -441,6 +463,7 @@ flowchart TD
 int swap_problem(int n) {
     int x = 1, y = 2;
     for (int i = 0; i < n; ++i) {
+        // 先保存旧 x，避免 x=y 覆盖随后还要交给 y 的值。
         int temp = x;
         x = y;
         y = temp;
@@ -463,6 +486,7 @@ int swap_problem(int n) {
 **图 2-11 用临时值打破交换环**
 
 ```text
+// 这是同一条控制流边上的一组复制；临时值打破 x/y 的循环依赖。
 temp = x;
 x = y;
 y = temp;
@@ -473,6 +497,7 @@ y = temp;
 **代码清单 2-14 非循环依赖 φ 函数代码示例**
 
 ```text
+// 实参依次对应入口边、回边；第二个 PHI 的回边输入读取上一轮 x2。
 x2 = φ(x0, x1);
 y2 = φ(y0, x2);
 ```
@@ -491,7 +516,7 @@ y2 = φ(y0, x2);
 
 ```text
 1: a = 1;
-2: b = a + 1;
+2: b = a + 1; // 若这是 a 的最后一次使用，其位置可在读完 a 后供新值复用
 ...b...; //b被使用，说明b是活跃的
 ```
 
@@ -512,6 +537,7 @@ LLVM 18 的实际入口是 `PHIElimination::LowerPHINode`：为 PHI 建立中间
 ```sh
 "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/machine-phi.ll" -o "$CODEGEN_LAB/machine-phi.bc"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/machine-phi.bc"
+# 同一输入停在 PHI 消除前后；MachineVerifier 检查机器操作数及相关结构约束。
 for stage in before after; do
   "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O0 -verify-machineinstrs \
     "-stop-${stage}=phi-node-elimination" "$CODEGEN_LAB/machine-phi.bc" \
@@ -537,6 +563,7 @@ fi
 python3 "$BOOK_INPUT/runner.py" --output-dir "$CODEGEN_LAB/model-checks"
 python3 - "$CODEGEN_LAB/model-checks/results.json" <<'PYJSON'
 import json, sys
+# 读取已有断言结果，筛出并行复制模型；这段输出代码不重新实现复制算法。
 checks = json.load(open(sys.argv[1]))["checks"]
 for row in checks:
     if row["name"] in {"parallel_copy_exhaustive", "lost_copy_edge_placement"}:
@@ -574,10 +601,12 @@ entry:
     y1 = 0;
 jump loop(x1, y1)
 
+// 循环头参数由进入的边同时绑定；块内使用的是本轮参数值。
 loop(x2,  y2):
     y3 = y2 + x2;
     x3 = x2 + 1;
     v1 = cmp lt x3, 10
+    // 回边携带下一轮的两个输入，退出边只携带最后一次累加结果。
     branch v1, loop(x3, y3), exit(y3)
 
 exit(result):
@@ -593,7 +622,9 @@ loop 的参数 x2、y2 接收 entry 的初值或上一迭代的 x3、y3，exit �
 ```mlir
 module {
   func.func @choose(%c: i1, %a: i32, %b: i32) -> i32 {
+    // 目标块相同，但参数取决于选中的边：true 传 a，false 传 b。
     cf.cond_br %c, ^join(%a : i32), ^join(%b : i32)
+  // 块参数是一个 SSA 定义；它把“来自哪条边”与“传来哪个值”绑定起来。
   ^join(%value: i32):
     return %value : i32
   }
@@ -607,9 +638,11 @@ MLIR 到 LLVM IR 的两阶段转换可直接执行：
 <!-- manual-lab:ch2-mlir-edge-values -->
 
 ```sh
+# 先把各操作降到 LLVM 方言；此时仍允许重复后继携带不同块参数。
 "$LLVM_BUILD/bin/mlir-opt" "$BOOK_INPUT/edge-values.mlir" \
   --convert-arith-to-llvm --convert-func-to-llvm --convert-cf-to-llvm \
   --reconcile-unrealized-casts -o "$CODEGEN_LAB/edge-values-llvm.mlir"
+# 导出 LLVM IR 时拆开重复后继，使 PHI 能按不同前驱块识别两条输入。
 "$LLVM_BUILD/bin/mlir-translate" "$CODEGEN_LAB/edge-values-llvm.mlir" \
   --mlir-to-llvmir -o "$CODEGEN_LAB/edge-values.ll"
 "$LLVM_BUILD/bin/llvm-as" "$CODEGEN_LAB/edge-values.ll" -o "$CODEGEN_LAB/edge-values.bc"
@@ -621,16 +654,18 @@ sed -n '/define i32 @choose(/,/^}/p' "$CODEGEN_LAB/edge-values.ll"
 
 预期 LLVM 方言中仍为重复目标，导出的 choose 出现中间块与两个 PHI；解释器返回 0，表示 true/false 分别选中 1/2。
 
-实验先运行 `mlir-opt --convert-arith-to-llvm --convert-func-to-llvm --convert-cf-to-llvm --reconcile-unrealized-casts`，LLVM 方言中仍保留同一目标的两条边。随后 `mlir-translate --mlir-to-llvmir` 调用 `LLVM::ensureDistinctSuccessors`，为第二条边新建中间块。导出结果如下（仅把数字名称改为易读名称）：
+实验先运行 `mlir-opt --convert-arith-to-llvm --convert-func-to-llvm --convert-cf-to-llvm --reconcile-unrealized-casts`，LLVM 方言中仍保留同一目标的两条边。随后 `mlir-translate --mlir-to-llvmir` 调用 `LLVM::ensureDistinctSuccessors`，为第二条边新建中间块。导出结果如下（数字名称改为易读名称，并加入阅读注释；指令保持一致）：
 
 ```llvm
 define i32 @choose(i1 %c, i32 %a, i32 %b) {
 entry:
   br i1 %c, label %join, label %edge
 join:
+  ; 阅读注释：拆边后两种值分别来自 edge 和 entry，不再共享同一前驱名。
   %value = phi i32 [ %forwarded, %edge ], [ %a, %entry ]
   ret i32 %value
 edge:
+  ; 中间块参数导出为单输入 PHI，转发 b；它可在后续简化中被消除。
   %forwarded = phi i32 [ %b, %entry ]
   br label %join
 }
@@ -651,6 +686,7 @@ for name in bad-dominance bad-phi bad-duplicate-edge; do
     bad-phi) expected='PHINode should have one entry' ;;
     bad-duplicate-edge) expected='multiple entries for the same basic block' ;;
   esac
+  # if 允许预期的非零退出；随后还须匹配诊断，不能把任意工具失败算作通过。
   if "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/$name.ll" \
       > "$CODEGEN_LAB/$name.stdout" 2> "$CODEGEN_LAB/$name.stderr"; then
     printf '负例意外通过：%s\n' "$name" >&2
@@ -658,6 +694,7 @@ for name in bad-dominance bad-phi bad-duplicate-edge; do
   fi
   rg -F "$expected" "$CODEGEN_LAB/$name.stderr"
 done
+# 合法修复先在前驱计算 select，再让 PHI 接收已选定的一个值。
 "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/edge-selection.ll" -o "$CODEGEN_LAB/edge-selection.bc"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/edge-selection.bc"
 "$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel "$CODEGEN_LAB/edge-selection.bc"

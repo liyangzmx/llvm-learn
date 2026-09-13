@@ -7,11 +7,14 @@
 <!-- manual-lab:ch12-setup -->
 
 ```sh
+# 开启严格检查，使未处理的命令/管道失败与未定义变量尽早暴露。
 set -euo pipefail
+# 可提前 export 覆盖默认路径；各阶段使用同一套 LLVM 构建。
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
 BOOK_INPUT="$BOOK_ROOT/experiments/ch12"
+# 每次创建独立目录，保留前后阶段文件供比较，实验输入保持只读。
 CODEGEN_LAB=$(mktemp -d)
 export BOOK_INPUT CODEGEN_LAB
 "$LLVM_BUILD/bin/llc" --version
@@ -50,7 +53,10 @@ printf '实验输出目录：%s\n' "$CODEGEN_LAB"
 
 MC opcode数字来自生成枚举，不能当作指令编码。下面是本次 `llvm-mc --triple=bpfel --show-inst add.s` 的实际输出；指令名称比枚举编号更适合跨版本对照。
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```text
+# Reg:1 是 LLVM 内部的 R0 枚举值；两个相同寄存器操作数表达读后写的两地址约束。
 .text
 	r0 += 1                                 # <MCInst #283 ADD_ri
                                         #  <MCOperand Reg:1>
@@ -63,6 +69,7 @@ MachineInstr 中的操作码 ADD_ri 表示寄存器和立即数相加的操作�
 <!-- manual-lab:ch12-mcinst -->
 
 ```sh
+# show-inst 展示内部 opcode 和操作数；这些枚举编号本身不是目标机器码。
 "$LLVM_BUILD/bin/llvm-mc" --triple=bpfel --show-inst "$BOOK_INPUT/add.s" \
   > "$CODEGEN_LAB/add-inst.txt"
 cat "$CODEGEN_LAB/add-inst.txt"
@@ -111,6 +118,7 @@ int test(int a, int b)
     if (a > b) {
         return a;
     }
+    // 引用需要参数对象的地址，且 swap 可改写 a；调用后必须读取修改后的值。
     swap(a, b);
     return a;
 }
@@ -123,6 +131,7 @@ int test(int a, int b)
 <!-- manual-lab:ch12-clang-and-mir -->
 
 ```sh
+# PEI 后栈槽已解析为帧指针偏移，可将 MIR 的访存与最终汇编逐项对应。
 "$LLVM_BUILD/bin/clang++" --target=bpfel -mcpu=generic -O2 -S \
   "$BOOK_INPUT/test.cpp" -o "$CODEGEN_LAB/test.s"
 "$LLVM_BUILD/bin/clang++" --target=bpfel -mcpu=generic -O2 -S -emit-llvm \
@@ -136,14 +145,18 @@ MIR 中栈对象已经变为 R10-8/R10-4，外部引用参数调用的符号为 
 
 **代码清单 12-3 代码清单 12-2 对应的 MIR**
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```text
 bb.0.entry:
     successors: %bb.2(0x40000000), %bb.1(0x40000000)
     liveins: $r1, $r2
 
     $r0 = COPY $r1
+    ; R10 是 BPF 帧指针；-8 与 -4 是两个 int 的栈偏移，STW 只写 32 位。
     STW $r2, $r10, -8 :: (store (s32) into %ir.b.addr, !tbaa !3)
     STW $r0, $r10, -4 :: (store (s32) into %ir.a.addr, !tbaa !3)
+    ; 先左移再算术右移，把低 32 位 int 符号扩展到 64 位后做有符号比较。
     $r2 = SLL_ri killed $r2, 32
     $r2 = SRA_ri killed $r2, 32
     $r1 = SLL_ri killed $r1, 32
@@ -154,11 +167,13 @@ bb.0.entry:
   bb.1.if.end:
     successors: %bb.2(0x80000000)
 
+    ; 调用参数改为 a、b 的栈地址；R1/R2 此时不再保存原来的整数实参。
     $r1 = MOV_rr $r10
     $r1 = ADD_ri $r1, -4
     $r2 = MOV_rr $r10
     $r2 = ADD_ri $r2, -8
     JAL @_Z4swapRiS_, implicit-def dead $r0, implicit-def dead $r1, implicit-def dead $r2, implicit-def dead $r3, implicit-def dead $r4, implicit-def dead $r5, implicit $r11, implicit $r1, implicit $r2
+    ; swap 可修改 a 且调用破坏 R0，所以返回值必须从 a 的槽重新加载。
     $r0 = LDW $r10, -4 :: (dereferenceable load (s32) from %ir.a.addr, !tbaa !3)
 
   bb.2.return:
@@ -172,6 +187,7 @@ bb.0.entry:
 <!-- manual-lab:ch12-mc-encoding -->
 
 ```sh
+# 对同一汇编切换大小端目标，比较寄存器半字节排列、偏移与立即数字节顺序。
 for triple in bpfel bpfeb; do
   "$LLVM_BUILD/bin/llvm-mc" --triple="$triple" --show-inst --show-encoding \
     "$BOOK_INPUT/encoding.s" > "$CODEGEN_LAB/encoding-$triple.txt"
@@ -186,11 +202,15 @@ cat "$CODEGEN_LAB/encoding-bpfeb.txt"
 
 **代码清单 12-4 MC 片段**
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```text
+# bpfel 每条普通指令为 8 字节；0x10 的高半字节是源 R1，低半字节是目的 R0。
 r0 = r1                                 # encoding: [0xbf,0x10,0x00,0x00,0x00,0x00,0x00,0x00]
                                         # <MCInst #388 MOV_rr
                                         #  <MCOperand Reg:1>
                                         #  <MCOperand Reg:2>>
+# 存储以 R10 为基址、R2 为数据源；f8 ff 是偏移 -8 的 16 位小端补码。
 	*(u32 *)(r10 - 8) = r2                  # encoding: [0x63,0x2a,0xf8,0xff,0x00,0x00,0x00,0x00]
                                         # <MCInst #430 STW
                                         #  <MCOperand Reg:3>
@@ -210,6 +230,8 @@ r0 = r1                                 # encoding: [0xbf,0x10,0x00,0x00,0x00,0x
 
 实际输出的函数汇编如下。
 
+以下片段中的新增中文注释用于阅读，不属于原始工具输出。
+
 ```asm
 .text
 	.file	"test.cpp"
@@ -217,6 +239,7 @@ r0 = r1                                 # encoding: [0xbf,0x10,0x00,0x00,0x00,0x
 	.p2align	3
 	.type	_Z4testii,@function
 _Z4testii:                              # @_Z4testii
+# .cfi_* 描述栈展开信息，不是运行时执行的 BPF 指令。
 	.cfi_startproc
 # %bb.0:                                # %entry
 	r0 = r1
@@ -232,6 +255,7 @@ _Z4testii:                              # @_Z4testii
 	r1 += -4
 	r2 = r10
 	r2 += -8
+# 外部符号尚无最终地址；生成目标文件时由调用位置对应的重定位记录保留关联。
 	call _Z4swapRiS_
 	r0 = *(u32 *)(r10 - 4)
 LBB0_2:                                 # %return
@@ -277,6 +301,8 @@ LBB0_2:                                 # %return
 
 以下四条指令已经由llvm-mc实际编码。另一个测试把 `r3 = 0x1122334455667788 ll` 编为 `18 03 00 00 88 77 66 55 00 00 00 00 44 33 22 11`，占两个8字节槽，说明BPF指令数与槽数不能混用。
 
+阅读提示：每行左侧是实际字节，右侧是对应汇编；例如 `20 00 00 00` 是 32 位小端立即数 32，不是四条指令。
+
 ```text
 bf 10 00 00 00 00 00 00   r0 = r1
 63 2a f8 ff 00 00 00 00   *(u32 *)(r10 - 8) = r2
@@ -291,6 +317,7 @@ bf 10 00 00 00 00 00 00   r0 = r1
 > 以下是字段赋值的说明记法，不是可直接执行的完整 TableGen 定义。`Inst{63-56}` 构成 opcode 字节，最终流中字节序由 BPFMCCodeEmitter 单独安排，不能直接对整个 64 位 `Inst` 做宿主字节序写出。
 
 ```text
+// 这是编码字段示意：先组合目标指令位域，再由发射器按 BPF 字节布局写出。
 Inst{63-60} = BPF_MOV(0xb)
 Inst{59}    = BPF_X (0x1)
 Inst{58-56} = BPF_ALU64 (0x7);
@@ -319,6 +346,7 @@ Inst{51-48} = dst (0)
 <!-- manual-lab:ch12-object-and-relocations -->
 
 ```sh
+# 反汇编查看指令字节；readobj 另查符号和重定位，补上未解析外部调用的信息。
 "$LLVM_BUILD/bin/clang++" --target=bpfel -mcpu=generic -O2 -c \
   "$BOOK_INPUT/test.cpp" -o "$CODEGEN_LAB/test.o"
 "$LLVM_BUILD/bin/llvm-objdump" -d "$CODEGEN_LAB/test.o" > "$CODEGEN_LAB/test.dis"
@@ -333,6 +361,8 @@ cat "$CODEGEN_LAB/test-object.txt"
 
 
 反汇编得到15条指令，占120字节：
+
+阅读提示：左侧指令号按 8 字节槽计数；槽 7 的相对偏移 6 从下一槽计算，目标是 7 + 1 + 6 = 14。`call -0x1` 仍是待重定位的占位值。
 
 ```text
 test.o:	file format elf64-bpf
@@ -360,6 +390,8 @@ Disassembly of section .text:
 ```
 
 第7槽的条件跳转目标是第14槽，因此offset为 `14-(7+1)=6`，编码为 `06 00`。第12槽call的imm暂为-1，外部符号还没有地址；这不能当作最终调用距离。实际重定位为：
+
+阅读提示：重定位偏移使用字节单位，`0x60` 对应第 12 个指令槽；`.rel.eh_frame` 项服务于展开元数据，不能把它误算为第二条调用。
 
 ```text
 Section (3) .rel.text {
@@ -393,6 +425,7 @@ Section (3) .rel.text {
 <!-- manual-lab:ch12-assembly-roundtrip -->
 
 ```sh
+# 把 Clang 汇编交给 MC 再组装，检查文本发射与直接对象发射的指令是否一致。
 "$LLVM_BUILD/bin/llvm-mc" --triple=bpfel --filetype=obj "$CODEGEN_LAB/test.s" \
   -o "$CODEGEN_LAB/reassembled.o"
 "$LLVM_BUILD/bin/llvm-objdump" -d "$CODEGEN_LAB/reassembled.o" \
@@ -401,6 +434,7 @@ python3 -B - "$CODEGEN_LAB" <<'PY_ROUNDTRIP'
 from pathlib import Path
 import re, sys
 out = Path(sys.argv[1])
+# 排除文件名、节名等外壳文本，只比较反汇编中的指令行；这里不宣称整个 ELF 逐字节相同。
 def instructions(name):
     return [line.strip() for line in (out / name).read_text().splitlines()
             if re.match(r"\s*[0-9]+:", line)]

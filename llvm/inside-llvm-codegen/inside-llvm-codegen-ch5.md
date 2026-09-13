@@ -18,11 +18,13 @@ LLVM 的 LoopInfo 主要表示自然循环，不负责枚举 CFG 中所有可能
 <!-- manual-lab:ch5-setup -->
 
 ```sh
+# -e 使普通命令失败时停止；-u 检查未定义变量，pipefail 使管道成员的失败可见。
 set -euo pipefail
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
 BOOK_INPUT="$BOOK_ROOT/experiments/ch5"
+# 输入保留在 BOOK_INPUT；所有中间文件放到独立临时目录，避免覆盖样例。
 CODEGEN_LAB=$(mktemp -d)
 printf '本章临时输出目录：%s\n' "$CODEGEN_LAB"
 "$LLVM_BUILD/bin/opt" --version
@@ -122,6 +124,7 @@ LLVM IR 和 Machine IR 的基本块 / 跳转不直接形成独立的嵌套循环
 <!-- manual-lab:ch5-loopinfo -->
 
 ```sh
+# 同样合法的 IR，可分别具有自然循环或不可归约环；LoopInfo 只表示前者。
 for name in nested irreducible; do
   "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/$name.ll" -o "$CODEGEN_LAB/$name.bc"
   "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/$name.bc"
@@ -192,8 +195,10 @@ preheader 只有一条后继边，只有 latch 回到 header，exit 的前驱仅
 "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/multi-latch.ll" \
   -o "$CODEGEN_LAB/multi-latch.bc"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/multi-latch.bc"
+# 拆分/汇合相关边以建立规范形；随后检查更新后的 IR、支配树和循环信息。
 "$LLVM_BUILD/bin/opt" '-passes=loop-simplify,verify,verify<domtree>,verify<loops>' -S \
   "$CODEGEN_LAB/multi-latch.bc" -o "$CODEGEN_LAB/multi-latch.simplified.ll"
+# 测试包含跳过循环与不同回边，避免只验证“循环跑起来”的一条路径。
 for ir in "$BOOK_INPUT/multi-latch.ll" "$CODEGEN_LAB/multi-latch.simplified.ll"; do
   "$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel "$ir"
 done
@@ -229,6 +234,7 @@ flowchart TD
 
 ```c
 int test(int n) {
+    // 无溢出时每轮相当于乘以 i+1；若零次迭代，仍必须返回初值 1。
     int a = 1;
     for (int i = 0; i < n; ++i)
         a += a * i;
@@ -250,11 +256,14 @@ int test(int n) {
 "$LLVM_BUILD/bin/clang" --target=bpfel -O0 -Xclang -disable-O0-optnone \
   -fno-discard-value-names -S -emit-llvm "$BOOK_INPUT/book-loop.c" \
   -o "$CODEGEN_LAB/book-loop.ll"
+# 先建立 SSA 与循环边界形式，给旋转变换一个可分析的准备状态。
 "$LLVM_BUILD/bin/opt" -passes=mem2reg,loop-simplify,lcssa,verify -S \
   "$CODEGEN_LAB/book-loop.ll" -o "$CODEGEN_LAB/before-rotate.ll"
+# loop(...) 内执行旋转；后面的 verifier 保持在 function 层，避免 Pass 作用域混淆。
 "$LLVM_BUILD/bin/opt" \
   '-passes=function(loop(loop-rotate),verify,verify<loops>,verify<domtree>)' -S \
   "$CODEGEN_LAB/before-rotate.ll" -o "$CODEGEN_LAB/rotated.ll"
+# 原循环允许零次迭代，旋转后的入口 guard 必须保留同样的跳过语义。
 for ir in "$CODEGEN_LAB/before-rotate.ll" "$CODEGEN_LAB/rotated.ll"; do
   "$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel "$ir"
 done
@@ -278,7 +287,9 @@ define i32 @closed(i32 %n, i1 %c) {
 entry:
   br label %header
 header:
+  ; PHI 按进入 header 的边取值：首次取 0，回边取上一轮的 next。
   %i = phi i32 [ 0, %entry ], [ %next, %merge ]
+  ; 7 覆盖零次迭代；执行过循环体后，last 接收最近一次选择的 x3。
   %last = phi i32 [ 7, %entry ], [ %x3, %merge ]
   %cond = icmp slt i32 %i, %n
   br i1 %cond, label %body, label %exit
@@ -289,10 +300,12 @@ left:
 right:
   br label %merge
 merge:
+  ; c 选择哪条分支，就由对应的入边把 10 或 20 带到 merge。
   %x3 = phi i32 [ 10, %left ], [ 20, %right ]
   %next = add i32 %i, 1
   br label %header
 exit:
+  ; 这是合法 SSA，但 last 从循环内部直接流到外部使用，尚未形成 LCSSA。
   %result = add i32 %last, 4
   ret i32 %result
 }
@@ -303,11 +316,13 @@ exit:
 **代码清单 5-3 在循环出口处插入 φ 函数**
 
 ```llvm
+; 中文为阅读注释；下列指令与所展示的 LCSSA 变换结果保持一致。
 define i32 @closed(i32 %n, i1 %c) {
 entry:
   br label %header
 header:
   %i = phi i32 [ 0, %entry ], [ %next, %merge ]
+  ; 循环携带值仍按原来的入口/回边选择，LCSSA 不改变这一计算。
   %last = phi i32 [ 7, %entry ], [ %x3, %merge ]
   %cond = icmp slt i32 %i, %n
   br i1 %cond, label %body, label %exit
@@ -322,7 +337,9 @@ merge:
   %next = add i32 %i, 1
   br label %header
 exit:
+  ; 出口 PHI 接住循环值；incoming 使用归于 header→exit 边的循环内前驱。
   %last.lcssa = phi i32 [ %last, %header ]
+  ; 循环外只引用这个边界定义，不再直接引用循环内部的 last。
   %result = add i32 %last.lcssa, 4
   ret i32 %result
 }
@@ -341,6 +358,7 @@ LLVM 18 中，`LCSSAPass::run`（新 Pass Manager）及 `LCSSAWrapperPass`（旧
 ```sh
 "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/lcssa.ll" -o "$CODEGEN_LAB/lcssa.bc"
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/lcssa.bc"
+# 单输入出口 PHI 也有用途：它显式记录值跨越循环边界的位置。
 "$LLVM_BUILD/bin/opt" -passes=lcssa,verify -S "$CODEGEN_LAB/lcssa.bc" \
   -o "$CODEGEN_LAB/lcssa.after.ll"
 for ir in "$BOOK_INPUT/lcssa.ll" "$CODEGEN_LAB/lcssa.after.ll"; do
