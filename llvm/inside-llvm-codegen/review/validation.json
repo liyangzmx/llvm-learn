@@ -1,0 +1,107 @@
+{
+  "pdf_pages": 435,
+  "documents_checked": 55,
+  "local_links_checked": 850,
+  "linked_images_checked": 211,
+  "chapters": {
+    "ch1": {
+      "section_headings": 5,
+      "listing_identifiers": 3,
+      "source_chars": 7769,
+      "corrected_chars": 8834
+    },
+    "ch2": {
+      "section_headings": 14,
+      "listing_identifiers": 17,
+      "source_chars": 20150,
+      "corrected_chars": 21816
+    },
+    "ch3": {
+      "section_headings": 13,
+      "listing_identifiers": 8,
+      "source_chars": 21170,
+      "corrected_chars": 17631
+    },
+    "ch4": {
+      "section_headings": 11,
+      "listing_identifiers": 1,
+      "source_chars": 13091,
+      "corrected_chars": 13661
+    },
+    "ch5": {
+      "section_headings": 5,
+      "listing_identifiers": 3,
+      "source_chars": 6958,
+      "corrected_chars": 8704
+    },
+    "ch6": {
+      "section_headings": 11,
+      "listing_identifiers": 21,
+      "source_chars": 19128,
+      "corrected_chars": 22443
+    },
+    "ch7": {
+      "section_headings": 16,
+      "listing_identifiers": 35,
+      "source_chars": 66155,
+      "corrected_chars": 68833
+    },
+    "ch8": {
+      "section_headings": 32,
+      "listing_identifiers": 14,
+      "source_chars": 71445,
+      "corrected_chars": 74374
+    },
+    "ch9": {
+      "section_headings": 14,
+      "listing_identifiers": 18,
+      "source_chars": 30266,
+      "corrected_chars": 32889
+    },
+    "ch10": {
+      "section_headings": 40,
+      "listing_identifiers": 33,
+      "source_chars": 104272,
+      "corrected_chars": 106005
+    },
+    "ch11": {
+      "section_headings": 18,
+      "listing_identifiers": 11,
+      "source_chars": 44443,
+      "corrected_chars": 47665
+    },
+    "ch12": {
+      "section_headings": 5,
+      "listing_identifiers": 8,
+      "source_chars": 8756,
+      "corrected_chars": 12776
+    },
+    "ch13": {
+      "section_headings": 12,
+      "listing_identifiers": 1,
+      "source_chars": 7858,
+      "corrected_chars": 11624
+    },
+    "appendix-a": {
+      "section_headings": 10,
+      "listing_identifiers": 12,
+      "source_chars": 15808,
+      "corrected_chars": 18231
+    },
+    "appendix-b": {
+      "section_headings": 12,
+      "listing_identifiers": 0,
+      "source_chars": 5353,
+      "corrected_chars": 6309
+    },
+    "appendix-c": {
+      "section_headings": 3,
+      "listing_identifiers": 1,
+      "source_chars": 7282,
+      "corrected_chars": 9200
+    }
+  },
+  "errors": [],
+  "warnings": [],
+  "scope": "Structural checks only. No LLVM build, IR parsing/execution, or semantic test was run."
+}

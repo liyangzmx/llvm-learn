@@ -1,0 +1,43 @@
+{
+  "source_root": "/opt/llvm-project",
+  "tag": "llvmorg-18.1.8",
+  "commit": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff",
+  "local_modified_files": [
+    {
+      "path": "llvm/lib/Target/BPF/BPF.td",
+      "working_tree_sha256": "26735d65abb1b532bcb4edf0ffa4c8c7dc6fa52fc8af0106fbb5594f50907704",
+      "head_sha256": "a714dfb9da0d021478b49fcaa7525da7b49692ee874dbcfb2b4ad6cb059094cc"
+    },
+    {
+      "path": "llvm/lib/Target/BPF/BPFCallingConv.td",
+      "working_tree_sha256": "aa74f96137527d6c82d26a1e72edda151942e8e31decbca2836a9848706aebc9",
+      "head_sha256": "88b3c1a5aa4aeb2a1814f62e1cafc982eb99a4cbd28d7388053748cdea50808c"
+    },
+    {
+      "path": "llvm/lib/Target/BPF/BPFInstrFormats.td",
+      "working_tree_sha256": "c9474ca0e831315860891bde0c6ce981309331c34e86e364a2dd5a64096bfb13",
+      "head_sha256": "170285cd3c0df41350be16f62c9a569e819f809dafd540ff614081d9d3c8f972"
+    },
+    {
+      "path": "llvm/lib/Target/BPF/BPFInstrInfo.td",
+      "working_tree_sha256": "48c7051c7ceab0ec9851a477251f8a81833bb26894f6b815a94e4267a1418e13",
+      "head_sha256": "7aecdce628180b4968635daab3628dd76b35a414155077430c68d3b1cae07a14"
+    },
+    {
+      "path": "llvm/lib/Target/BPF/BPFMIChecking.cpp",
+      "working_tree_sha256": "3154c678365a8dc277d16e5b40ace74e9f9e97b1f6428e1e098b1f14bded6d9a",
+      "head_sha256": "4f46be885d892fd29ad1673daf4ea979f9e5ede2cf6a4585283e2c8e40bc4b19"
+    },
+    {
+      "path": "llvm/lib/Target/BPF/BPFRegisterInfo.td",
+      "working_tree_sha256": "6eb26d653728cac03fd895e1800c1454579fac85f7b44b01d56b13e56abd9f3f",
+      "head_sha256": "4708a886cf6cdda58db3ab2fb588ea4308a15fd4790da79a685dac703f03b728"
+    },
+    {
+      "path": "llvm/lib/Target/BPF/GISel/BPFRegisterBanks.td",
+      "working_tree_sha256": "b2a88dee10b1424a270585ad41d058f79c837009dff62573dd494ce46f2365fa",
+      "head_sha256": "0d13bf912ea50f18c361c786be025280356a99cd7b67cc3ed3f3525d2313c9d7"
+    }
+  ],
+  "policy": "Read only. Existing user changes preserved; affected definitions compared against HEAD. No LLVM build or IR execution."
+}
