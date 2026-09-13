@@ -4,6 +4,24 @@
 
 实验包括六种 SelectionDAG 调度器、MIR 的数据/内存/输出依赖、RISC-V 分配前后调度、Hexagon 软件流水线和显式假设下的数学模型。机器指令通过 verifier，Hexagon 输出还通过所附回归测试的 FileCheck；我们没有在这些目标硬件上运行程序或测量周期。所有“延迟、发射周期、压力”都要先说明所属模型。
 
+本章命令使用 **Bash**。先执行下面的初始化，再在同一个 Bash 会话中按正文顺序执行后续命令；输出目录会保留，便于比较各阶段文件。需要 LLVM 18.1.8 的 Debug/assertions 工具和本章涉及的后端，以及 Python 3。
+
+<!-- manual-lab:ch8-setup -->
+
+```sh
+set -euo pipefail
+export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
+export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
+export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
+BOOK_INPUT="$BOOK_ROOT/experiments/ch8"
+CODEGEN_LAB=$(mktemp -d)
+"$LLVM_BUILD/bin/llc" --version > "$CODEGEN_LAB/llc-version.txt"
+cat "$CODEGEN_LAB/llc-version.txt"
+printf '本章输出目录：%s\n' "$CODEGEN_LAB"
+```
+
+确认版本为 18.1.8，并在注册目标中找到 BPF、RISC-V、Hexagon。本章所有输出都写入 `$CODEGEN_LAB`，`$BOOK_INPUT` 中的输入文件只读。
+
 ## 8.1 LLVM 指令调度
 
 指令调度是在依赖和资源约束下选择机器指令的顺序。把较早可执行的独立操作放进长延迟链之间，可能减少停顿；但过早产生很多值，又可能增加寄存器压力，使后续分配需要 spill。调度因而有多个目标，不能用“始终把最长指令放前面”替代算法。
@@ -48,6 +66,25 @@ flowchart LR
 
 把 A 放在等待 M 的空档可能得到另一个合法安排。是否更好还取决于发射宽度、功能单元、旁路、寄存器压力，以及硬件是否能乱序执行。教材中的拓扑箭头不应冒充精确流水线模拟。
 
+执行本章教学模型，将后续压力、延迟和软件流水边界的计算结果集中保存：
+
+<!-- manual-lab:ch8-teaching-models -->
+
+```sh
+python3 "$BOOK_INPUT/models.py" > "$CODEGEN_LAB/models.json"
+python3 - "$CODEGEN_LAB/models.json" <<'PYCODE'
+import json, pathlib, sys
+r = json.loads(pathlib.Path(sys.argv[1]).read_text())
+p = r['ssa_boundary_pressure']
+print('拓扑顺序数、最小/最大边界压力：', p['all_topological_orders'], p['minimum'], p['maximum'])
+print('单发射开始周期：', r['single_issue_edge_latency']['issue_cycles'])
+print('递归依赖下界：', r['recurrence'])
+print('流水结构验证的 N 数量：', len(r['software_pipeline']['tested_lengths']))
+PYCODE
+```
+
+结果为 80 个拓扑顺序、压力范围 3～4、开始周期 0/4/5/7；递归依赖 II=1/2 不可行、3/4 可行，流水结构覆盖 N=0～64。它们是显式模型的计算结果。
+
 ## 8.2 Linearize 调度器
 
 ### 8.2.1 构造依赖图
@@ -84,6 +121,34 @@ entry:
 
 运行形态为 `llc -mtriple=bpfel -mcpu=v1 -O2 -fast-isel=false -pre-RA-sched=linearize -verify-machineinstrs -stop-after=finalize-isel`。换成 `fast/list-burr/source/list-hybrid/list-ilp` 即可比较其他实现。runner 检查六个输出都有三个 LDD、一个写回及返回，并保留各自完整 MIR 和调试日志；不依赖易变的 SUnit 编号。
 
+以下循环显式调用六种 DAG 调度器，固定输入、CPU 和停止点，分别保存 MIR 与日志：
+
+<!-- manual-lab:ch8-six-dag-schedulers -->
+
+```sh
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/dependencies.ll"
+for scheduler in linearize fast list-burr source list-hybrid list-ilp; do
+  "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 -fast-isel=false \
+    "-pre-RA-sched=$scheduler" -verify-machineinstrs \
+    -debug-only=pre-RA-sched -stop-after=finalize-isel \
+    "$BOOK_INPUT/dependencies.ll" -o "$CODEGEN_LAB/dag-$scheduler.mir" \
+    2> "$CODEGEN_LAB/dag-$scheduler.log"
+done
+python3 - "$CODEGEN_LAB" <<'PYCODE'
+import pathlib, re, sys
+out = pathlib.Path(sys.argv[1])
+for name in ['linearize', 'fast', 'list-burr', 'source', 'list-hybrid', 'list-ilp']:
+    text = (out/f'dag-{name}.mir').read_text()
+    body = re.search(r'^body:\s+\|\n(.*?)(?=^\.\.\.)', text, re.M | re.S)[1]
+    assert body.count('LDD ') == 3 and 'STD ' in body and 'RET' in body
+    print(name, '三个 LDD、STD 和 RET 检查通过')
+print((out/'dag-linearize.mir').name)
+PYCODE
+sed -n '/^body:/,/^\.\.\.$/p' "$CODEGEN_LAB/dag-linearize.mir"
+```
+
+六个配置均成功生成机器指令并通过 verifier；`dag-linearize.mir` 展示逆序发射后的合法指令顺序，其余文件供下面各小节比较。
+
 ## 8.3 Fast 调度器
 
 ### 8.3.1 Fast 调度器实现
@@ -103,6 +168,16 @@ Fast DAG 调度器使用自底向上的列表调度，优先快速构造合法�
 清单 8-1 中的算术和访存可以直接比较六种合法顺序，不需要引入难以稳定重现的物理状态寄存器冲突。Fast 输出同样通过 machine verifier。验证器有助于发现寄存器约束和活跃性不一致，但它不证明生成程序在所有输入上的语义等价，也不证明某一顺序最快。
 
 实际选择 DAG 中 EntryToken 显示 `ch,glue` 两个结果，通常引用其 chain 结果 0。glue 相关的 CopyToReg/RET 被作为紧密关系处理；EntryToken 自身不变成硬件指令。这里修正了旧稿“EntryToken 不含 glue”的错误。
+
+直接查看上一节已经生成的 Fast 输出，不需要改动输入：
+
+<!-- manual-lab:ch8-inspect-fast -->
+
+```sh
+sed -n '/^body:/,/^\.\.\.$/p' "$CODEGEN_LAB/dag-fast.mir"
+```
+
+比较 load 与算术的相对位置；完整调度细节在同目录 `dag-fast.log`，这一用例没有专门覆盖所有物理寄存器冲突修复分支。
 
 ## 8.4 BURR List 调度器
 
@@ -138,17 +213,58 @@ Height(u) = max(Height(v) + L(u,v))     对后继 v 取最大
 
 穷举结果的最小值为 3、最大值为 4。它证明合法拓扑顺序可以有不同的压力，不证明 LLVM BURR 一定找到全局最小值，也不代表任意目标寄存器类的真实压力权重。
 
+对照实际 BURR 输出和教学模型中的两条压力轨迹：
+
+<!-- manual-lab:ch8-inspect-burr -->
+
+```sh
+sed -n '/^body:/,/^\.\.\.$/p' "$CODEGEN_LAB/dag-list-burr.mir"
+python3 - "$CODEGEN_LAB/models.json" <<'PYCODE'
+import json, pathlib, sys
+pressure = json.loads(pathlib.Path(sys.argv[1]).read_text())['ssa_boundary_pressure']
+for label in ['broad', 'compact']:
+    print(label)
+    for step in pressure[label]:
+        print(step['before'], step['live'])
+PYCODE
+```
+
+轨迹展示每条指令之前的活跃值集合；它解释压力为何随顺序变化，不把 BPF 的真实 pressure set 简化成这个单位权重模型。
+
 ## 8.5 Source List 调度器
 
 Source 调度器注册名 `source`，在依赖允许的范围内偏向源码/原始节点顺序，同时仍使用 RRList 调度框架处理其他约束。它不保证最终汇编逐行对应 C 的书写顺序：IR 优化、DAG combine、指令选择早已改变表达式形态，调度也不能违反依赖。
 
 观察清单 8-1 的 `dag-source.mir` 可以比较最终 load 和算术指令的相对位置。用它定位“调度是否改变了顺序”很方便，但不能把保留较多源码顺序等同于保持更强的程序语义。
 
+查看同一输入在 Source 策略下的完整机器指令 body：
+
+<!-- manual-lab:ch8-inspect-source -->
+
+```sh
+sed -n '/^body:/,/^\.\.\.$/p' "$CODEGEN_LAB/dag-source.mir"
+```
+
+与 `dag-linearize.mir` 和 `dag-list-burr.mir` 比较可观察排序差别；并非要求所有策略在这个小例子中都产生不同序列。
+
 ## 8.6 Hybrid List 调度器
 
 `list-hybrid` 在 RRList 框架中结合寄存器压力与延迟启发式；`list-ilp` 是另一个偏向指令级并行的策略。它们都不是逐节点按 Latency 数字排序：还要考虑依赖路径、就绪性、可用指令和寄存器约束。
 
 本章六种调度器共用同一输入、CPU 和停止点；调试日志中的算法名称可以确认所选策略。结果相同不代表选项无效，可能只是这个小图在多个启发式下给出了相同选择。不同结果也只能说明调度决策不同，性能仍需要目标模型或硬件实验。
+
+对照 Hybrid 与 ILP 两个已经生成的结果：
+
+<!-- manual-lab:ch8-inspect-hybrid-ilp -->
+
+```sh
+for scheduler in list-hybrid list-ilp; do
+  printf '%s\n' "$scheduler"
+  sed -n '/^body:/,/^\.\.\.$/p' "$CODEGEN_LAB/dag-$scheduler.mir"
+done
+```
+
+这些是特定启发式的排序结果，不是吞吐率或运行周期的测量。
 
 ## 8.7 Pre-RA-MISched 调度器
 
@@ -170,6 +286,28 @@ flowchart TD
 
 选择策略可以只从顶部、只从底部或双向工作。源码默认偏向 bottom-up，目标和 `-misched-topdown/-misched-bottomup` 可覆盖。`ReadyCycle/CurrCycle` 是调度模型中的可用时间和边界时间，不是“已经排了几条指令”的计数器；多发射、资源占用和 hazard 都会影响它们。
 
+现在改在 MIR 阶段显式启用 MachineScheduler，保存依赖边、策略和压力信息：
+
+<!-- manual-lab:ch8-bpf-machine-scheduler -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 -fast-isel=false \
+  -enable-misched=true -verify-machineinstrs -debug-only=machine-scheduler \
+  -stop-after=machine-scheduler "$BOOK_INPUT/dependencies.ll" \
+  -o "$CODEGEN_LAB/bpf-misched.mir" 2> "$CODEGEN_LAB/bpf-misched.log"
+python3 - "$CODEGEN_LAB/bpf-misched.log" <<'PYCODE'
+import pathlib, re, sys
+log = pathlib.Path(sys.argv[1]).read_text()
+assert all(x in log for x in ['Data Latency=', 'Memory', 'Out  Latency=', 'Pressure'])
+for line in log.splitlines():
+    if any(x in line for x in ['RegionPolicy:', 'Max Pressure:', 'Data Latency=', 'Out  Latency=', 'Memory']):
+        print(line)
+print('数据边的延迟集合：', sorted(set(map(int, re.findall(r'Data Latency=(\d+)', log)))))
+PYCODE
+```
+
+日志可见 Data、Memory、Out 三类关系；该输入的数据边模型值含 0、1、4，区域还报告压力追踪策略。不要把它与 DAG 日志中的节点延迟混用。
+
 ### 8.7.2 调度区域的划分
 
 区域通常位于单个机器基本块中，不能直接越过边界自由搬动指令。`TargetInstrInfo::isSchedulingBoundary` 及目标覆盖决定边界；调用、terminator、position 指令、`INLINEASM_BR`、栈指针定义等都可能相关。这不是“只有 call、branch、return 三类”的封闭清单。
@@ -189,6 +327,27 @@ boundary SUnit 表示区域外的使用或定义，不能把它当作最后一�
 LLVM 支持 itinerary 和较新的调度模型。旧 itinerary 用阶段、功能单元、操作数周期及旁路描述机器；新模型通过 `SchedWrite/SchedRead`、资源和 `ReadAdvance` 描述生产者结果与消费者读取需求。目标可以只提供其中一部分，缺失信息时使用目标的默认延迟；不能从“没有表”推断延迟全为零。
 
 下面所有 TD 片段都取自可独立解析的 `schedule-model.td`。runner 用 llvm-tblgen 解析完整文件并检查记录；该教学 target 没有注册成 LLVM 后端，也不是可执行处理器模拟器。
+
+把完整教学 target 交给 TableGen，检查操作数与 ReadAdvance 记录的关联：
+
+<!-- manual-lab:ch8-tablegen-schedule-model -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-tblgen" -I "$LLVM_SRC/llvm/include" -dump-json \
+  "$BOOK_INPUT/schedule-model.td" -o "$CODEGEN_LAB/schedule-model.json"
+python3 - "$CODEGEN_LAB/schedule-model.json" <<'PYCODE'
+import json, pathlib, sys
+records = json.loads(pathlib.Path(sys.argv[1]).read_text())
+rw = [x['def'] for x in records['DemoMUL']['SchedRW']]
+advance = [v for v in records.values() if isinstance(v, dict) and 'ReadAdvance' in v.get('!superclasses', []) and v.get('Cycles') == 1]
+assert rw == ['MULOut', 'EXIn', 'OrdinaryRead']
+assert any(v['ValidWrites'][0]['def'] == 'ALUOut' for v in advance)
+print('DemoMUL SchedRW:', rw)
+print('EXIn 对 ALUOut 的 ReadAdvance=1；假设选用该模型时边延迟 max(0, 2-1)=1')
+PYCODE
+```
+
+解析和关联检查通过的是完整 TD 记录。下面清单只是该输入的节选，不能各自单独替代 `schedule-model.td`。
 
 **代码清单 8-2　旧 itinerary 的阶段定义（完整文件中的节选）**
 
@@ -279,6 +438,37 @@ void test(int a, int *x, int *y) {
 }
 ```
 
+前端与后端都指定 E31，保存原压力示例在 MIR 调度前后的状态：
+
+<!-- manual-lab:ch8-rv32-small-pressure -->
+
+```sh
+"$LLVM_BUILD/bin/clang" --target=riscv32-unknown-elf -march=rv32im \
+  -mabi=ilp32 -mcpu=sifive-e31 -O2 -fno-discard-value-names \
+  -S -emit-llvm "$BOOK_INPUT/pressure.c" -o "$CODEGEN_LAB/pressure.ll"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/pressure.ll"
+for stop in before after; do
+  "$LLVM_BUILD/bin/llc" -mtriple=riscv32-unknown-elf -mcpu=sifive-e31 \
+    -mattr=+m -O2 -enable-misched=true -verify-machineinstrs \
+    -debug-only=machine-scheduler "-stop-$stop=machine-scheduler" \
+    "$CODEGEN_LAB/pressure.ll" -o "$CODEGEN_LAB/rv32-pre-$stop.mir" \
+    2> "$CODEGEN_LAB/rv32-pre-$stop.log"
+done
+python3 - "$CODEGEN_LAB" <<'PYCODE'
+import pathlib, re, sys
+out = pathlib.Path(sys.argv[1])
+for stop in ['before', 'after']:
+    text = (out/f'rv32-pre-{stop}.mir').read_text()
+    body = re.search(r'^body:\s+\|\n(.*?)(?=^\.\.\.)', text, re.M | re.S)[1]
+    assert 'MUL ' in body and 'MULW' not in body and 'ADDW' not in body
+log = (out/'rv32-pre-after.log').read_text()
+assert 'ShouldTrackPressure=0' in log
+print('\n'.join(x for x in log.splitlines() if 'RegionPolicy:' in x or 'RegionInstrs:' in x))
+PYCODE
+```
+
+原例使用 RV32 的 `MUL/ADD`，区域为 14 条指令且 `ShouldTrackPressure=0`；下面的 MIR 是该次生成的实际结果。
+
 **代码清单 8-7　RV32 machine-scheduler 后的实际 MIR body**
 
 ```yaml
@@ -327,7 +517,32 @@ GPRTC=2
 GPR=6
 ```
 
-通过对比 `rv32-pre-before.mir/rv32-pre-after.mir` 可以观察排序变化；通过 `rv32-pressure-large.stderr` 可以观察策略和压力。若某个输出顺序变了，应该回到依赖图解释它为什么合法，而不是仅给 SUnit 编号排列。
+通过对比 `rv32-pre-before.mir/rv32-pre-after.mir` 可以观察排序变化；通过 `rv32-pressure-large.log` 可以观察策略和压力。若某个输出顺序变了，应该回到依赖图解释它为什么合法，而不是仅给 SUnit 编号排列。
+
+对四项点积使用相同 ISA、ABI 和 CPU，让更大的区域触发压力追踪：
+
+<!-- manual-lab:ch8-rv32-large-pressure -->
+
+```sh
+"$LLVM_BUILD/bin/clang" --target=riscv32-unknown-elf -march=rv32im \
+  -mabi=ilp32 -mcpu=sifive-e31 -O2 -fno-discard-value-names \
+  -S -emit-llvm "$BOOK_INPUT/pressure-large.c" -o "$CODEGEN_LAB/pressure-large.ll"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/pressure-large.ll"
+"$LLVM_BUILD/bin/llc" -mtriple=riscv32-unknown-elf -mcpu=sifive-e31 \
+  -mattr=+m -O2 -enable-misched=true -verify-machineinstrs \
+  -debug-only=machine-scheduler -stop-after=machine-scheduler \
+  "$CODEGEN_LAB/pressure-large.ll" -o "$CODEGEN_LAB/rv32-pressure-large.mir" \
+  2> "$CODEGEN_LAB/rv32-pressure-large.log"
+python3 - "$CODEGEN_LAB/rv32-pressure-large.log" <<'PYCODE'
+import pathlib, re, sys
+log = pathlib.Path(sys.argv[1]).read_text()
+assert 'ShouldTrackPressure=1' in log and 'Max Pressure:' in log
+print('\n'.join(x for x in log.splitlines() if 'RegionPolicy:' in x or 'RegionInstrs:' in x))
+print(re.search(r'Max Pressure:.*?(?=Live In:)', log, re.S)[0])
+PYCODE
+```
+
+18 条区域指令启用追踪；这里打印的是调度开始前扫描得到的最大压力摘要。完整日志中的后续 Bottom Pressure 是另一观察点。
 
 ## 8.8 Post-RA-TDList 调度器
 
@@ -352,6 +567,31 @@ int MUL(int x, int y) {
   return z * q;
 }
 ```
+
+先生成 `postra.c` 的 IR，再只启用 PostRASchedulerList 这一种 post-RA 调度器：
+
+<!-- manual-lab:ch8-postra-tdlist -->
+
+```sh
+"$LLVM_BUILD/bin/clang" --target=riscv32-unknown-elf -march=rv32im \
+  -mabi=ilp32 -mcpu=sifive-e31 -O2 -fno-discard-value-names \
+  -S -emit-llvm "$BOOK_INPUT/postra.c" -o "$CODEGEN_LAB/postra.ll"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/postra.ll"
+"$LLVM_BUILD/bin/llc" -mtriple=riscv32-unknown-elf -mcpu=sifive-e31 \
+  -mattr=+m -O2 -post-RA-scheduler=true -enable-post-misched=false \
+  -verify-machineinstrs -debug-only=post-RA-sched,machine-scheduler \
+  -stop-after=post-RA-sched "$CODEGEN_LAB/postra.ll" \
+  -o "$CODEGEN_LAB/rv32-post-tdlist.mir" 2> "$CODEGEN_LAB/rv32-post-tdlist.log"
+python3 - "$CODEGEN_LAB/rv32-post-tdlist.mir" <<'PYCODE'
+import pathlib, re, sys
+mir = pathlib.Path(sys.argv[1]).read_text()
+body = re.search(r'^body:\s+\|\n(.*?)(?=^\.\.\.)', mir, re.M | re.S)[1]
+assert '$x10' in body and 'MUL ' in body and not re.search(r'%\d', body)
+print(body)
+PYCODE
+```
+
+最终 body 只有物理寄存器，不再出现 `%N` 虚拟寄存器；保存的日志允许区分此前的 pre-RA 阶段与实际 post-RA 调度。
 
 **代码清单 8-9　显式 PostRASchedulerList 后的实际 RV32 MIR**
 
@@ -379,6 +619,27 @@ PostMachineScheduler 复用 MachineScheduler 框架和 `ScheduleDAGMI`，策略�
 实验使用 `-post-RA-scheduler=false -enable-post-misched=true -stop-after=postmisched`，另一组使用 `-post-RA-scheduler=true -enable-post-misched=false -stop-after=post-RA-sched`。停止点和选项同时记录在 JSON 中。
 
 通用资源策略中的 CriticalResources/DemandedResources 与瓶颈资源、需求和候选的资源增量有关；它们不是“区间内资源”和“跨区间资源”的分类。若具体 CPU 模型缺失或有 no-model 默认项，调度行为可能更多依赖默认延迟，不能凭资源策略的名字假定已模拟完整硬件。
+
+复用上一节的 `postra.ll`，关闭 TDList 并显式启用 PostMachineScheduler：
+
+<!-- manual-lab:ch8-postra-misched -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=riscv32-unknown-elf -mcpu=sifive-e31 \
+  -mattr=+m -O2 -post-RA-scheduler=false -enable-post-misched=true \
+  -verify-machineinstrs -debug-only=post-RA-sched,machine-scheduler \
+  -stop-after=postmisched "$CODEGEN_LAB/postra.ll" \
+  -o "$CODEGEN_LAB/rv32-post-misched.mir" 2> "$CODEGEN_LAB/rv32-post-misched.log"
+python3 - "$CODEGEN_LAB/rv32-post-misched.mir" <<'PYCODE'
+import pathlib, re, sys
+mir = pathlib.Path(sys.argv[1]).read_text()
+body = re.search(r'^body:\s+\|\n(.*?)(?=^\.\.\.)', mir, re.M | re.S)[1]
+assert '$x10' in body and 'MUL ' in body and not re.search(r'%\d', body)
+print(body)
+PYCODE
+```
+
+两种 post-RA 输出现在可直接比较；成功生成并验证不等于已经比较了它们的硬件性能。
 
 ## 8.10 循环调度
 
@@ -593,6 +854,29 @@ attributes #1 = { nounwind readnone }
 ```
 
 runner 在 `pipeliner` 前后保存完整 MIR，还生成最终汇编并执行 FileCheck。下面的清单展示实际调度前后 MIR，寄存器和基本块编号仅属于本次输出。
+
+验证完整 Hexagon 输入，并分别停在 pipeliner 前、后。CPU、别名分析和 experimental codegen 选项与回归实验一致：
+
+<!-- manual-lab:ch8-hexagon-pipeliner-mir -->
+
+```sh
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/swp-bad-sched.ll"
+for stop in before after; do
+  "$LLVM_BUILD/bin/llc" -mtriple=hexagon -mcpu=hexagonv60 -O2 \
+    -enable-pipeliner -enable-aa-sched-mi -pipeliner-experimental-cg=true \
+    -verify-machineinstrs -debug-only=pipeliner "-stop-$stop=pipeliner" \
+    "$BOOK_INPUT/swp-bad-sched.ll" -o "$CODEGEN_LAB/hexagon-sms-$stop.mir" \
+    2> "$CODEGEN_LAB/hexagon-sms-$stop.log"
+done
+python3 - "$CODEGEN_LAB/hexagon-sms-before.mir" "$CODEGEN_LAB/hexagon-sms-after.mir" <<'PYCODE'
+import pathlib, re, sys
+bodies = [re.search(r'^body:\s+\|\n(.*?)(?=^\.\.\.)', pathlib.Path(p).read_text(), re.M | re.S)[1] for p in sys.argv[1:]]
+assert bodies[0] != bodies[1]
+print('pipeliner 前后 body 行数：', len(bodies[0].splitlines()), len(bodies[1].splitlines()))
+PYCODE
+```
+
+两个完整 YAML 文件保留在临时目录，body 确实变化。下面的清单展示同一输入的前后状态，后续还要检查最终汇编与实际 II 日志。
 
 **代码清单 8-13　pipeliner 前的实际 Hexagon MIR body**
 
@@ -906,6 +1190,32 @@ No schedule found, return
 
 分析前后代码时，应先定位本次被流水化的循环，再确认其 prologue、kernel 和 epilogue 及跨块 PHI。这个输入有不止一个循环，不能把一段日志的 MII 贴到整个函数上；同样不能把第一次尝试的下界当作最终成功 II。
 
+继续生成完整汇编，执行输入文件自带的 FileCheck，再核对两个循环的实际尝试结果：
+
+<!-- manual-lab:ch8-hexagon-filecheck -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=hexagon -mcpu=hexagonv60 -O2 \
+  -enable-pipeliner -enable-aa-sched-mi -pipeliner-experimental-cg=true \
+  -verify-machineinstrs -debug-only=pipeliner "$BOOK_INPUT/swp-bad-sched.ll" \
+  -o "$CODEGEN_LAB/hexagon-sms.s" 2> "$CODEGEN_LAB/hexagon-sms.log"
+"$LLVM_BUILD/bin/FileCheck" "$BOOK_INPUT/swp-bad-sched.ll" \
+  --input-file "$CODEGEN_LAB/hexagon-sms.s"
+python3 - "$CODEGEN_LAB/hexagon-sms.s" "$CODEGEN_LAB/hexagon-sms.log" <<'PYCODE'
+import pathlib, sys
+asm, log = (pathlib.Path(p).read_text() for p in sys.argv[1:])
+assert 'loop0(' in asm and 'endloop0' in asm
+assert 'Schedule Found? 1 (II=3)' in log
+assert 'Schedule Found? 0 (II=20)' in log
+for line in log.splitlines():
+    if any(x in line for x in ['MII =', 'Schedule Found?', 'No schedule found']):
+        print(line)
+print('FileCheck 通过；硬件循环起始数量：', asm.count('loop0('))
+PYCODE
+```
+
+小循环在 II=3 成功，较大循环尝试到 II=20 失败，最终汇编通过该回归测试的检查。这里的两个结果是正、负调度尝试，整个 llc 命令本身应成功退出。
+
 ## 8.11 扩展阅读：调度算法的影响因素
 
 选择调度策略时要同时看依赖、目标模型和编译阶段。分配前更容易通过改变生产/消费距离影响压力；分配后物理寄存器已固定，更侧重延迟与资源、可安全消除的反依赖。过早发射 load 有时隐藏延迟，有时把活跃范围拉长；过度串行化又可能牺牲并行性。
@@ -920,12 +1230,7 @@ No schedule found, return
 
 调度首先要满足依赖，再在资源、延迟和寄存器需求之间作选择。拓扑关系、LLVM 模型周期、硬件实测周期是三个不同层次；pressure set、寄存器类和活跃值个数也不同。可复现的输入和明确的停止点，比一张脱离配置的 SUnit 编号表更能帮助理解调度。
 
-```sh
-export LLVM_BUILD=${LLVM_BUILD:-/opt/llvm-project/build}
-export LLVM_SRC=${LLVM_SRC:-/opt/llvm-project}
-export BOOK_ROOT=/opt/coding/mlir-toy/llvm/inside-llvm-codegen
-python3 "$BOOK_ROOT/experiments/ch8/runner.py"
-```
+按上面的命令可以逐阶段复现；另需汇总 JSON 时可执行 `python3 "$BOOK_INPUT/runner.py"`。
 
 默认输出到新临时目录，包含各策略 MIR、stderr 调度日志、TableGen JSON、Hexagon 汇编和结果报告。`--output` 指定保存位置，`--summary` 另存 JSON；`--bpf-only` 是部分环境下的探索入口，不代表 RISC-V/Hexagon 部分通过。
 

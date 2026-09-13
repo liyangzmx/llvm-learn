@@ -50,12 +50,13 @@ LLVM 的 verifier 检查表示的结构和类型约束，例如 PHI 前驱、操
 
 ## 1.3 LLVM 构建与调试
 
-所有命令在本地仓库根目录运行。先设置三个显式路径：
+各章手工实验使用 Bash，按正文顺序在同一个会话中执行；后续命令会使用前面生成的文件。先设置三个显式路径；本章的构建配置只需在工具缺失或配置不符时执行：
 
+<!-- manual-lab:ch1-setup -->
 ```sh
-export LLVM_SRC=/opt/llvm-project
-export LLVM_BUILD=/opt/llvm-project/build
-export BOOK_ROOT=/opt/coding/mlir-toy/llvm/inside-llvm-codegen
+export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
+export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
+export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
 ```
 
 本次配置沿用已有 Ninja 构建、Debug、断言以及 Clang/MLIR 项目。为了支持书中的跨目标实验，在 BPF 和 Native 之外启用了 X86、RISCV、Hexagon、PowerPC、ARM；Native 在当前 Apple Silicon 主机上对应 AArch64。这些后端用于交叉生成代码，不要求本机能够运行其机器指令。
@@ -90,6 +91,7 @@ cmake --build "$LLVM_BUILD" --parallel 12 --target \
 
 **代码清单 1-2：检查实际执行的工具。** CMakeCache 中的目标列表不证明现有可执行文件已经按该配置重建；要同时检查二进制。
 
+<!-- manual-lab:ch1-tool-versions -->
 ```sh
 "$LLVM_BUILD/bin/clang" --version
 "$LLVM_BUILD/bin/llc" --version
@@ -103,6 +105,7 @@ cmake --build "$LLVM_BUILD" --parallel 12 --target \
 
 观察 Pass 时，优先使用可保存的文本输出：
 
+<!-- manual-lab:ch1-pass-registry -->
 ```sh
 # 优化器注册的 Pass 名称及流水线观察。
 "$LLVM_BUILD/bin/opt" --print-passes
@@ -118,6 +121,7 @@ LLDB 可用于断点、单步和查看对象，但断点名称不是稳定 API�
 
 **代码清单 1-3：显式控制各编译阶段。** 输出使用独立临时目录，不写进 LLVM 源码树。
 
+<!-- manual-lab:ch1-compile-and-execute -->
 ```sh
 CODEGEN_LAB=$(mktemp -d)
 "$LLVM_BUILD/bin/clang" --target=bpfel -O0 \
@@ -131,9 +135,14 @@ CODEGEN_LAB=$(mktemp -d)
   -o "$CODEGEN_LAB/sum.bc"
 "$LLVM_BUILD/bin/llvm-dis" "$CODEGEN_LAB/sum.bc" \
   -o "$CODEGEN_LAB/roundtrip.ll"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output \
+  "$CODEGEN_LAB/roundtrip.ll"
 "$LLVM_BUILD/bin/opt" '-passes=default<O2>' -verify-each -S \
   "$CODEGEN_LAB/sum-ssa.ll" -o "$CODEGEN_LAB/sum-opt.ll"
 
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 \
+  -verify-machineinstrs "$CODEGEN_LAB/sum-opt.ll" \
+  -o "$CODEGEN_LAB/sum.s"
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 \
   -verify-machineinstrs -filetype=obj "$CODEGEN_LAB/sum-opt.ll" \
   -o "$CODEGEN_LAB/sum.o"
@@ -159,6 +168,15 @@ CODEGEN_LAB=$(mktemp -d)
 | lli 解释执行 | 给定输入优化前后均返回 0 | 实际 BPF 指令已在内核中运行，或所有输入均等价 |
 
 runner 还让 Clang 按修复后的本机默认 triple 重新生成 `host.ll`，再用普通 `lli` JIT 执行并检查返回 0。这一用例验证本机后端和 JIT 的衔接；它使用重新生成的宿主 IR，并没有把 BPF 目标对象当作宿主代码运行。
+
+<!-- manual-lab:ch1-host-jit -->
+```sh
+"$LLVM_BUILD/bin/clang" -O0 -S -emit-llvm \
+  "$BOOK_ROOT/experiments/ch1/sum.c" -o "$CODEGEN_LAB/host.ll"
+"$LLVM_BUILD/bin/lli" "$CODEGEN_LAB/host.ll"
+```
+
+以上命令成功时退出码均为 0；IR 解释器与宿主 JIT 的 `main` 都会自行检查求和结果。`sum.s` 是 BPF 汇编，`sum.o` 是 BPF 对象，`host.ll` 则保留宿主 triple，三者用途不同。
 
 完整自动执行包含上述命令和断言：
 

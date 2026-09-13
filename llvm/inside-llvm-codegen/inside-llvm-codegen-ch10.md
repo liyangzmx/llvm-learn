@@ -6,14 +6,25 @@
 
 本章固定 `bpfel`、`-mcpu=generic`、`-O2`，使用 Debug/assertions 构建并开启 `-verify-machineinstrs`。Fast 使用非优化分配路径 `-optimize-regalloc=0`；Basic、Greedy、PBQP 使用优化路径。四者是各自完整分配路径的比较，不是假定前后 Pass 完全相同。MIR 清单展示实际输出中的函数体；含 YAML 头的完整文件由运行器生成。
 
+<!-- manual-lab:ch10-setup -->
+
 ```sh
-export LLVM_BUILD=${LLVM_BUILD:-/opt/llvm-project/build}
-export LLVM_SRC=${LLVM_SRC:-/opt/llvm-project}
-export BOOK_ROOT=/opt/coding/mlir-toy/llvm/inside-llvm-codegen
-python3 "$BOOK_ROOT/experiments/ch10/runner.py"
+set -euo pipefail
+export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
+export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
+export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
+BOOK_INPUT="$BOOK_ROOT/experiments/ch10"
+CODEGEN_LAB=$(mktemp -d)
+export BOOK_INPUT CODEGEN_LAB
+"$LLVM_BUILD/bin/llc" --version
+printf '实验输出目录：%s\n' "$CODEGEN_LAB"
 ```
 
-运行器默认把日志、MIR、汇编、目标文件和 `results.json` 写入临时目录；可用 `--out` 指定目录。IR 经 assembler 和 verifier 检查，并以 `lli -force-interpreter` 验证求和与排序语义；BPF 产物经过机器指令校验、编码和反汇编。两种验证的范围不同，本章没有在内核 BPF JIT 中运行目标文件。
+以下命令按正文顺序在同一个 Bash 会话运行；输入取自本章实验目录，所有新文件写入刚创建的临时目录。
+
+
+
+下文直接列出生成日志、MIR、汇编和目标文件的命令；自动运行器另提供 `--out` 选项及 `results.json` 汇总。IR 经 assembler 和 verifier 检查，并以 `lli -force-interpreter` 验证求和与排序语义；BPF 产物经过机器指令校验、编码和反汇编。两种验证的范围不同，本章没有在内核 BPF JIT 中运行目标文件。
 
 ## 10.1 寄存器分配流程解析
 
@@ -230,6 +241,24 @@ bb.0.entry:
     $r0 = COPY %1
     RET implicit $r0
 ```
+
+<!-- manual-lab:ch10-sum-stages -->
+
+```sh
+for name in sum bubble; do
+  "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/$name.ll" -o "$CODEGEN_LAB/$name.bc"
+  "$LLVM_BUILD/bin/opt" -passes=verify "$CODEGEN_LAB/$name.bc" -disable-output
+done
+for stage in finalize-isel livevars phi-node-elimination twoaddressinstruction \
+             register-coalescer virtregrewriter prologepilog; do
+  "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
+    "-stop-after=$stage" "$BOOK_INPUT/sum.ll" -o "$CODEGEN_LAB/sum-$stage.mir"
+done
+sed -n '/^body:/,$p' "$CODEGEN_LAB/sum-phi-node-elimination.mir"
+sed -n '/^body:/,$p' "$CODEGEN_LAB/sum-register-coalescer.mir"
+```
+
+按文件名比较各阶段：PHI 消除引入 COPY，合并后主要虚拟寄存器集中为 %8/%9/%6，物理重写和 PEI 快照用于后文对照。
 
 ## 10.2 寄存器分配涉及的 Pass
 
@@ -672,6 +701,20 @@ bb.0.entry:
     RET implicit killed $r0
 ```
 
+<!-- manual-lab:ch10-x86-two-address -->
+
+```sh
+for name in add-x86 lea-x86; do
+  "$LLVM_BUILD/bin/llvm-mc" --triple=x86_64-unknown-linux-gnu --filetype=obj \
+    "$BOOK_INPUT/$name.s" -o "$CODEGEN_LAB/$name.o"
+  "$LLVM_BUILD/bin/llvm-objdump" -d "$CODEGEN_LAB/$name.o" \
+    > "$CODEGEN_LAB/$name.dis"
+  cat "$CODEGEN_LAB/$name.dis"
+done
+```
+
+两份 AT&T 汇编均可编码：一份含 add/mov/ret，另一份含 lea/ret；这验证语法与编码，不是硬件速度比较。
+
 ### 10.2.7 指令编号
 
 SlotIndexes 为机器指令、bundle与块边界提供有序位置。调试指令等不参与这个机器活跃区间编号；这并不表示必须删除调试信息。初始相邻条目距离为 `InstrDist=16`，在中间插入条目可利用空隙，空隙不足时局部重新编号。
@@ -705,6 +748,17 @@ SlotIndexes 为机器指令、bundle与块边界提供有序位置。调试指�
 176B	  JSGT_ri %6:gpr, 9, %bb.3
 192B	  JMP %bb.2
 ```
+
+<!-- manual-lab:ch10-sum-debug -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
+  -debug-only=regalloc,machine-block-freq "$BOOK_INPUT/sum.ll" \
+  -o "$CODEGEN_LAB/sum.s" 2> "$CODEGEN_LAB/sum-trace.log"
+sed -n '1,65p' "$CODEGEN_LAB/sum-trace.log"
+```
+
+Debug 构建日志包含 SlotIndexes、LiveIntervals 及后面的分配过程；同一次命令生成的 sum.s 供物理映射小节查看。
 
 ### 10.2.8 变量活跃区间分析
 
@@ -1004,6 +1058,20 @@ bb.0.entry:
 
 比较完整 `sum-fast-prologepilog.mir` 与优化路径 `sum-prologepilog.mir`，可见前者有spill对象及store/reload，后者无spill。该对比解释策略差别，不构成运行时间排名。
 
+<!-- manual-lab:ch10-fast -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
+  -regalloc=fast -optimize-regalloc=0 -stop-before=regallocfast \
+  "$BOOK_INPUT/sum.ll" -o "$CODEGEN_LAB/sum-fast-regallocfast.mir"
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
+  -regalloc=fast -optimize-regalloc=0 -stop-after=prologepilog \
+  "$BOOK_INPUT/sum.ll" -o "$CODEGEN_LAB/sum-fast-prologepilog.mir"
+sed -n '/^body:/,$p' "$CODEGEN_LAB/sum-fast-prologepilog.mir"
+```
+
+Fast 结果含跨块 spill/reload；与前面优化路径的 sum-prologepilog.mir 比较可见后者无 spill。
+
 ## 10.4 Basic 算法实现
 
 LLVM 历史上采用过线性扫描分配器；现代 Basic 与 Greedy 仍使用活跃区间，但不等同于按起点排序并单次扫过指令的经典线性扫描。它们通过 RegAllocBase 队列选取区间、用 LiveRegMatrix 检测干涉，并把 spill/split 产生的区间重新入队。Basic 是展示这一基础设施的简化分配器，也适合作为算法比较基准。
@@ -1222,6 +1290,20 @@ Enqueuing %44
 
 ABI允许swap破坏R0～R5；不能根据它只有两个参数就删除R3～R5的调用干涉。精确clobber需要另有可靠的跨过程信息。
 
+<!-- manual-lab:ch10-basic-trace -->
+
+```sh
+cp "$BOOK_INPUT/bubble.ll" "$CODEGEN_LAB/bubble.ll"
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
+  -regalloc=basic -optimize-regalloc=1 \
+  -debug-only=regalloc,regalloc-pbqp,spill-code-placement,edge-bundles \
+  "$CODEGEN_LAB/bubble.ll" -o "$CODEGEN_LAB/basic.s" \
+  2> "$CODEGEN_LAB/basic-trace.log"
+sed -n '1,55p' "$CODEGEN_LAB/basic-trace.log"
+```
+
+完整 basic-trace.log 包含当前区间、权重与 spiller 处理；最终 basic.s 保留一个 spill 槽、两次静态 reload。
+
 ## 10.5 Greedy 算法实现
 
 Greedy 在直接分配之外整合了剔除、区间拆分、重着色和 spill 位置选择。它不只尝试减少发生 spill 的值的数量，还要降低动态保存/重载的成本，例如让热路径保留寄存器、冷路径经栈传递。Greedy 算法分配流程如图 10-25 所示。
@@ -1364,6 +1446,15 @@ E(s)=-\frac12\sum_i\sum_{j\ne i}w_{ij}s_i s_j-\sum_i b_i s_i.
 本章另用 [models.py](experiments/ch10/models.py) 检查 729 个三节点二态网络的 5832 条初态轨迹：5128 次实际翻转都严格降能，但有 1280 条轨迹停在非全局最小值。同步更新反例 `(1,-1)→(-1,1)→(1,-1)` 形成二周期。这些有限检查辅助理解上述证明，不代替一般证明，也不表示测试了 LLVM 三态网络的全部行为。
 
 LLVM 18 的具体实现位于 `SpillPlacement.cpp`。节点 `Value` 实际取 `{-1,0,+1}`，通过 `BiasP`、`BiasN`、相邻节点的正频率链接与阈值 dead zone 更新；只有 `Value>0` 被判作偏好寄存器，0 与负值最终都不选该寄存器区域。它不是把上面的二态公式逐字照搬，也不需要训练数据或反向梯度传播。10.5.4 将这个实现映射到 EdgeBundles 与拆分位置。
+
+<!-- manual-lab:ch10-mathematical-models -->
+
+```sh
+python3 -B "$BOOK_INPUT/models.py" > "$CODEGEN_LAB/models.json"
+cat "$CODEGEN_LAB/models.json"
+```
+
+结果同时报告本节的 Hopfield 有限轨迹与 10.6.3 的 PBQP R1/R2 穷举检查；同步二周期和非全局最小终态也被保留为反例。
 
 ### 10.5.4 使用 Hopfield 网络求解拆分
 
@@ -1556,6 +1647,19 @@ Enqueuing %43
 ```
 
 随后 `%39/%6/%11` 等区间继续经历剔除、拆分或remat。最终 `%6` 的调用附近部分需要spill，HoistSpillHelper把存储从调用块上提到入口。Greedy最终同样只有1个8字节槽，但只留下1条静态reload；总机器指令为56，多于Basic的53。由此可见，较少reload与较少总指令是两个不同指标，不能将一个指标当作全局性能保证。
+
+<!-- manual-lab:ch10-greedy-trace -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
+  -regalloc=greedy -optimize-regalloc=1 \
+  -debug-only=regalloc,regalloc-pbqp,spill-code-placement,edge-bundles \
+  "$CODEGEN_LAB/bubble.ll" -o "$CODEGEN_LAB/greedy.s" \
+  2> "$CODEGEN_LAB/greedy-trace.log"
+rg 'Cost of isolating|Split for|total = 961' "$CODEGEN_LAB/greedy-trace.log"
+```
+
+日志中可找到按 R4 保留区域的 961 成本和逐块隔离的 1025 成本；这些是模型成本。
 
 ## 10.6 PBQP 算法实现
 
@@ -1757,6 +1861,26 @@ VREG %41 -> R6
 
 `%7`引入reload值 `%42`；`%11`引入 `%43/%44`。有新待分配区间时重建图，本例发生第0、1两轮。第二轮完成后仍只有一个栈槽。整个流程并非“不断把所有溢出消除到零”，而是直到每个仍需寄存器的值都被合法安排，栈槽里的spill值可以保留。
 
+<!-- manual-lab:ch10-pbqp-trace -->
+
+```sh
+# PBQP 图文件名由输入模块名派生；输入副本和工作目录都设在实验临时目录。
+(
+  cd "$CODEGEN_LAB"
+  "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
+    -regalloc=pbqp -optimize-regalloc=1 -pbqp-coalescing=false -pbqp-dump-graphs \
+    -debug-only=regalloc,regalloc-pbqp,spill-code-placement,edge-bundles \
+    bubble.ll -o pbqp.s 2> pbqp-trace.log
+)
+rg 'SPILLED|VREG' "$CODEGEN_LAB/pbqp-trace.log"
+for graph in "$CODEGEN_LAB"/*.pbqpgraph; do
+  printf '%s\n' "$graph"
+  sed -n '1,12p' "$graph"
+done
+```
+
+本例产生第 0、1 两轮图；日志区分 %7 的 spill 与 %11 的重新物化，图成本第 0 项与日志 LI.weight 不同。
+
 ## 10.7 扩展阅读：图着色分配
 
 图着色和基于区间的分配是两类常见思路。LLVM 18 通用优化路径使用 Greedy，通过区间并集查询干涉；它与经典线性扫描不同。PBQP 可表达不规则寄存器/额外成本约束，本节用图着色作概念比较；不据本地 LLVM 源码推断其他编译器当前实现或市场使用比例。
@@ -1820,6 +1944,72 @@ VREG %41 -> R6
 | Basic | 函数级活跃区间、spill-weight队列与LiveRegMatrix；展示LLVM分配基础设施，适合算法实验和基准。 | 生产级代码质量优化较少；缺少Greedy的复杂区域拆分与剔除策略。 |
 | Greedy | 优先队列、剔除、局部/区域拆分、重新物化和最终重着色等；通用优化路径默认。 | 实现与启发式复杂；区域拆分使用边束，但仍考虑块内冲突并有局部拆分，可能为某输入引入多余COPY；不保证全局最低spill成本。 |
 | PBQP | 用节点/边成本表达寄存器与额外目标约束，适合建模不规则寄存器；AArch64 Cortex-A57有扩展约束实现。 | 构图和求解有开销，高阶节点需启发式；保守可分配工作集和潜在溢出工作集采用不同选择规则，后者已经比较spill cost，不能说两者都只按可用寄存器数排序。 |
+
+<!-- manual-lab:ch10-allocator-artifacts -->
+
+```sh
+for alloc in fast basic greedy pbqp; do
+  if [ "$alloc" = fast ]; then optimize_ra=0; else optimize_ra=1; fi
+  ALLOC_FLAGS=(-regalloc="$alloc" -optimize-regalloc="$optimize_ra")
+  if [ "$alloc" = pbqp ]; then ALLOC_FLAGS+=(-pbqp-coalescing=false); fi
+  for kind in asm obj mir; do
+    case "$kind" in
+      asm) OUTPUT_FLAGS=(-filetype=asm); suffix=s ;;
+      obj) OUTPUT_FLAGS=(-filetype=obj); suffix=o ;;
+      mir) OUTPUT_FLAGS=(-stop-after=prologepilog); suffix=mir ;;
+    esac
+    "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
+      "${ALLOC_FLAGS[@]}" "${OUTPUT_FLAGS[@]}" "$CODEGEN_LAB/bubble.ll" \
+      -o "$CODEGEN_LAB/$alloc.$suffix"
+  done
+  "$LLVM_BUILD/bin/llvm-objdump" -d "$CODEGEN_LAB/$alloc.o" > "$CODEGEN_LAB/$alloc.dis"
+done
+python3 -B - "$CODEGEN_LAB" <<'PY_CHECK'
+from pathlib import Path
+import re, sys
+out = Path(sys.argv[1])
+expected = {"fast": (67,10,18,10), "basic": (53,1,2,1),
+            "greedy": (56,1,1,1), "pbqp": (53,1,2,1)}
+for alloc, want in expected.items():
+    asm = (out / (alloc + ".s")).read_text()
+    mir = (out / (alloc + ".mir")).read_text()
+    dis = (out / (alloc + ".dis")).read_text()
+    got = (len(re.findall(r"^\s*[0-9]+:", dis, re.M)),
+           len(re.findall(r"type: spill-slot", mir)),
+           len(re.findall(r"= \*\(u64 \*\)\(r10", asm)),
+           len(re.findall(r"\*\(u64 \*\)\(r10[^\n]*=", asm)))
+    assert got == want, (alloc, got)
+    print(alloc, "instructions/spill-slots/loads/stores =", got)
+PY_CHECK
+```
+
+输出四行与表 10-3 一致；循环分别生成汇编、对象文件和 PEI 后 MIR，并将反汇编写入对应 .dis 文件。
+
+<!-- manual-lab:ch10-semantics -->
+
+```sh
+# check.ll 提供 swap 定义及 main；拼接前移除 bubble.ll 中同名声明。
+{
+  cat "$BOOK_INPUT/sum.ll"
+  sed '/^declare dso_local void @swap(ptr, ptr)$/d' "$BOOK_INPUT/bubble.ll"
+  cat "$BOOK_INPUT/check.ll"
+} > "$CODEGEN_LAB/check.ll"
+"$LLVM_BUILD/bin/llvm-as" "$CODEGEN_LAB/check.ll" -o "$CODEGEN_LAB/check.bc"
+"$LLVM_BUILD/bin/lli" -force-interpreter "$CODEGEN_LAB/check.bc"
+
+# 第二条路径直接编译书中的 C；给内联排序版本改名，避免重复定义。
+{
+  cat "$BOOK_INPUT/sum.c" "$BOOK_INPUT/bubble.c"
+  sed 's/bubbleSort(/bubbleSortInline(/g' "$BOOK_INPUT/bubble-inline.c"
+  cat "$BOOK_INPUT/check-c.c"
+} > "$CODEGEN_LAB/check-c.c"
+"$LLVM_BUILD/bin/clang" -O1 -fno-inline-functions -S -emit-llvm \
+  "$CODEGEN_LAB/check-c.c" -o "$CODEGEN_LAB/check-c.ll"
+"$LLVM_BUILD/bin/lli" -force-interpreter "$CODEGEN_LAB/check-c.ll"
+printf 'IR 与 C 清单语义检查均返回 0\n'
+```
+
+两条路径都检查 sum=45、带负数和重复值的排序，以及 n=0/1 时数组不变；解释器成功退出时才打印最后一行。
 
 ## 10.9 本章小结
 

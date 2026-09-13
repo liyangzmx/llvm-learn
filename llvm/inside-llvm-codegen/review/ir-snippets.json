@@ -4,7 +4,7 @@
   "cases": [
     {
       "file": "inside-llvm-codegen-ch10.md",
-      "line": 176,
+      "line": 187,
       "ir_sha256": "486026d2967b36a02676d1c7ebafa68c056b99ad9de67c2b80e255ae3ae32ed1",
       "returncode": 0,
       "diagnostic": "",
@@ -12,7 +12,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch10.md",
-      "line": 1089,
+      "line": 1157,
       "ir_sha256": "5d83dfeadd6e011d853881285611920f2042cd4581706453d09e1f54f8b51816",
       "returncode": 0,
       "diagnostic": "",
@@ -20,7 +20,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch11.md",
-      "line": 379,
+      "line": 504,
       "ir_sha256": "7f86e7bb4198f0f0832e3b3dc5d508eb656d5cb7505fb61b335e5019b166fe08",
       "returncode": 0,
       "diagnostic": "",
@@ -28,7 +28,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch2.md",
-      "line": 77,
+      "line": 108,
       "ir_sha256": "023b7d8e1bf96d687ea53715707a635181c20824736cede9b10adc7fea9fbf78",
       "returncode": 0,
       "diagnostic": "",
@@ -36,7 +36,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch2.md",
-      "line": 94,
+      "line": 125,
       "ir_sha256": "a4acb03aa0556c09c24325d2dc30424e77277bd8fb7e1b1069df793a82d6524b",
       "returncode": 0,
       "diagnostic": "",
@@ -44,7 +44,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch2.md",
-      "line": 515,
+      "line": 626,
       "ir_sha256": "9e9f9239309e1b73a43beba9852890a9957302516e045bad6c52113027323ba2",
       "returncode": 0,
       "diagnostic": "",
@@ -52,7 +52,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch5.md",
-      "line": 230,
+      "line": 276,
       "ir_sha256": "1cbcd2036cbbcc322cb94c75d28b7d178a07c34565631160a4c33be9a6c27ae9",
       "returncode": 0,
       "diagnostic": "",
@@ -60,7 +60,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch5.md",
-      "line": 259,
+      "line": 305,
       "ir_sha256": "331575a35746af62650e3f65b6939454c3d86adc34d8c89e824683c9cbfa06c6",
       "returncode": 0,
       "diagnostic": "",
@@ -68,7 +68,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch7.md",
-      "line": 83,
+      "line": 115,
       "ir_sha256": "01de44115e7d408b39d8acef43aff229a7fa6a09f824b5d691b79322babd10a2",
       "returncode": 0,
       "diagnostic": "",
@@ -76,7 +76,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch7.md",
-      "line": 126,
+      "line": 158,
       "ir_sha256": "21dc74c01ce772e3979e936dfb380d0a301c778412084cb46b89c8e00916284e",
       "returncode": 0,
       "diagnostic": "",
@@ -84,7 +84,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch7.md",
-      "line": 224,
+      "line": 315,
       "ir_sha256": "b551371150900a3b51a021686a6a386a0079eba205b0d155dbd8060a8ab2f374",
       "returncode": 0,
       "diagnostic": "",
@@ -92,7 +92,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch7.md",
-      "line": 480,
+      "line": 672,
       "ir_sha256": "530a9d3b287fdfa5b7c6996e8a9dd125be220c7814a3a85fa472afe0ab117f03",
       "returncode": 0,
       "diagnostic": "",
@@ -100,7 +100,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch8.md",
-      "line": 67,
+      "line": 104,
       "ir_sha256": "04d028374c1317890a2a4121d0da272b9a2a5ce23ccbc91e395e091631ae3efb",
       "returncode": 0,
       "diagnostic": "",
@@ -108,7 +108,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch8.md",
-      "line": 460,
+      "line": 721,
       "ir_sha256": "c96002e8b9da72855b6d09b618cf16d8c108ab1feac7789f05c908109e754f7b",
       "returncode": 0,
       "diagnostic": "",
@@ -116,7 +116,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch9.md",
-      "line": 101,
+      "line": 111,
       "ir_sha256": "42600413f21d0c01289e6228440d38ab38b1f37e92498789e25f9506f7756c2a",
       "returncode": 0,
       "diagnostic": "",
@@ -124,7 +124,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch9.md",
-      "line": 211,
+      "line": 254,
       "ir_sha256": "5175834c25b985ce5da56291a6480620fd036b0ef732e0d4fec72ee3f1aab2df",
       "returncode": 0,
       "diagnostic": "",
@@ -132,7 +132,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch9.md",
-      "line": 270,
+      "line": 313,
       "ir_sha256": "ca86d27ef1c23ae3cc094420eabc0c8d6d57017a2917c808a7babb61b9c44009",
       "returncode": 0,
       "diagnostic": "",
@@ -140,7 +140,7 @@
     },
     {
       "file": "inside-llvm-codegen-ch9.md",
-      "line": 519,
+      "line": 637,
       "ir_sha256": "8c4d477d682885c692aed29461d457ed10c764bdf5496e18d0ba0a611817a48b",
       "returncode": 0,
       "diagnostic": "",

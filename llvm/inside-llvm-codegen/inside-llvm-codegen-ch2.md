@@ -18,17 +18,22 @@ flowchart LR
 
 这些职责并非绝对隔离：中端可查询目标成本，后端也执行大量优化。本书后续章节正要讨论目标相关的代码生成。IR 是这些分析与变换的共同基础，本章先说明其组织方式、控制流和 SSA。
 
-本章命令约定如下；已有工具即可运行，runner 不触发构建。
+本章命令使用 **Bash**，先执行下面的准备块，再在同一 shell 中按正文顺序执行后续命令。工具应为已构建的 LLVM 18.1.8；这些步骤不会启动构建。输入只读，所有生成文件写入 `CODEGEN_LAB` 指向的新临时目录。
+
+<!-- manual-lab:ch2-setup -->
 
 ```sh
+set -euo pipefail
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
-python3 "$BOOK_ROOT/experiments/ch2/runner.py"
+BOOK_INPUT="$BOOK_ROOT/experiments/ch2"
+CODEGEN_LAB=$(mktemp -d)
+printf '本章临时输出目录：%s\n' "$CODEGEN_LAB"
+"$LLVM_BUILD/bin/opt" --version
 ```
 
-可用 `--output-dir /tmp/ch2-output` 保留一个固定输出目录；结果 JSON 包含逐项断言和命令。失败样例的非零退出码是实验预期，runner 会核对诊断，不能把它们作为合法 IR / TD 使用。
-
+预期工具报告 LLVM 18.1.8。后面的 `opt` 命令显式指定 Pass；使用解释器时，返回码 0 表示输入中 `main` 的检查通过，不表示在 BPF 内核或 JIT 上运行过。
 ## 2.1 IR 分类
 
 树、线性序列和图描述 IR 的组织或观察方式，三者并不互斥。例如，一个 LLVM 函数既有基本块和指令序列，也有由 terminator 建立的 CFG，以及由 Value/Use 建立的使用—定义图。不同阶段选择适合其分析与变换的抽象层次。
@@ -45,7 +50,18 @@ int add(int a, int b) {
 }
 ```
 
-使用本章 LLVM 18.1.8 的 Clang，编译命令为 `"$LLVM_BUILD/bin/clang" --target=bpfel -Xclang -ast-dump -fsyntax-only "$BOOK_ROOT/experiments/ch2/examples.c"`，获得的 AST 如图 2-2 所示。
+从完整 C 输入导出 AST，并筛选本节讨论的节点：
+
+<!-- manual-lab:ch2-clang-ast -->
+
+```sh
+"$LLVM_BUILD/bin/clang" --target=bpfel -Xclang -ast-dump -fsyntax-only \
+  "$BOOK_INPUT/examples.c" > "$CODEGEN_LAB/examples.ast.txt"
+rg -n 'FunctionDecl|CompoundStmt|ReturnStmt|BinaryOperator|ImplicitCastExpr|ParmVarDecl' \
+  "$CODEGEN_LAB/examples.ast.txt"
+```
+
+预期可见 add 的 FunctionDecl、函数体 CompoundStmt、ReturnStmt，以及加法的 BinaryOperator 和左值转换节点；图 2-2 仅抽取相关子树。
 
 在图 2-2 中，函数对应 FunctionDecl，函数体对应复合语句节点（CompoundStmt），该节点包含了 return 语句的节点（ReturnStmt）。而 return 节点又是由一个二元操作节点构成（add 是二元操作的一种类型）的，二元操作节点的两个输入经 ImplicitCastExpr 完成左值到右值转换，再引用相应 DeclRefExpr。AST形式是非常自然的表达形式，它可以通过文法解析得到。
 
@@ -68,7 +84,22 @@ flowchart TD
 
 线性表示按顺序列出操作，常见形式包括三地址代码和自定义指令序列。LLVM IR 在基本块内保存有序的指令列表。
 
-LLVM 中端的许多优化操作 LLVM IR；后端还会在 Machine IR 上优化。使用 Clang 编译代码清单 2-1 可以获得线性 IR，编译命令为 `"$LLVM_BUILD/bin/clang" --target=bpfel -O0 -Xclang -disable-O0-optnone -S -emit-llvm "$BOOK_ROOT/experiments/ch2/examples.c" -o /tmp/ch2.ll`，对应的 IR 如代码清单 2-2 所示。
+LLVM 中端的许多优化操作 LLVM IR；后端还会在 Machine IR 上优化。下面先验证清单 2-2 的完整手写模块，再从 C 输入生成待优化的 IR。`-disable-O0-optnone` 允许后续 opt 变换，`-fno-discard-value-names` 保留便于观察的名称。
+
+<!-- manual-lab:ch2-parse-and-emit-ir -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/add.ll" -o "$CODEGEN_LAB/add.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/add.bc"
+"$LLVM_BUILD/bin/clang" --target=bpfel -O0 -Xclang -disable-O0-optnone \
+  -fno-discard-value-names -S -emit-llvm "$BOOK_INPUT/examples.c" \
+  -o "$CODEGEN_LAB/examples.before.ll"
+"$LLVM_BUILD/bin/llvm-as" "$CODEGEN_LAB/examples.before.ll" \
+  -o "$CODEGEN_LAB/examples.before.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/examples.before.bc"
+```
+
+预期两个模块均通过解析和 verifier，`examples.before.ll` 中仍有局部变量的 alloca/load/store。
 
 **代码清单 2-2 代码清单 2-1 对应的 IR（2-2.ll，LLVM 18 opaque pointer 形式）**
 
@@ -104,6 +135,26 @@ define i32 @add(i32 %0, i32 %1) {
 }
 ```
 
+把可提升的内存变量转成 SSA，并分别执行变换前后的完整模块：
+
+<!-- manual-lab:ch2-mem2reg -->
+
+```sh
+"$LLVM_BUILD/bin/opt" -passes=mem2reg,verify -S \
+  "$CODEGEN_LAB/examples.before.ll" -o "$CODEGEN_LAB/examples.ssa.ll"
+for ir in "$CODEGEN_LAB/examples.before.ll" "$CODEGEN_LAB/examples.ssa.ll"; do
+  "$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel "$ir"
+done
+rg -n ' phi i32 ' "$CODEGEN_LAB/examples.ssa.ll"
+sed -n '/define.*@pruned(/,/^}/p' "$CODEGEN_LAB/examples.ssa.ll"
+if rg -n 'alloca' "$CODEGEN_LAB/examples.ssa.ll"; then
+  printf '本例预期所有 alloca 均已提升。\n' >&2
+  exit 1
+fi
+```
+
+预期两个执行命令均返回 0，SSA 文件共有 10 个 i32 PHI；打印的 pruned 函数没有 PHI，且整个模块不再含 alloca。
+
 `experiments/ch2/runner.py` 实际生成了 C 示例的 IR，再运行 `mem2reg,verify`：本例中所有可提升的 alloca 消失，包含循环与分支的模块产生 10 个 LLVM PHI；`pruned` 函数中从未被使用的局部变量没有留下 PHI。将优化前后 IR 交给 `lli --force-interpreter -mtriple=bpfel`，阶乘、分支、循环求和等 15 项条件均成立。这里选择 BPF triple 是为了让输入目标明确，解释执行不依赖 BPF JIT。
 
 SSA 的单赋值约束作用于 `%5` 这样的值。`store` 仍能多次修改同一内存位置，因此含 alloca/load/store 的 LLVM IR 也符合 SSA；mem2reg 是把合适的内存变量提升成 SSA 值，而不是把“不合法 IR”修成 SSA。
@@ -138,6 +189,19 @@ int factor(int n) {
 ```
 
 runner 实际用 Clang 生成 IR，并执行 `opt -passes=dot-cfg -disable-output`，得到包含 factor 的 DOT 文件。它会显示生成 IR 中的具体块名与指令；图 2-3 是其源语言层面的简化视图。
+
+<!-- manual-lab:ch2-cfg-dot -->
+
+```sh
+(
+  cd "$CODEGEN_LAB"
+  "$LLVM_BUILD/bin/opt" -passes=dot-cfg -disable-output \
+    "$CODEGEN_LAB/examples.ssa.ll"
+)
+test -s "$CODEGEN_LAB/.factor.dot"
+```
+
+预期临时目录出现 `.factor.dot` 等文件；子 shell 的 cd 保证 DOT 不写入源码目录。
 
 **图 2-4 LLVM CFG 的查看方法**：在实验输出目录查看 `.factor.dot`。DOT 可交给 Graphviz 渲染；它表达的是基本块及 terminator 后继关系。
 
@@ -443,16 +507,44 @@ Briggs 式保守复制插入和 Sreedhar 式利用干涉信息选择复制位置
 
 LLVM 18 的实际入口是 `PHIElimination::LowerPHINode`：为 PHI 建立中间虚拟寄存器，在前驱插入相应复制，再把汇合后的值复制给原结果。复制放置、关键边处理及后续寄存器合并需共同保持语义。实验对 [machine-phi.ll](experiments/ch2/machine-phi.ll) 使用以下两个停止位置，并开启 MachineVerifier：
 
+<!-- manual-lab:ch2-machine-phi-elimination -->
+
 ```sh
-"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O0 -verify-machineinstrs \
-  -stop-before=phi-node-elimination "$BOOK_ROOT/experiments/ch2/machine-phi.ll" -o /tmp/before.mir
-"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O0 -verify-machineinstrs \
-  -stop-after=phi-node-elimination "$BOOK_ROOT/experiments/ch2/machine-phi.ll" -o /tmp/after.mir
+"$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/machine-phi.ll" -o "$CODEGEN_LAB/machine-phi.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/machine-phi.bc"
+for stage in before after; do
+  "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O0 -verify-machineinstrs \
+    "-stop-${stage}=phi-node-elimination" "$CODEGEN_LAB/machine-phi.bc" \
+    -o "$CODEGEN_LAB/machine-${stage}.mir"
+done
+rg -n ' = PHI ' "$CODEGEN_LAB/machine-before.mir"
+rg -n 'COPY' "$CODEGEN_LAB/machine-after.mir"
+if rg -n ' = PHI ' "$CODEGEN_LAB/machine-after.mir"; then
+  printf 'PHIElimination 后不应保留机器 PHI。\n' >&2
+  exit 1
+fi
 ```
 
 观察到机器 PHI 数量由 2 变成 0，输出包含 COPY，两个阶段均通过机器指令验证。此实验停在分配前，不把 COPY 数量等同于最终机器复制成本。
 
 并行复制可用以下规则安全串行化：先发射目的位置不再被其他待发射复制读取的赋值；如果不存在这种赋值，则先把一个仍需使用的旧值存到临时位置，以打破环。runner 穷举 1–4 个位置的全部 288 种赋值映射，与一次性读取全部旧值的参考语义比较，全部一致。这个有限实验覆盖交换、自复制和一个源供多个目的使用等情况；算法正确性仍以每次不覆盖未读取源值的不变量说明。
+
+数学复制模型使用现有有限穷举入口；该脚本也会同时复跑本章 LLVM 检查，其输出放入单独子目录：
+
+<!-- manual-lab:ch2-copy-models -->
+
+```sh
+python3 "$BOOK_INPUT/runner.py" --output-dir "$CODEGEN_LAB/model-checks"
+python3 - "$CODEGEN_LAB/model-checks/results.json" <<'PYJSON'
+import json, sys
+checks = json.load(open(sys.argv[1]))["checks"]
+for row in checks:
+    if row["name"] in {"parallel_copy_exhaustive", "lost_copy_edge_placement"}:
+        print(json.dumps(row, ensure_ascii=False))
+PYJSON
+```
+
+预期打印 288 种赋值映射全部一致，以及 Lost Copy 正确结果 10、错误放置结果 11。
 
 ### 2.3.4 SSA 分类
 
@@ -510,6 +602,25 @@ module {
 
 `c=true` 时 value 绑定 a，否则绑定 b。这在 MLIR 中合法；但 LLVM IR 要求来自同一前驱的重复 PHI 项具有相同值，所以直接照抄为两个不同 incoming 值是不合法的。
 
+MLIR 到 LLVM IR 的两阶段转换可直接执行：
+
+<!-- manual-lab:ch2-mlir-edge-values -->
+
+```sh
+"$LLVM_BUILD/bin/mlir-opt" "$BOOK_INPUT/edge-values.mlir" \
+  --convert-arith-to-llvm --convert-func-to-llvm --convert-cf-to-llvm \
+  --reconcile-unrealized-casts -o "$CODEGEN_LAB/edge-values-llvm.mlir"
+"$LLVM_BUILD/bin/mlir-translate" "$CODEGEN_LAB/edge-values-llvm.mlir" \
+  --mlir-to-llvmir -o "$CODEGEN_LAB/edge-values.ll"
+"$LLVM_BUILD/bin/llvm-as" "$CODEGEN_LAB/edge-values.ll" -o "$CODEGEN_LAB/edge-values.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/edge-values.bc"
+"$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel "$CODEGEN_LAB/edge-values.bc"
+rg -n 'llvm.cond_br' "$CODEGEN_LAB/edge-values-llvm.mlir"
+sed -n '/define i32 @choose(/,/^}/p' "$CODEGEN_LAB/edge-values.ll"
+```
+
+预期 LLVM 方言中仍为重复目标，导出的 choose 出现中间块与两个 PHI；解释器返回 0，表示 true/false 分别选中 1/2。
+
 实验先运行 `mlir-opt --convert-arith-to-llvm --convert-func-to-llvm --convert-cf-to-llvm --reconcile-unrealized-casts`，LLVM 方言中仍保留同一目标的两条边。随后 `mlir-translate --mlir-to-llvmir` 调用 `LLVM::ensureDistinctSuccessors`，为第二条边新建中间块。导出结果如下（仅把数字名称改为易读名称）：
 
 ```llvm
@@ -528,6 +639,31 @@ edge:
 新增块中的单输入 PHI 是块参数导出的结果，此时尚未做简化。导出 IR 通过 llvm-as 和 verifier；完整模块解释执行确认 true/false 分别选中 1/2。LLVM 18 的导出处理对“带参数的重复后继”实施拆分，而不是依赖前端禁止这种控制流。
 
 本节的重复边规则由三个最小输入直接检验：`bad-dominance.ll` 因定义不支配使用被拒绝；`bad-phi.ll` 因 PHI 缺少前驱项被拒绝；`bad-duplicate-edge.ll` 因同一前驱的重复项携带不同值被拒绝。修正版 [edge-selection.ll](experiments/ch2/edge-selection.ll) 在前驱显式 select，再把选择结果传给 PHI；true/false 两种输入分别得到 1/2，并通过 verifier 与解释执行。
+
+负例必须显式接受失败并检查原因，不能在 `set -e` 下把错误当作成功跳过：
+
+<!-- manual-lab:ch2-verifier-negative-and-select -->
+
+```sh
+for name in bad-dominance bad-phi bad-duplicate-edge; do
+  case "$name" in
+    bad-dominance) expected='does not dominate' ;;
+    bad-phi) expected='PHINode should have one entry' ;;
+    bad-duplicate-edge) expected='multiple entries for the same basic block' ;;
+  esac
+  if "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/$name.ll" \
+      > "$CODEGEN_LAB/$name.stdout" 2> "$CODEGEN_LAB/$name.stderr"; then
+    printf '负例意外通过：%s\n' "$name" >&2
+    exit 1
+  fi
+  rg -F "$expected" "$CODEGEN_LAB/$name.stderr"
+done
+"$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/edge-selection.ll" -o "$CODEGEN_LAB/edge-selection.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/edge-selection.bc"
+"$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel "$CODEGEN_LAB/edge-selection.bc"
+```
+
+预期三个负例分别打印上述诊断；显式 select 的修复模块解析、验证与执行均成功。
 
 ## 2.4 本章小结
 

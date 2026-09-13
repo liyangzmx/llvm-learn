@@ -1,0 +1,720 @@
+{
+  "time_utc": "2026-09-13T16:05:11.108375+00:00",
+  "bash": "/bin/bash",
+  "llvm_build": "/opt/llvm-project/build",
+  "llvm_source": "/opt/llvm-project",
+  "output_directory": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b",
+  "chapters": [
+    {
+      "chapter": 1,
+      "passed": true,
+      "file": "inside-llvm-codegen-ch1.md",
+      "blocks": [
+        {
+          "label": "ch1-setup",
+          "line": 55,
+          "sha256": "713a46e2edc341f0a534463fe1d412cc45c1a315d888e4c5b95a441e775e22da"
+        },
+        {
+          "label": "ch1-tool-versions",
+          "line": 94,
+          "sha256": "117fa24007b961d832f6837198327a7dd160e5ca57e992747e9ac729d446e520"
+        },
+        {
+          "label": "ch1-pass-registry",
+          "line": 108,
+          "sha256": "eefa94d29913ee71a63b1671e32fa4536fb9d589dc7a22974e21a9be42c7706b"
+        },
+        {
+          "label": "ch1-compile-and-execute",
+          "line": 124,
+          "sha256": "fc8aaf91a0c75b18303dbd7207ed048362762a859216405e67116e8e616decb0"
+        },
+        {
+          "label": "ch1-host-jit",
+          "line": 172,
+          "sha256": "d2bf0199193230d956c67ead6e8f50795431ad9de0f980e2ad59aa23800a8f0f"
+        }
+      ],
+      "script_sha256": "14a190b4e1cf000a28f6fd5164f193bf1e9428b045593a61508a49eb715967c6",
+      "returncode": 0,
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch1.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch1.stderr",
+      "commands_unchanged_during_run": true,
+      "duration_seconds": 2.224
+    },
+    {
+      "chapter": 2,
+      "passed": true,
+      "file": "inside-llvm-codegen-ch2.md",
+      "blocks": [
+        {
+          "label": "ch2-setup",
+          "line": 23,
+          "sha256": "e17aae0e01e6c04e6c920969cc97fd75e5ee810d201b699741e64950e3acbc7b"
+        },
+        {
+          "label": "ch2-clang-ast",
+          "line": 55,
+          "sha256": "709eb3d1c6a91a40c9e38bf3b2a14817276512a00bd290bc27e6c2fd405c69df"
+        },
+        {
+          "label": "ch2-parse-and-emit-ir",
+          "line": 89,
+          "sha256": "2c80cac9ba9ce81450767fd10678c756e1f3ceaa3bfb07e2fd0d9f5ec8cefc4f"
+        },
+        {
+          "label": "ch2-mem2reg",
+          "line": 140,
+          "sha256": "9734438f4fb36981743c2ec9eb1968633a6515581c95ff5dd0b2967a91d8718f"
+        },
+        {
+          "label": "ch2-cfg-dot",
+          "line": 193,
+          "sha256": "98e175cfe5a3c9324eb56641656e4b11a80c2b7dcd17bf65897b994d10e316a7"
+        },
+        {
+          "label": "ch2-machine-phi-elimination",
+          "line": 510,
+          "sha256": "df23829b1fc46c92b7e0682761f8b5ce173235ffcc38732d52a8754c15203abf"
+        },
+        {
+          "label": "ch2-copy-models",
+          "line": 534,
+          "sha256": "70f5153a67c9b3bf985f74a1b07687971a2173d4c0f4f3d415fac688857fec5a"
+        },
+        {
+          "label": "ch2-mlir-edge-values",
+          "line": 607,
+          "sha256": "f1ae734bebf0deace13be37846056c4f66dd78d61beb1cc06f26f581da547854"
+        },
+        {
+          "label": "ch2-verifier-negative-and-select",
+          "line": 645,
+          "sha256": "46b4651ee300648a6e1b2ab83b4d7c3e4604b8343f370bc3a65a2480e1536751"
+        }
+      ],
+      "script_sha256": "c45fe3254d69ae41369dc49a07ab461cc9586f4982e44d3a9a041dfe396d0017",
+      "returncode": 0,
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch2.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch2.stderr",
+      "commands_unchanged_during_run": true,
+      "duration_seconds": 4.475
+    },
+    {
+      "chapter": 3,
+      "passed": true,
+      "file": "inside-llvm-codegen-ch3.md",
+      "blocks": [
+        {
+          "label": "ch3-setup",
+          "line": 10,
+          "sha256": "aba67a1d5d0d31893b67601d5b3f6c160f50af6d79db1a5a272cc70c1008405a"
+        },
+        {
+          "label": "ch3-finite-models",
+          "line": 98,
+          "sha256": "9df1182beb2697805317d8c8b7963447a6e887bfb76820f49db22c3bfdf21b73"
+        },
+        {
+          "label": "ch3-mop-mfp-model",
+          "line": 316,
+          "sha256": "6c2e36ea276b67a3535998818477856c539751118ac7c05c3d19eb235c2dc19d"
+        },
+        {
+          "label": "ch3-dataflow-tables",
+          "line": 450,
+          "sha256": "c0d2893a931d4fa8395c98fac0941534bfe04f48623bb32c03f4dfe517dfcd6b"
+        },
+        {
+          "label": "ch3-clang-sccp",
+          "line": 531,
+          "sha256": "7e47e642171bc8d714aefc765f032ec104969dbe7711f92dde44c52a06060933"
+        }
+      ],
+      "script_sha256": "9f6e8b0b11d9519dcf14d300f93bccb025871670e5a2752ba488179235b1da1f",
+      "returncode": 0,
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch3.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch3.stderr",
+      "commands_unchanged_during_run": true,
+      "duration_seconds": 1.181
+    },
+    {
+      "chapter": 4,
+      "passed": true,
+      "file": "inside-llvm-codegen-ch4.md",
+      "blocks": [
+        {
+          "label": "ch4-setup",
+          "line": 10,
+          "sha256": "2e512d24d415c093fb509e15bf3d51ce532ed158cc8a2a04d67a47b240051a35"
+        },
+        {
+          "label": "ch4-domtree-frontier",
+          "line": 87,
+          "sha256": "f33ec12ac56ddca6e169a0a5faa5048fc6ad001e0b473ea0240c3d4653106cff"
+        },
+        {
+          "label": "ch4-postdom-roots",
+          "line": 124,
+          "sha256": "b5935fdae26ca737b75e067491182f0711f77b73e5997dcc8b5ffa1321a8dfd5"
+        },
+        {
+          "label": "ch4-finite-graph-models",
+          "line": 233,
+          "sha256": "d60ddbddf854fa4db8d25d6b2e95e5d19710973cf2569ad23dfd7717d6db4562"
+        },
+        {
+          "label": "ch4-iterated-frontier-phis",
+          "line": 282,
+          "sha256": "b65e3c2af8994edc881b86c0545a0b4421c16634d97582a4bed42b6df50e82ba"
+        }
+      ],
+      "script_sha256": "88649db7a0e1add841327efea43fd39bb3b528a5d1c661b63a72e5be4d43a294",
+      "returncode": 0,
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch4.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch4.stderr",
+      "commands_unchanged_during_run": true,
+      "duration_seconds": 1.179
+    },
+    {
+      "chapter": 5,
+      "passed": true,
+      "file": "inside-llvm-codegen-ch5.md",
+      "blocks": [
+        {
+          "label": "ch5-setup",
+          "line": 18,
+          "sha256": "5e35d5e42445c49b4cba79a3024f56ac55b5b6a261149eaffe6ad2fe1d547625"
+        },
+        {
+          "label": "ch5-loopinfo",
+          "line": 122,
+          "sha256": "4bf16035f6c131f202252007ff51fe1f2342ebf33648bc39edb6ce627d51965c"
+        },
+        {
+          "label": "ch5-loop-simplify",
+          "line": 189,
+          "sha256": "6e32ca3b25b1e7401d61d75bef41a98ad364c425889cb9c4531f2c2b580ce532"
+        },
+        {
+          "label": "ch5-loop-rotate",
+          "line": 247,
+          "sha256": "65dd6571e75390dab0dcd9d67827d1526049df9aee233de442eefe5e44f02022"
+        },
+        {
+          "label": "ch5-lcssa",
+          "line": 339,
+          "sha256": "5e2a6fd7544fc7125f360d4f43b908973e3cea8bbb8dcbdaf8a90152dd801ef9"
+        }
+      ],
+      "script_sha256": "f5a1eb1de3c7c28cb7e697fc493778ff6e4efaf46169b7d2373c224a2e014e62",
+      "returncode": 0,
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch5.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch5.stderr",
+      "commands_unchanged_during_run": true,
+      "duration_seconds": 1.228
+    },
+    {
+      "chapter": 6,
+      "passed": true,
+      "file": "inside-llvm-codegen-ch6.md",
+      "blocks": [
+        {
+          "label": "ch6-setup",
+          "line": 12,
+          "sha256": "c6ac48cee74c3585705c6438462dc58bdbce719a1503476cd373e4257a17e7f6"
+        },
+        {
+          "label": "ch6-language-records",
+          "line": 82,
+          "sha256": "dff41fbb2964e1c8f080cf50e5340986aa103a9b1fa888cb2aa57595818a9404"
+        },
+        {
+          "label": "ch6-values-and-negative-cases",
+          "line": 153,
+          "sha256": "a40859b9a480a7c23525ccc656d408e82b5ad9ca0943cf313697ffa3a10c5bbb"
+        },
+        {
+          "label": "ch6-def-class",
+          "line": 218,
+          "sha256": "1091e300d5723aeefe87c07d8d7ee20ab3e29881883d7b4054e133e56556bcad"
+        },
+        {
+          "label": "ch6-multiclass-expansion",
+          "line": 282,
+          "sha256": "43e8e0c7c977336eee416369a30617d473905ec64338c59d9d59a02feca3cb06"
+        },
+        {
+          "label": "ch6-bpf-source-and-records",
+          "line": 437,
+          "sha256": "ddf3c0c04f2e9ebc9f0a4267be7a39050a0485adc09cee668af65971702cf27e"
+        },
+        {
+          "label": "ch6-dag-isel-generator",
+          "line": 511,
+          "sha256": "2b8c519398525742cf8825db09e075a39cad879d2941b86b3dd95b63bbbfccf0"
+        },
+        {
+          "label": "ch6-call-pattern-records",
+          "line": 646,
+          "sha256": "05fe4652534e16666aa0b9ab8f9d2c67150f887d9cb96679867d89f0e2718c92"
+        },
+        {
+          "label": "ch6-complex-pattern-and-generators",
+          "line": 769,
+          "sha256": "d86a2da65f85d88c7b943c0fbd0b60b6c78e6e3241caf590b6811e68a7108802"
+        },
+        {
+          "label": "ch6-working-tree-comparison",
+          "line": 800,
+          "sha256": "75b7adad0c693a5c96b8d0554cb6d29ee444b8f89ba0e9f64ed79f591445a5f8"
+        }
+      ],
+      "script_sha256": "a425ff48573db47a28a942e5cb34d67ccb338743efa8e31905c714df22e4a8ed",
+      "returncode": 0,
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch6.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch6.stderr",
+      "commands_unchanged_during_run": true,
+      "duration_seconds": 18.57
+    },
+    {
+      "chapter": 7,
+      "passed": true,
+      "file": "inside-llvm-codegen-ch7.md",
+      "blocks": [
+        {
+          "label": "ch7-setup",
+          "line": 9,
+          "sha256": "a11979f2ee5269c2b5aea427ee1ea3482921e4096e9b4abe83691b44c3f7dc3f"
+        },
+        {
+          "label": "ch7-clang-callee",
+          "line": 101,
+          "sha256": "e5daf57547f5da78ef8b2fb3665db58ac24a809c82d3eb8565a73f1c3a35f721"
+        },
+        {
+          "label": "ch7-bpf-v1-selection",
+          "line": 176,
+          "sha256": "2fd33e4a7d430329b28939e63fe3911be98b9846b631f315836970ce6c4523a1"
+        },
+        {
+          "label": "ch7-bpf-type-legalization",
+          "line": 253,
+          "sha256": "1477bd3656b6fad72907d851e7c3fb7ab09db878fd1c8cd3ffd435845c66926e"
+        },
+        {
+          "label": "ch7-bpf-softfloat-negative",
+          "line": 334,
+          "sha256": "a604afb48cb450b3f5c363884ffcfc793cf97e0a7bc063dd7862315e89300642"
+        },
+        {
+          "label": "ch7-tablegen-dag-matcher",
+          "line": 365,
+          "sha256": "f4ea679436025911e407d7b8410c8285aba4a2b87ee9a9d5de0f04e722d3b328"
+        },
+        {
+          "label": "ch7-dag-to-mir",
+          "line": 484,
+          "sha256": "833a4f2f1f89cd3a67b0f4f2f7e7a4e9299bc028fe409aad847bfaaaa8bf131e"
+        },
+        {
+          "label": "ch7-fastisel",
+          "line": 614,
+          "sha256": "d25ea6b0c15f713b45eeee908f48cc2cde72a54b8f607b32d66dc65563cf8051"
+        },
+        {
+          "label": "ch7-gi-irtranslator",
+          "line": 723,
+          "sha256": "0562d7f5f79a42d9ea056c8f54100b66912d9a42202b6035d04ff3bde1aceb9a"
+        },
+        {
+          "label": "ch7-gi-legalizer",
+          "line": 778,
+          "sha256": "a6c4e19b8ffc789b27df154db3a5d188383709345ac7e3d9b4202f4ad7a6cd77"
+        },
+        {
+          "label": "ch7-gi-register-bank",
+          "line": 898,
+          "sha256": "a24cf204fca4e200232d73b3495cb9ecb069dd116d7a93e7edf197e67b4ae224"
+        },
+        {
+          "label": "ch7-gi-instruction-select",
+          "line": 971,
+          "sha256": "67fba49960d740f95c7fde5271e235da7828630fff22fa731651b6727b131953"
+        }
+      ],
+      "script_sha256": "2728d923a947f371efee09beae769ea4836fea909e4e4342c4c5783dc8439955",
+      "returncode": 0,
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch7.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch7.stderr",
+      "commands_unchanged_during_run": true,
+      "duration_seconds": 13.815
+    },
+    {
+      "chapter": 8,
+      "passed": true,
+      "file": "inside-llvm-codegen-ch8.md",
+      "blocks": [
+        {
+          "label": "ch8-setup",
+          "line": 9,
+          "sha256": "a27ef09a74c0a2406bc41218b1ce087ec47218dd2a723fa7b1b7d35743eeed22"
+        },
+        {
+          "label": "ch8-teaching-models",
+          "line": 71,
+          "sha256": "0c79c7e48f56f666d1205c346b3782cbb77adfaa820017a67a28bf22032ce354"
+        },
+        {
+          "label": "ch8-six-dag-schedulers",
+          "line": 126,
+          "sha256": "64e0d1d58958cbc0c2346650643ba2d53ca92276b5f93c423640756de9a890e1"
+        },
+        {
+          "label": "ch8-inspect-fast",
+          "line": 174,
+          "sha256": "5d468b4e9d8a07ab5ad7991e1524177bf4043d2b5145dffa140f3872aa9dfd86"
+        },
+        {
+          "label": "ch8-inspect-burr",
+          "line": 218,
+          "sha256": "89ba2abc5dad056a4579a259d4c303b53b26ef391c8add4fa190bf3fe0de4d14"
+        },
+        {
+          "label": "ch8-inspect-source",
+          "line": 242,
+          "sha256": "a5c02da2eca811bf7b0707c64f24d6a1d783bb3af23a29519b2b5e92d27795d2"
+        },
+        {
+          "label": "ch8-inspect-hybrid-ilp",
+          "line": 258,
+          "sha256": "3ab5d1298e4cfcbaedae14d56bf9250bb3e4f45ffad57535174751d35ec4f999"
+        },
+        {
+          "label": "ch8-bpf-machine-scheduler",
+          "line": 291,
+          "sha256": "587c4e3c80cd71b466a72f3eab11e4b3c48decc98334fa86f873bd43f2773df0"
+        },
+        {
+          "label": "ch8-tablegen-schedule-model",
+          "line": 333,
+          "sha256": "6e7919b5f2ee59e7bf06d045c9a7dc5152e2a6cf1b214cfe7459d48e5a8295cc"
+        },
+        {
+          "label": "ch8-rv32-small-pressure",
+          "line": 443,
+          "sha256": "c4a01718d550e4317cf5b1f05ddfd5d421e4595d061c479be63cee492eccc5ae"
+        },
+        {
+          "label": "ch8-rv32-large-pressure",
+          "line": 524,
+          "sha256": "d076867af0a46a9d4f46f1fe4602672d9c2cb8cc23d888ff5946aba349ea963d"
+        },
+        {
+          "label": "ch8-postra-tdlist",
+          "line": 573,
+          "sha256": "e1da49857c8e9659b1cf7dc65e1e81b945758646b2247ec21a1bf881748adcc2"
+        },
+        {
+          "label": "ch8-postra-misched",
+          "line": 625,
+          "sha256": "5164c374cdecca28cc7648f56d3c5b9414b57d6b3952d31d57fc96d5ec2e331c"
+        },
+        {
+          "label": "ch8-hexagon-pipeliner-mir",
+          "line": 860,
+          "sha256": "3b5d8c7e6e10dae7f8fe58abc624eb2acb9b42cd0534a47210d18396df4866fd"
+        },
+        {
+          "label": "ch8-hexagon-filecheck",
+          "line": 1195,
+          "sha256": "0c987fcefd973b67eb8c99518297a9da6226e3d0b98e2befaee1be95f3cb5306"
+        }
+      ],
+      "script_sha256": "9ed9ed1fa37188ae01642469a6925273ec9a76b93a077b273a9754abe7686448",
+      "returncode": 0,
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch8.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch8.stderr",
+      "commands_unchanged_during_run": true,
+      "duration_seconds": 7.409
+    },
+    {
+      "chapter": 9,
+      "passed": true,
+      "file": "inside-llvm-codegen-ch9.md",
+      "blocks": [
+        {
+          "label": "ch9-setup",
+          "line": 23,
+          "sha256": "6a97723797621a22bc9256dc85104c5bdadc275760b3fca10d6b4181826c611b"
+        },
+        {
+          "label": "ch9-taildup",
+          "line": 155,
+          "sha256": "fc9819d6ce8427b502193a482d4ae2077b84e1f76af419ec696320bb846dde72"
+        },
+        {
+          "label": "ch9-phi",
+          "line": 192,
+          "sha256": "db2006d513991de44bc96d8780cba26da3341b30db94c3f2315d5ff2744f2ad7"
+        },
+        {
+          "label": "ch9-stack-coloring",
+          "line": 368,
+          "sha256": "50f8de96e0eb34bed98acb71a31f58c677711ff673ed84d0851bb7ff3c3cfcb5"
+        },
+        {
+          "label": "ch9-dead-mi",
+          "line": 427,
+          "sha256": "08980fabec525b5b9568c3373665cc56dd41410c5451ebdadfcbc50cdadf181b"
+        },
+        {
+          "label": "ch9-if-conversion",
+          "line": 578,
+          "sha256": "02785dc943f23ca9bda4106b495503d481436f76e2bde58338f866c01210056d"
+        },
+        {
+          "label": "ch9-licm",
+          "line": 619,
+          "sha256": "376f0acdbf47f299b9ab0eea0d0a4ec8465da8861739b826cc7d82c331349763"
+        },
+        {
+          "label": "ch9-cse",
+          "line": 675,
+          "sha256": "a99cfdcd747288dafae0d50f8739663180956443fae4b6575b7a8ffa09d0bbef"
+        },
+        {
+          "label": "ch9-machine-sink",
+          "line": 710,
+          "sha256": "a75c2945dcad5799ca719de27441dd5aafcff41266365872a8c6e52e4e495bbb"
+        }
+      ],
+      "script_sha256": "c9b9576dd2b7d3125bc8ac7f33273ee410d0e81f5c897c05a1a35a030d196421",
+      "returncode": 0,
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch9.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch9.stderr",
+      "commands_unchanged_during_run": true,
+      "duration_seconds": 2.148
+    },
+    {
+      "chapter": 10,
+      "passed": true,
+      "file": "inside-llvm-codegen-ch10.md",
+      "blocks": [
+        {
+          "label": "ch10-setup",
+          "line": 9,
+          "sha256": "aa3db40f9876d2d01c1934307ff02600c860157486c67fdecef9562b45398a11"
+        },
+        {
+          "label": "ch10-sum-stages",
+          "line": 245,
+          "sha256": "89ae3f0a5534d66f02459a7fcfb4a74cd1d0e6bd392b1237f642efeb8a5a99a3"
+        },
+        {
+          "label": "ch10-x86-two-address",
+          "line": 704,
+          "sha256": "57f322a19716acbdf43588d148183efc7917e18446dd444e0c3f0e57ec7fe26b"
+        },
+        {
+          "label": "ch10-sum-debug",
+          "line": 752,
+          "sha256": "22c380b517cf9c19cd89d112e8f48fc4da6c3b613f75f58a91e2265ff0a93ff4"
+        },
+        {
+          "label": "ch10-fast",
+          "line": 1061,
+          "sha256": "2df3a8d903063e98cae23e6cac0144bffc95974318d6284b8fe7200e0921f1ec"
+        },
+        {
+          "label": "ch10-basic-trace",
+          "line": 1293,
+          "sha256": "5701f1684be1c1db201b14be0fc68c3c027f724a907e3a599d25981d665e9be9"
+        },
+        {
+          "label": "ch10-mathematical-models",
+          "line": 1450,
+          "sha256": "2330a62f2c0f08a13574bf7903ab82f6337fe0bfa3a72db39efcf6f19739ecc8"
+        },
+        {
+          "label": "ch10-greedy-trace",
+          "line": 1651,
+          "sha256": "a17f9b15318707fe3fb43ffe63077be8887431a3de93a98f2817c7e3b0fa3048"
+        },
+        {
+          "label": "ch10-pbqp-trace",
+          "line": 1864,
+          "sha256": "7f93ec82983379cefbeb086ff630c94d6ca687b6031e65b9a7f3895a81c837d8"
+        },
+        {
+          "label": "ch10-allocator-artifacts",
+          "line": 1948,
+          "sha256": "b4b1db29796e1736cce54c78664d9c66cb0fbe96feb757ba0a8a57ccf14ef559"
+        },
+        {
+          "label": "ch10-semantics",
+          "line": 1988,
+          "sha256": "48837d6d7525af007a606a71605c54d9757bc24f773cf333dbc845b513ea1f7d"
+        }
+      ],
+      "script_sha256": "27f6008b38656c49d0e5fa715819506e33dc5d577d5ca0b65b2e7f379db6d3e4",
+      "returncode": 0,
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch10.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch10.stderr",
+      "commands_unchanged_during_run": true,
+      "duration_seconds": 3.319
+    },
+    {
+      "chapter": 11,
+      "passed": true,
+      "file": "inside-llvm-codegen-ch11.md",
+      "blocks": [
+        {
+          "label": "ch11-setup",
+          "line": 25,
+          "sha256": "ac137fe76c9fe0f655ff049fed96eb4c42a0941c9d432bc96c156586ea9253c6"
+        },
+        {
+          "label": "ch11-pei",
+          "line": 78,
+          "sha256": "08b312a9574c50374cab1314b33a91d9c44b692effd4c4d6941e71cda101723f"
+        },
+        {
+          "label": "ch11-postra-sink",
+          "line": 134,
+          "sha256": "03952cd788df73150e20682ad48287ccda77061f76c6f8a632aa5e06359d4d9f"
+        },
+        {
+          "label": "ch11-shrinkwrap",
+          "line": 191,
+          "sha256": "206fe917259b79ff229858e3a7d7925cd770e0150f0cbcf090bc5bacaa52eed3"
+        },
+        {
+          "label": "ch11-branch-folder",
+          "line": 248,
+          "sha256": "41028fe91ae6a2faf729cd81c9e47a942d5ee7a61e438a092f4469870c4e8bc1"
+        },
+        {
+          "label": "ch11-copy-propagation",
+          "line": 270,
+          "sha256": "2a52ee4e15b5e25a6dd8bd7eb5e6753e9f983d0e572d358d8677eb67c03c9728"
+        },
+        {
+          "label": "ch11-llvm-library-api",
+          "line": 363,
+          "sha256": "84dfdc2d15f0a6b3bdafcc3d782fcd9c31b5b13ef742ae1bc7069d4eee026649"
+        },
+        {
+          "label": "ch11-outliner",
+          "line": 472,
+          "sha256": "dba53b989ccd1f76782710c6d54e6bbaba8c9bb5c5459b157d0c49a4d1ca5e73"
+        },
+        {
+          "label": "ch11-mfs-hcs",
+          "line": 630,
+          "sha256": "a214c6f800cf82051a486aa0df633e6fc7c9fa639cb9172bd737144989fe084b"
+        },
+        {
+          "label": "ch11-suffix-candidates",
+          "line": 738,
+          "sha256": "1cce566ee73586c453d3697c7500f638e1f8be522c261af0bcdd4d01ab471253"
+        }
+      ],
+      "script_sha256": "f233192c1a9d40114cc0e9df21784cdda638b8f76d277226b979d779a11b8d10",
+      "returncode": 0,
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch11.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch11.stderr",
+      "commands_unchanged_during_run": true,
+      "duration_seconds": 3.4
+    },
+    {
+      "chapter": 12,
+      "passed": true,
+      "file": "inside-llvm-codegen-ch12.md",
+      "blocks": [
+        {
+          "label": "ch12-setup",
+          "line": 7,
+          "sha256": "32ac436d4ee3f40523ec99c8479047d6c0468debf2221c037827144b25353a69"
+        },
+        {
+          "label": "ch12-mcinst",
+          "line": 63,
+          "sha256": "64a5a7cf0e02cdc6d58426dacf294b88cd71c16eb1130e52e7f52de5a32c9fb4"
+        },
+        {
+          "label": "ch12-clang-and-mir",
+          "line": 123,
+          "sha256": "ab4d5e742d91bdf598e48856549021a30d4c732093fe202b6506d6ae280d08c6"
+        },
+        {
+          "label": "ch12-mc-encoding",
+          "line": 172,
+          "sha256": "e08337f0ebc3ea8677d2ee01821bcfc65fc5806bc1f9173f5268b6a697ab4349"
+        },
+        {
+          "label": "ch12-object-and-relocations",
+          "line": 319,
+          "sha256": "6ad2e1544d4f759e4fe5fe32cbe901a8ff3b811f5a208b0a09e0b3335fcb241c"
+        },
+        {
+          "label": "ch12-assembly-roundtrip",
+          "line": 393,
+          "sha256": "80c2d7aa9e49907b5b919f464f581c468f8b37e946dbf70fb26ee14da5343a65"
+        }
+      ],
+      "script_sha256": "c1be480467af50c177d9d81096d17a54d677e590619fa1d5b36d1efa02077712",
+      "returncode": 0,
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch12.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch12.stderr",
+      "commands_unchanged_during_run": true,
+      "duration_seconds": 0.731
+    },
+    {
+      "chapter": 13,
+      "passed": true,
+      "file": "inside-llvm-codegen-ch13.md",
+      "blocks": [
+        {
+          "label": "ch13-setup",
+          "line": 9,
+          "sha256": "251310e5dc660975f9221995504f27364fd6d0d5c83a4e3df7a4809da133fb19"
+        },
+        {
+          "label": "ch13-tablegen",
+          "line": 105,
+          "sha256": "be64b922e1e5395eea327463666f6caa6db435324751ecfd3167eb905ed348c8"
+        },
+        {
+          "label": "ch13-select",
+          "line": 141,
+          "sha256": "1f52d3c9539b924504c0460c19ac36acb4c68a3990c0ac17c651b3c119fb9d8c"
+        },
+        {
+          "label": "ch13-assembly",
+          "line": 160,
+          "sha256": "168b12742e761a2827757b13f2dc59cd0fd69c613bc38582df0190a4ea3677b5"
+        },
+        {
+          "label": "ch13-unsupported-arguments",
+          "line": 174,
+          "sha256": "d19df5f126b127fa7db47290b7673a725be29a393293b84922fb018132c99e85"
+        },
+        {
+          "label": "ch13-objects",
+          "line": 191,
+          "sha256": "1a9180b354089945fa0893781c8ea037664a7a74a509fe1b54770da24c4ecbdb"
+        }
+      ],
+      "script_sha256": "7eeee3123e30cc322a77dc3ad6e361a87631b3a7000bd50f5188ded01be5ae35",
+      "returncode": 0,
+      "stdout": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch13.stdout",
+      "stderr": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/llvm-book-manual-v3v_vy_b/ch13.stderr",
+      "commands_unchanged_during_run": true,
+      "duration_seconds": 14.124
+    }
+  ],
+  "passed": true,
+  "scope": "Execute marked chapter shell blocks in reading order, including explicit checks and expected failures. Uses the existing LLVM build; does not rerun CMake or claim hardware execution."
+}

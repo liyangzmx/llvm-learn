@@ -5,17 +5,22 @@
 
 数据流分析是编译优化和代码生成的重要基础。其抽象状态常构成半格或格，控制流汇合与单调转移函数构成一组约束，再通过不动点迭代求解。这里的理论对象是有序集合上的单调映射，不是一般“仿射变换一定有解”。本章介绍相应数学条件、分析原理、三类具体方程和遍历策略。
 
-本章命令约定如下；已有工具即可运行，runner 不触发构建。
+本章命令使用 **Bash**，先执行下面的准备块，再在同一 shell 中按正文顺序执行后续命令。工具应为已构建的 LLVM 18.1.8；这些步骤不会启动构建。输入只读，所有生成文件写入 `CODEGEN_LAB` 指向的新临时目录。
+
+<!-- manual-lab:ch3-setup -->
 
 ```sh
+set -euo pipefail
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
-python3 "$BOOK_ROOT/experiments/ch3/runner.py"
+BOOK_INPUT="$BOOK_ROOT/experiments/ch3"
+CODEGEN_LAB=$(mktemp -d)
+printf '本章临时输出目录：%s\n' "$CODEGEN_LAB"
+"$LLVM_BUILD/bin/opt" --version
 ```
 
-可用 `--output-dir /tmp/ch3-output` 保留一个固定输出目录；结果 JSON 包含逐项断言和命令。失败样例的非零退出码是实验预期，runner 会核对诊断，不能把它们作为合法 IR / TD 使用。
-
+预期工具报告 LLVM 18.1.8。后面的 `opt` 命令显式指定 Pass；使用解释器时，返回码 0 表示输入中 `main` 的检查通过，不表示在 BPF 内核或 JIT 上运行过。
 ## 3.1 半格、格与不动点
 
 本节介绍半格、格和不动点的相关定义、性质和定理。
@@ -87,6 +92,22 @@ Knaster–Tarski 定理：完备格上的单调自映射，其不动点集合在
 本节的有限实验取 `P({a,b})`，共有 4 个格元素、256 个自映射，其中恰有 36 个单调映射。runner 对全部 36 个映射枚举不动点，并分别从底和顶迭代，验证得到 lfp / gfp。
 
 还有一个具体反例：交换 `{a}` 与 `{b}`，固定 `∅` 和 `{a,b}` 的映射是单调的，却从 `{a}` 开始永远交替。这解释了为什么“单调 + 有限域”仍不能支持任意初值迭代；从底或顶得到单调链的条件不能省略。有限穷举用于检查示例与实现，不能代替对任意格的定理证明。
+
+格与后面三张数据流表的求解器位于同一个 runner。这里运行一次，随后各节可从结果中查看自己的模型；该入口也会运行 SCCP 样例，完整工具命令将在 3.3.3 节单独展开。
+
+<!-- manual-lab:ch3-finite-models -->
+
+```sh
+python3 "$BOOK_INPUT/runner.py" --output-dir "$CODEGEN_LAB/model-checks"
+python3 - "$CODEGEN_LAB/model-checks/results.json" <<'PYJSON'
+import json, sys
+for row in json.load(open(sys.argv[1]))["checks"]:
+    if row["name"] in {"finite_lattice_fixed_points", "arbitrary_seed_counterexample"}:
+        print(json.dumps(row, ensure_ascii=False))
+PYJSON
+```
+
+预期 256 个自映射中有 36 个单调映射，另打印 `{a}→{b}→{a}` 的中间初值循环。
 
 ## 3.2 数据流分析原理及描述
 
@@ -292,6 +313,18 @@ flowchart TD
 
 对图 3-6，runner 分别执行“先各路径计算再合并”和“先逐变量合并再计算”，实际得到 `MOP(t)=5` 与 `MFP(t)=⊤`。这里特意使用非关系常量域；若换用能记录 `x+y=5` 的关系域，精度结论会不同。实验验证的是指定抽象域上的方程，不是声称所有常量优化都无法求出 5。
 
+<!-- manual-lab:ch3-mop-mfp-model -->
+
+```sh
+python3 - "$CODEGEN_LAB/model-checks/results.json" <<'PYJSON'
+import json, sys
+row = next(c for c in json.load(open(sys.argv[1]))["checks"] if c["name"] == "mop_vs_mfp")
+print(json.dumps(row, ensure_ascii=False))
+PYJSON
+```
+
+预期报告 MOP=5、MFP=top，与指定的非关系常量域一致。
+
 ## 3.3 数据流方程示例
 
 本节通过 3 个例子演示如何使用数据流解决实际问题：活跃变量、到达定值（reaching definition）、常量传播。
@@ -412,6 +445,22 @@ Gen 包含在块内产生且未被该块后续赋值杀死的**定义点**，Kil
 
 表 3-4 的稳定解同样已运行确认：B 的 Out 为 `{s3,s4,s5,s6,s7}`，F 的 Out 为 `{s5,s6,s7,s8}`。实验还从每个定义点独立搜索其能穿过哪些“不杀死该定义”的基本块，结果与数据流迭代一致。按 A,B,C,D,E,F 扫描时，包含最终检查共三轮。
 
+读取本章已经运行的三个方程模型，逐项查看稳定集合：
+
+<!-- manual-lab:ch3-dataflow-tables -->
+
+```sh
+python3 - "$CODEGEN_LAB/model-checks/results.json" <<'PYJSON'
+import json, sys
+names = {"liveness_table_3_3", "reaching_definitions_table_3_4", "dense_constant_table_3_5"}
+for row in json.load(open(sys.argv[1]))["checks"]:
+    if row["name"] in names:
+        print(json.dumps(row, ensure_ascii=False, indent=2))
+PYJSON
+```
+
+预期活跃性与到达定值均需三轮（包含最终检查）；常量表的 S5 出口是 `[top,1]`、S7 是 `[top,top]`。第三项将在下一节解释。
+
 ### 3.3.3 常量传播
 
 常量传播是一种最为基础的编译优化手段，它涉及识别并处理形如 int x = 5 这样的变量定义，在后续代码中又以 x 指代该常量值的情况，正如代码清单 3-7 所示的那样。
@@ -476,6 +525,28 @@ while (i > 0 && !flag) {
 | S7 | (⊤,⊤) | (⊤,⊤) |
 
 按 S1→…→S7 就地迭代，首轮 S4 为 (2,0)、S5 为 (1,1)，S6 汇合成 (⊤,⊤)；第二轮达到上表。原表首轮就把 i++ 判为非常量也不正确。
+
+对完整 C 样例运行实际 SCCP，而不是把教学三态转移直接当作 LLVM 输出：
+
+<!-- manual-lab:ch3-clang-sccp -->
+
+```sh
+"$LLVM_BUILD/bin/clang" --target=bpfel -O0 -Xclang -disable-O0-optnone \
+  -fno-discard-value-names -S -emit-llvm "$BOOK_INPUT/constant.c" \
+  -o "$CODEGEN_LAB/constant.before.ll"
+"$LLVM_BUILD/bin/llvm-as" "$CODEGEN_LAB/constant.before.ll" \
+  -o "$CODEGEN_LAB/constant.before.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/constant.before.bc"
+"$LLVM_BUILD/bin/opt" -passes=mem2reg,sccp,simplifycfg,verify -S \
+  "$CODEGEN_LAB/constant.before.ll" -o "$CODEGEN_LAB/constant.sccp.ll"
+for ir in "$CODEGEN_LAB/constant.before.ll" "$CODEGEN_LAB/constant.sccp.ll"; do
+  "$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel "$ir"
+done
+sed -n '/define.*@branch(/,/^}/p' "$CODEGEN_LAB/constant.sccp.ll"
+sed -n '/define.*@loop(/,/^}/p' "$CODEGEN_LAB/constant.sccp.ll"
+```
+
+预期两个执行命令返回 0；branch 直接返回 0，loop 删除 i++，但仍保留 flag PHI 与出口的 10+flag。
 
 LLVM 的 SCCP 同时传播值信息与可执行边。本章实际运行 `mem2reg,sccp,simplifycfg,verify` 后，`i++` 所在分支被删除，i 可确定为 1；但 flag 在循环头仍由 PHI 合并 0 与 1，出口保留 `10 + flag`，没有直接变成 `ret i32 11`。因此，删除不可执行边与在每条边上完整推导路径条件，是不同的能力。
 

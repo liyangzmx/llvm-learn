@@ -7,17 +7,22 @@
 
 因为 TableGen 和代码生成过程密切相关，所以本章简单介绍 TableGen 的词法、语法，并且演示如何从目标描述语言转换为 C++ 代码，从而和编译器的代码生成框架结合起来。本章最后将以指令匹配为例介绍如何写 TD 文件。
 
-本章命令约定如下；已有工具即可运行，runner 不触发构建。
+本章命令使用 **Bash**，先执行下面的准备块，再在同一 shell 中按正文顺序执行后续命令。工具应为已构建的 LLVM 18.1.8；这些步骤不会启动构建。输入只读，所有生成文件写入 `CODEGEN_LAB` 指向的新临时目录。
+
+<!-- manual-lab:ch6-setup -->
 
 ```sh
+set -euo pipefail
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
-python3 "$BOOK_ROOT/experiments/ch6/runner.py"
+BOOK_INPUT="$BOOK_ROOT/experiments/ch6"
+CODEGEN_LAB=$(mktemp -d)
+printf '本章临时输出目录：%s\n' "$CODEGEN_LAB"
+"$LLVM_BUILD/bin/llvm-tblgen" --version
 ```
 
-可用 `--output-dir /tmp/ch6-output` 保留一个固定输出目录；结果 JSON 包含逐项断言和命令。失败样例的非零退出码是实验预期，runner 会核对诊断，不能把它们作为合法 IR / TD 使用。
-
+预期工具报告 LLVM 18.1.8。后续 TableGen 命令会明确 include 目录、TD 输入与生成后端；记录解析不需要 target triple 或 CPU 参数。
 ## 6.1 目标描述语言
 
 下面分别从 TableGen 的词法和语法展开介绍。
@@ -74,6 +79,23 @@ TokVarName ::= "$" ualpha (ualpha | "0"..."9")*
 
 [language.td](experiments/ch6/language.td) 是本章的独立输入。实际 `llvm-tblgen --dump-json` 输出确认：`-42` 为有符号整数，`0x2A` 与 `0b101010` 都为 42；多行 code 字段作为字符串保留，未在 TableGen 前端执行其中的 C++ 文字。
 
+<!-- manual-lab:ch6-language-records -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-tblgen" --dump-json "$BOOK_INPUT/language.td" \
+  -o "$CODEGEN_LAB/language.json"
+"$LLVM_BUILD/bin/llvm-tblgen" --print-records "$BOOK_INPUT/language.td" \
+  -o "$CODEGEN_LAB/language.records.txt"
+python3 - "$CODEGEN_LAB/language.json" <<'PYJSON'
+import json, sys
+v = json.load(open(sys.argv[1]))["Values"]
+for key in ("negative", "hexadecimal", "binary", "body"):
+    print(key, repr(v[key]))
+PYJSON
+```
+
+预期数值为 -42/42/42，body 是包含换行和 `return 1;` 的字符串；完整记录打印保存在 language.records.txt。TableGen 读取 TD，不需要设置 target triple 或 CPU。
+
 ### 6.1.2 语法
 
 TableGen 提供的语法比较丰富，限于篇幅无法展开介绍，本节仅介绍类型（type）、值（value）和记录（record）相关的内容，其他内容请参考官网。
@@ -128,6 +150,31 @@ SliceElement  ::=  Value | Value "..." Value | Value "-" Value | Value TokIntege
 
 实验给 a 的初值设为 0，再执行 `let a{1...3}=0b110`，得到四位值 `0110`；列表 `[10,20,30]` 的切片 `[2,0]` 得到 `[30,10]`；拼接得到 `12ab`，嵌套 dag 的直接参数计数为 2。两个反例也已运行：给不存在的字段赋值、重复给同一位赋值，分别被 TableGen 诊断为 unknown field 和“more than once”。
 
+<!-- manual-lab:ch6-values-and-negative-cases -->
+
+```sh
+python3 - "$CODEGEN_LAB/language.json" <<'PYJSON'
+import json, sys
+v = json.load(open(sys.argv[1]))["Values"]
+for key in ("a", "slice", "joined", "direct_arguments"):
+    print(key, v[key])
+PYJSON
+for name in bad-field bad-bits; do
+  case "$name" in
+    bad-field) expected='unknown' ;;
+    bad-bits) expected='more than once' ;;
+  esac
+  if "$LLVM_BUILD/bin/llvm-tblgen" --print-records "$BOOK_INPUT/$name.td" \
+      > "$CODEGEN_LAB/$name.stdout" 2> "$CODEGEN_LAB/$name.stderr"; then
+    printf '负例意外通过：%s\n' "$name" >&2
+    exit 1
+  fi
+  rg -i -F "$expected" "$CODEGEN_LAB/$name.stderr"
+done
+```
+
+预期 JSON 中 a 按低位到高位存为 `[0,1,1,0]`，slice=[30,10]、joined=12ab、direct_arguments=2；两个负例分别给出对应诊断。
+
 3. 记录
 
 TableGen 最主要的目的之一是生成记录，然后后端基于记录进行分析得到最终结果。记录可以被看作是有名字、有类型、具有特定属性的结构体。TableGen 分别通过 def 和class 定义记录，并在此基础上提供批量定义记录的高级语法 multiclass、defm。
@@ -167,6 +214,18 @@ def MUL: TestInst {
 ```
 
 [records.td](experiments/ch6/records.td) 包含清单 6-5、6-6，实际 JSON 确认 ADD / MUL 的高六位分别编码 1 / 2，低 26 位仍未赋值。代码清单 6-6 先定义 TestInst，再通过 def 实例化 ADD 和 MUL。在实例化的过程中，要用 let 关键字对 class 中定义的字段进行赋值，例如class 中定义了 asmname，在 ADD 中通过 let asmname="add" 对 asmname 进行赋值。
+
+<!-- manual-lab:ch6-def-class -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-tblgen" --dump-json "$BOOK_INPUT/records.td" \
+  -o "$CODEGEN_LAB/records.json"
+"$LLVM_BUILD/bin/llvm-tblgen" --print-records "$BOOK_INPUT/records.td" \
+  -o "$CODEGEN_LAB/records.txt"
+cat "$CODEGEN_LAB/records.txt"
+```
+
+预期 record_example 的字段为 a=1、b="def example"；ADD/MUL 高六位分别为1/2，其余26位显示为 `?`。
 
 我们还可以定义 class 层次，并通过继承的方式来使用（所以它非常类似于 C++ 中的class）。使用 class 可以大大简化记录的定义，将公共的信息通过 class 定义，然后通过 def进行实例化。
 
@@ -219,6 +278,20 @@ def MyBackend_rr {     // Instr
 ```
 
 注意：`--print-records` 打印 class 与展开后的 def，不把 multiclass 当成具体记录另列。multiclass 的内部定义实际上已被 defm 展开。
+
+<!-- manual-lab:ch6-multiclass-expansion -->
+
+```sh
+python3 - "$CODEGEN_LAB/language.json" <<'PYJSON'
+import json, sys
+records = json.load(open(sys.argv[1]))
+print(records["!instanceof"]["Instr"])
+for name in ("MyBackend_rm", "MyBackend_rr"):
+    print(name, records[name]["name"], records[name]["opcode"])
+PYJSON
+```
+
+预期只有 MyBackend_rm / MyBackend_rr 两个 Instr 实例，name 分别为 rm / rr，opcode 分别为全0 / 全1。
 
 本节仅简单示范了 def、class、multiclass、defm 的使用，并未介绍更高级的语法的应用。希望通过本节的介绍，读者能够读懂 TD 文件，知道如何从 TD 文件生成对应的记录。关于 TableGen 还有很多内容，限于篇幅无法在本书中展开介绍，如文法的定义、使用方式等，以及一些高级功能（如 foreach、defvar、defset、assert 等语法），读者可参考官网深入了解 TableGen。
 
@@ -357,18 +430,35 @@ let Constraints = "$dst = $src2" in {
 
 `Inst{63-56}` 在 BPF 的 TableGen 编码值中表示首个 opcode 字节，`BPFMCCodeEmitter::encodeInstruction` 先发射它；不要把这里的位编号与内存中小端 64 位整数的低 8 位混淆。ALU/JMP 的 opcode 字节共有同一种位域布局，但 class 值区分 ALU64、ALU、JMP 等。`Constraints = "$dst = $src2"` 是 tied operand（二地址）约束，交换律属性是另一个字段 `isCommutable`。
 
-BPF 示例固定使用提交 `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`。runner 用 `git archive` 只读导出所需 include 和 BPF 目录到临时目录，再运行 TableGen，使正文生成物有固定来源，也不会修改 LLVM 源文件。实验另用当前工作树运行相同的 DAG 选择器、指令描述和编码器生成命令；本次三份输出均与基线逐字节相同，SHA-256 记录在 JSON 中。工作树有文本修改并不自动意味着这三份生成物存在语义差异。以下命令使用相同方法得到可查看的固定输出目录。
+BPF 示例固定使用提交 `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`。runner 用 `git archive` 只读导出所需 include 和 BPF 目录到临时目录，再运行 TableGen，使正文生成物有固定来源，也不会修改 LLVM 源文件。实验另用当前工作树运行相同的 DAG 选择器、指令描述和编码器生成命令；本次三份输出均与基线逐字节相同，SHA-256 记录在 JSON 中。工作树有文本修改并不自动意味着这三份生成物存在语义差异。以下命令直接导出同一基线，并将记录打印和 JSON 写入本章临时目录。
 
 **代码清单 6-11 使用 llvm-tblgen 命令将 TD 文件转换为记录**
 
+<!-- manual-lab:ch6-bpf-source-and-records -->
+
 ```sh
-python3 "$BOOK_ROOT/experiments/ch6/runner.py" --output-dir /tmp/ch6-output
-"$LLVM_BUILD/bin/llvm-tblgen" \
-  -I /tmp/ch6-output/llvm18-source/llvm/include \
-  -I /tmp/ch6-output/llvm18-source/llvm/lib/Target/BPF \
-  --print-records \
-  /tmp/ch6-output/llvm18-source/llvm/lib/Target/BPF/BPF.td
+BPF_BASELINE=3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff
+mkdir -p "$CODEGEN_LAB/llvm18-source"
+git -C "$LLVM_SRC" archive --format=tar --output="$CODEGEN_LAB/llvm18-source.tar" \
+  "$BPF_BASELINE" llvm/include llvm/lib/Target/BPF
+tar -xf "$CODEGEN_LAB/llvm18-source.tar" -C "$CODEGEN_LAB/llvm18-source"
+BPF_TD="$CODEGEN_LAB/llvm18-source/llvm/lib/Target/BPF/BPF.td"
+BPF_TD_INCLUDES=(-I "$CODEGEN_LAB/llvm18-source/llvm/include"
+                 -I "$CODEGEN_LAB/llvm18-source/llvm/lib/Target/BPF")
+"$LLVM_BUILD/bin/llvm-tblgen" "${BPF_TD_INCLUDES[@]}" --print-records "$BPF_TD" \
+  -o "$CODEGEN_LAB/bpf.records.txt"
+"$LLVM_BUILD/bin/llvm-tblgen" "${BPF_TD_INCLUDES[@]}" --dump-json "$BPF_TD" \
+  -o "$CODEGEN_LAB/bpf.json"
+python3 - "$CODEGEN_LAB/bpf.json" <<'PYJSON'
+import json, sys
+records = json.load(open(sys.argv[1]))
+for name in ("ADD_rr", "ADD_ri", "ADD_rr_32", "ADD_ri_32"):
+    record = records[name]
+    print(name, {k: record[k] for k in ("Size", "Constraints", "isAsCheapAsAMove")})
+PYJSON
 ```
+
+预期四个 ADD 变体均存在，Size=8、Constraints 为 `$dst = $src2`、isAsCheapAsAMove=1。
 
 下面以 ADD_rr 为例展示生成的记录的部分片段，如代码清单 6-12 所示。
 
@@ -416,7 +506,17 @@ def ADD_ri_32 {
 
 接下来需要对记录进一步处理，根据后端功能需要提取不同的信息。图 6-1 所示的后端功能非常多，不同功能需要的信息有所不同，这里以指令匹配为例介绍如何从记录提取指令匹配所需要的信息。
 
-仍以 BPF 为例，将清单 6-11 的 `--print-records` 改为 `-gen-dag-isel`，并增加 `-o BPFGenDAGISel.inc`，可生成 SelectionDAG 指令选择器代码。其中 MatcherTable 描述把已降低、合法化后的 SelectionDAG 匹配为目标机器节点的过程，不直接匹配 LLVM IR。清单 6-13 实际是 ISD::ADD 的整个 opcode 分支节选，包含立即数和不同位宽等候选，并非 ADD_rr 独占的匹配序列。
+仍以 BPF 为例，沿用清单 6-11 的源快照和 include 目录，使用 `-gen-dag-isel` 生成 SelectionDAG 指令选择器代码。其中 MatcherTable 描述把已降低、合法化后的 SelectionDAG 匹配为目标机器节点的过程，不直接匹配 LLVM IR。清单 6-13 实际是 ISD::ADD 的整个 opcode 分支节选，包含立即数和不同位宽等候选，并非 ADD_rr 独占的匹配序列。
+
+<!-- manual-lab:ch6-dag-isel-generator -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-tblgen" "${BPF_TD_INCLUDES[@]}" -gen-dag-isel "$BPF_TD" \
+  -o "$CODEGEN_LAB/BPFGenDAGISel.inc"
+rg -n -m 8 'BPF::(FI_ri|ADD_ri|ADD_rr)' "$CODEGEN_LAB/BPFGenDAGISel.inc"
+```
+
+预期生成文件含 FI_ri、ADD_ri/ADD_rr 及相应32位候选；偏移用于阅读这一次输出，不作为稳定接口。
 
 > 清单 6-13 取自本章实际生成的 BPFGenDAGISel.inc，展示完整 ADD opcode 分支。字节偏移只用于阅读这一次生成物，测试检查匹配动作与符号，不把偏移当成稳定接口。
 
@@ -541,6 +641,26 @@ def anonymous_7229 {
 
 它们都有一个字段 PatternToMatch 用于匹配信息的生成（imm 表示立即数，GPR 表示通用寄存器），而 TableGen 后端处理则和 6.2.2 节内容相同。
 
+不依赖匿名编号，可按模式内容查询两种调用记录：
+
+<!-- manual-lab:ch6-call-pattern-records -->
+
+```sh
+python3 - "$CODEGEN_LAB/bpf.json" <<'PYJSON'
+import json, sys
+records = json.load(open(sys.argv[1]))
+for name, record in records.items():
+    if not isinstance(record, dict) or "PatternToMatch" not in record:
+        continue
+    source = json.dumps(record["PatternToMatch"])
+    result = json.dumps(record.get("ResultInstrs", []))
+    if "BPFcall" in source and ("JAL" in result or "JALX" in result):
+        print(name, source, result)
+PYJSON
+```
+
+预期包含清单 6-14 的立即数和寄存器规则，也会显示本基线的符号调用规则；编号变化不影响内容识别。
+
 ### 6.3.2 复杂匹配模板
 
 有些目标地址模式更适合用程序化算法分解，单靠固定 DAG 模式不够方便。ComplexPattern 允许把匹配工作委托给目标选择器中的 C++ 方法，并返回若干目标操作数；这不意味着 TableGen 完全不能表达地址，或每条 load 都必须使用 ComplexPattern。此例在 TD 中保存方法名称，C++ 实现写在后端源文件中。
@@ -644,6 +764,29 @@ def LDW {
 
 可以看到，LDW 记录本身的匹配模式（字段 Pattern）包含了 ADDRri 记录，而 ADDRri又使用了字段 SelectFunc 将其工作委托到对应的 C++ 函数中，生成器提取这些信息并生成对 SelectAddr 方法的调用。LDW 的 `zextloadi32` 读取 32 位内存、零扩展为 i64 寄存器值，不是读取 64 位内存；启用 ALU32 时会使用其他受谓词约束的模式，例如 LDW32。
 
+查看 ComplexPattern / LDW 的实际字段，并生成另外两个后端输出：
+
+<!-- manual-lab:ch6-complex-pattern-and-generators -->
+
+```sh
+python3 - "$CODEGEN_LAB/bpf.json" <<'PYJSON'
+import json, sys
+records = json.load(open(sys.argv[1]))
+print("ADDRri", {k: records["ADDRri"][k] for k in ("SelectFunc", "NumOperands")})
+print("LDW", json.dumps({k: records["LDW"][k] for k in ("Predicates", "Pattern")}))
+PYJSON
+"$LLVM_BUILD/bin/llvm-tblgen" "${BPF_TD_INCLUDES[@]}" -gen-instr-info "$BPF_TD" \
+  -o "$CODEGEN_LAB/BPFGenInstrInfo.inc"
+"$LLVM_BUILD/bin/llvm-tblgen" "${BPF_TD_INCLUDES[@]}" -gen-emitter "$BPF_TD" \
+  -o "$CODEGEN_LAB/BPFGenMCCodeEmitter.inc"
+rg -n -F 'SelectAddr(N, Result[NextRes+0].first, Result[NextRes+1].first)' \
+  "$CODEGEN_LAB/BPFGenDAGISel.inc"
+test -s "$CODEGEN_LAB/BPFGenInstrInfo.inc"
+test -s "$CODEGEN_LAB/BPFGenMCCodeEmitter.inc"
+```
+
+预期 ADDRri 的 SelectFunc=SelectAddr、NumOperands=2；LDW 包含 BPFNoALU32 和 zextloadi32，生成选择器确实调用两个结果槽。
+
 实际运行还生成了 BPFGenInstrInfo.inc 和 BPFGenMCCodeEmitter.inc。DAG 选择器中可直接看到以下调用：
 
 ```cpp
@@ -651,6 +794,37 @@ return SelectAddr(N, Result[NextRes+0].first, Result[NextRes+1].first);
 ```
 
 它验证了 SelectFunc 的字符串经生成器变成命名方法调用，以及 NumOperands=2 对应两个结果槽。生成器执行成功只证明 TD 可解析且相应后端可生成代码；SelectAddr 对实际 DAG 地址的选择、最终指令编码与目标运行行为属于后续代码生成章节，不能由这一个生成结果推出。
+
+最后比较相同生成器在固定源快照和当前工作树上的结果。两组命令的工具与选项一致，仅 TD/include 来源不同：
+
+<!-- manual-lab:ch6-working-tree-comparison -->
+
+```sh
+bpf_modes=(-gen-dag-isel -gen-instr-info -gen-emitter)
+bpf_files=(BPFGenDAGISel.inc BPFGenInstrInfo.inc BPFGenMCCodeEmitter.inc)
+for index in "${!bpf_modes[@]}"; do
+  "$LLVM_BUILD/bin/llvm-tblgen" -I "$LLVM_SRC/llvm/include" \
+    -I "$LLVM_SRC/llvm/lib/Target/BPF" "${bpf_modes[$index]}" \
+    "$LLVM_SRC/llvm/lib/Target/BPF/BPF.td" \
+    -o "$CODEGEN_LAB/working-tree-${bpf_files[$index]}"
+  if cmp -s "$CODEGEN_LAB/${bpf_files[$index]}" \
+      "$CODEGEN_LAB/working-tree-${bpf_files[$index]}"; then
+    printf '相同：%s\n' "${bpf_files[$index]}"
+  else
+    printf '存在差异：%s；请检查本地源修改。\n' "${bpf_files[$index]}"
+  fi
+done
+python3 - "$CODEGEN_LAB" <<'PYJSON'
+import hashlib, pathlib, sys
+out = pathlib.Path(sys.argv[1])
+for name in ("BPFGenDAGISel.inc", "BPFGenInstrInfo.inc", "BPFGenMCCodeEmitter.inc"):
+    for prefix in ("", "working-tree-"):
+        path = out / (prefix + name)
+        print(hashlib.sha256(path.read_bytes()).hexdigest(), path.name)
+PYJSON
+```
+
+本次预期三份比较都显示“相同”，每对 SHA-256 一致；以后工作树修改可能产生差异，应把它作为来源变化的观察。
 
 ### 6.3.3 匹配规则支撑类
 

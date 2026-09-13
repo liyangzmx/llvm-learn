@@ -20,15 +20,25 @@ flowchart TD
  O --> CFI[CFI 修复及最终目标钩子]
 ```
 
-本章先解释 PEI，再解释在它之前运行的下沉和范围收缩，便于理解它们为什么能减少保存/恢复。这个叙述顺序不是执行次序。复现命令如下，产物默认进入临时目录，可附加 `--out /tmp/ch11`。
+本章先解释 PEI，再解释在它之前运行的下沉和范围收缩，便于理解它们为什么能减少保存/恢复。这个叙述顺序不是执行次序。先运行下面的 Bash 配置，再按小节执行；自动化入口 [runner.py](experiments/ch11/runner.py) 仍保留完整断言。
+
+<!-- manual-lab:ch11-setup -->
 
 ```sh
-LLVM_BUILD=${LLVM_BUILD:-/opt/llvm-project/build}
-LLVM_SRC=${LLVM_SRC:-/opt/llvm-project}
-BOOK_ROOT=/opt/coding/mlir-toy/llvm/inside-llvm-codegen
-export LLVM_BUILD LLVM_SRC BOOK_ROOT
-python3 "$BOOK_ROOT/experiments/ch11/runner.py"
+set -euo pipefail
+export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
+export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
+export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
+BOOK_INPUT="$BOOK_ROOT/experiments/ch11"
+CODEGEN_LAB=$(mktemp -d)
+export BOOK_INPUT CODEGEN_LAB
+"$LLVM_BUILD/bin/llc" --version
+printf '实验输出目录：%s\n' "$CODEGEN_LAB"
 ```
+
+以下命令按正文顺序在同一个 Bash 会话运行；输入取自本章实验目录，所有新文件写入刚创建的临时目录。
+
+
 
 ## 11.1 函数栈帧生成以及相关优化
 
@@ -64,6 +74,22 @@ square:
 PEI 的处理可按数据依赖理解：先识别保存/恢复块和需要保留的寄存器，为它们分配保存位置，维护各块 live-in；然后在目标约束下布局局部对象、保存区、溢出槽及对齐。目标的 frame-lowering 钩子生成调整和保存指令，frame-index elimination 将抽象对象替换为基址加偏移。超出指令寻址范围时可能需要额外计算或寄存器 scavenging。
 
 BPF 是一个有用的反例。`frame.ll` 中有一个 8 字节 volatile 局部对象，PEI 前使用 `%stack.0`，之后使用 `R10-8`，没有 AArch64 那样的 SP 加减。本章实际验证了这一变化。通用 PEI 流程与目标栈模型必须分开理解。
+
+<!-- manual-lab:ch11-pei -->
+
+```sh
+"$LLVM_BUILD/bin/clang" --target=aarch64-unknown-linux-gnu -O0 -S \
+  "$BOOK_INPUT/square.c" -o "$CODEGEN_LAB/square.s"
+cat "$CODEGEN_LAB/square.s"
+for point in before after; do
+  "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
+    "-stop-$point=prologepilog" "$BOOK_INPUT/frame.ll" \
+    -o "$CODEGEN_LAB/frame-$point.mir"
+done
+sed -n '/^body:/,$p' "$CODEGEN_LAB/frame-after.mir"
+```
+
+AArch64 输出含 SP 的 16 字节调整；BPF 输出把抽象栈索引解析为 R10-8，没有相同的 SP 调整序列。
 
 ### 11.1.2 代码下沉
 
@@ -104,6 +130,22 @@ bb.1:
 实验还保留了对应 BPF 输入。BPF 在本地 LLVM 18 基线中没有开启目标 `AllowRegisterRenaming`，因此仅在文本上写 `renamable` 不足以获得目标级的可重命名语义；该例不发生下沉。这个负例说明：Pass 名字和输入外形相同，不等于所有目标的处理相同。
 
 按层次可比较几类常见下沉：IR 层基于 SSA/内存分析移动表达式，MachineSinking 处理分配前虚拟寄存器，PostRAMachineSinking 主要处理满足物理寄存器限制的 COPY。它们的共同目的是减少不必要执行或活跃范围，输入和合法性规则不同。
+
+<!-- manual-lab:ch11-postra-sink -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -verify-machineinstrs \
+  -run-pass=postra-machine-sink "$BOOK_INPUT/postra-sink-a64.mir" \
+  -o "$CODEGEN_LAB/postra-sink-a64.mir"
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
+  -run-pass=postra-machine-sink "$BOOK_INPUT/postra-sink.mir" \
+  -o "$CODEGEN_LAB/postra-sink.mir"
+for name in postra-sink-a64 postra-sink; do
+  sed -n '/^body:/,$p' "$CODEGEN_LAB/$name.mir"
+done
+```
+
+AArch64 COPY 下沉到 bb.1；BPF 版本保留原位置，体现目标可重命名能力限制。
 
 ### 11.1.3 栈帧范围收缩
 
@@ -146,6 +188,23 @@ getSqrt:
 
 不仅 Save，Restore 的频率也要与入口频率比较；把恢复放到循环内高频位置可能抵消节省。循环中还要避免重复保存但没有对应恢复、或者绕过保存先恢复等不平衡路径。LLVM 18 的后处理可在条件允许时拆分恢复区域，让经过“需要帧”路径和未经过该路径的入边分开。这是受约束的启发式，不保证所有 CFG 都得到最小区域；无合法/有益候选时保留普通入口/出口方案。
 
+<!-- manual-lab:ch11-shrinkwrap -->
+
+```sh
+for variant in shrink no-shrink; do
+  SHRINK_FLAGS=(-O2 -fno-optimize-sibling-calls)
+  if [ "$variant" = no-shrink ]; then
+    SHRINK_FLAGS+=(-mllvm -enable-shrink-wrap=false)
+  fi
+  "$LLVM_BUILD/bin/clang" --target=aarch64-unknown-linux-gnu \
+    "${SHRINK_FLAGS[@]}" -S "$BOOK_INPUT/shrink.c" \
+    -o "$CODEGEN_LAB/$variant.s"
+  cat "$CODEGEN_LAB/$variant.s"
+done
+```
+
+开启收缩时 stp 在比较之后、只在调用路径执行，ldp 恢复位置为一处；关闭时入口即保存，两个出口分别恢复。
+
 ## 11.2 MIR 优化
 
 `addMachineLateOptimization` 的通用次序为 `MachineLateInstrsCleanup`、BranchFolder、目标允许时的 TailDuplicate、MachineCopyPropagation。要求结构化 CFG 的目标会限制尾代码重复；这些 Pass 不能被当成每个目标无条件运行的集合。PostRA MachineLICM 属于与寄存器分配紧邻的流程，不在这一段末尾。
@@ -186,6 +245,16 @@ BPF 实验 `branch.mir` 构造两个完全相同的 `R0=17; RET` 返回块。`-r
 
 **跳表清理。** BranchFolder 标记机器操作数实际引用的跳转表，再删除未使用的整张表；不能不重写索引映射就任意删去某个 case 的表项。
 
+<!-- manual-lab:ch11-branch-folder -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
+  -run-pass=branch-folder "$BOOK_INPUT/branch.mir" -o "$CODEGEN_LAB/branch.mir"
+sed -n '/^body:/,$p' "$CODEGEN_LAB/branch.mir"
+```
+
+输出共享一个返回块，总块数为 2，当前单 Pass 结果仍含文中指出的 JNE。
+
 ### 11.2.2 尾代码重复
 
 分配后尾代码重复仍使用 `TailDuplicator`。它把后继尾部复制进合适前驱，以减少分支并提供复制传播或布局机会。与第 9 章相比，不需创建虚拟 SSA 定义和修复 PHI，且不再统一禁止 call/return 候选。但目标 `isNotDuplicable`、收敛性、异常控制流、布局和大小阈值仍需检查。BPF 的具体 return 属性也不会因为进入 PostRA 阶段自动失效。
@@ -197,6 +266,20 @@ BPF 实验 `branch.mir` 构造两个完全相同的 `R0=17; RET` 返回块。`-r
 MachineCopyPropagation 跟踪物理寄存器 COPY 关系。如果源寄存器从复制到用途之间保持有效，且用途允许该寄存器，可以用源替代目的，并删除已经无用的 COPY。调用 regmask、隐式定义、子寄存器写入和重叠别名都会截断传播。
 
 本章 AArch64 `copy-a64.mir` 有 X0→X1→X2 的 COPY 链，最后 `X0=ADDXri X2,3`。实测 `-run-pass=machine-cp` 删除两条 COPY，变为 `X0=ADDXri X0,3`。同样外形的 BPF 例子因目标可重命名能力限制保持原形。第 10 章附近出现过复制传播，这里再次运行是因为中间 Pass 又可能产生了新的 COPY。
+
+<!-- manual-lab:ch11-copy-propagation -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -verify-machineinstrs \
+  -run-pass=machine-cp "$BOOK_INPUT/copy-a64.mir" -o "$CODEGEN_LAB/copy-a64.mir"
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
+  -run-pass=machine-cp "$BOOK_INPUT/copy.mir" -o "$CODEGEN_LAB/copy.mir"
+for name in copy-a64 copy; do
+  sed -n '/^body:/,$p' "$CODEGEN_LAB/$name.mir"
+done
+```
+
+AArch64 的两条 COPY 消失，ADD 直接使用 X0；BPF 负例不发生同样传播。
 
 ## 11.3 MIR 指令变换和调度
 
@@ -276,6 +359,32 @@ return concatenated layout
 实际 `computeExtTspLayout` 返回第二种排列。它把到高频 B4 的跳转距离从 48 字节缩短到 32 字节，同时让低频 B3 更远；ExtTSP 因而可以区分直通分数相同的两个结果。这是模型分数的验证，没有进行指令 cache miss 或硬件时间测量。
 
 流水线选项 `enable-ext-tsp-block-placement` 的普通默认值是 false，但 SampleProfile 流程在用户未显式指定时可开启它；MachineBlockPlacement 后处理还检查块数等条件。`ext-tsp-apply-without-profile` 默认 true，所以“ExtTSP 已启用”不等于“一定有实际 profile”。
+
+<!-- manual-lab:ch11-llvm-library-api -->
+
+```sh
+export CXX="${CXX:-/usr/bin/clang++}"
+"$LLVM_BUILD/bin/llvm-config" --cxxflags --ldflags --libs transformutils --system-libs \
+  > "$CODEGEN_LAB/llvm-flags.txt"
+# 用 shlex 解析 llvm-config 的引号与空格，避免路径拆词错误。
+python3 -B - <<'PY_COMPILE'
+from pathlib import Path
+import os, shlex, subprocess
+out = Path(os.environ["CODEGEN_LAB"])
+flags = shlex.split((out / "llvm-flags.txt").read_text())
+if Path("/opt/homebrew/lib").is_dir():
+    flags += ["-L/opt/homebrew/lib"]
+cmd = [os.environ["CXX"], *flags,
+       str(Path(os.environ["BOOK_INPUT"]) / "algorithms.cpp"),
+       "-o", str(out / "algorithms")]
+(out / "algorithms-build-command.txt").write_text(shlex.join(cmd) + "\n")
+subprocess.run(cmd, cwd=out, check=True)
+PY_COMPILE
+"$CODEGEN_LAB/algorithms" > "$CODEGEN_LAB/algorithms.json"
+cat "$CODEGEN_LAB/algorithms.json"
+```
+
+该程序直接调用本地 LLVM 库；输出两个 ExtTSP 分数及 layout=[0,1,2,4,3]，同时包含 11.5 节要分析的后缀树候选。
 
 ### 11.4.2 公共代码提取
 
@@ -359,6 +468,22 @@ OUTLINED_FUNCTION_0:
 实现把机器指令映射成整数符号，而不是把打印出来的汇编逐字符建树。可以匹配的相同指令得到相同编号；不能跨越的边界或不可提取内容使用阻隔符号。调试指令等还有专门处理。这样，查找重复机器序列转化为在整数序列中查找重复子串。
 
 SuffixTree 找到候选后，Outliner 还要处理重叠出现、目标约束、活跃寄存器与成本。选定候选才建立新 MachineFunction、重写原位置并修复必要信息。第 11.5 节解释后缀树，特别区分理论上的所有重复子串与 LLVM 当前迭代器输出的候选集合。
+
+<!-- manual-lab:ch11-outliner -->
+
+```sh
+for variant in no-outliner outliner; do
+  OUTLINER_FLAGS=(-O2)
+  if [ "$variant" = outliner ]; then
+    OUTLINER_FLAGS+=(-mllvm -enable-machine-outliner=always)
+  fi
+  "$LLVM_BUILD/bin/clang" --target=x86_64-unknown-linux-gnu -S \
+    "${OUTLINER_FLAGS[@]}" "$BOOK_INPUT/outliner.c" -o "$CODEGEN_LAB/$variant.s"
+done
+cat "$CODEGEN_LAB/outliner.s"
+```
+
+启用版出现一个 OUTLINED_FUNCTION_0，func1/func2 各有一次尾跳转；可与 no-outliner.s 的重复尾部对照。
 
 ### 11.4.3 函数冷热代码分离
 
@@ -502,6 +627,22 @@ foo.cold.1:
 
 这里可看到对 `foo.cold.1` 的普通 call、新函数自己的寄存器保存/恢复和输出值存储。MFS 的冷块与 HCS 的新函数不能仅因都带 `.cold` 名称就视为同一个机制。两者都会增加某种转移成本；是否值得由冷路径比例、额外代码和目标成本共同决定。
 
+<!-- manual-lab:ch11-mfs-hcs -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=x86_64-unknown-linux-gnu -O2 -verify-machineinstrs \
+  -enable-split-machine-functions -x86-asm-syntax=intel "$BOOK_INPUT/split.ll" \
+  -o "$CODEGEN_LAB/mfs.s"
+"$LLVM_BUILD/bin/opt" -passes=hotcoldsplit -hotcoldsplit-threshold=0 -S \
+  "$BOOK_INPUT/split.ll" -o "$CODEGEN_LAB/hcs.ll"
+"$LLVM_BUILD/bin/llc" -mtriple=x86_64-unknown-linux-gnu -O2 -verify-machineinstrs \
+  -x86-asm-syntax=intel "$CODEGEN_LAB/hcs.ll" -o "$CODEGEN_LAB/hcs.s"
+cat "$CODEGEN_LAB/mfs.s"
+cat "$CODEGEN_LAB/hcs.s"
+```
+
+MFS 用 section 与分支连接同一函数；HCS IR 创建 foo.cold.1，汇编通过普通调用和独立保存/恢复执行该函数。
+
 ### 11.4.4 代码布局优化比较
 
 编译器内的基本块布局使用 MIR 与目标信息，链接器可借 section/符号信息安排函数或基本块聚类，链接后的优化工具则在已有二进制及 profile 上分析并重写布局。信息可用程度、重新优化能力、调试/展开信息维护和构建集成成本各不相同。
@@ -593,6 +734,20 @@ LLVM 18 的 `RepeatedSubstringIterator` 是专为候选枚举实现的接口，�
 ```
 
 字符串 `ab` 实际在 0、3、6 出现三次，但本例迭代器不返回它：ab 节点只有一个直接叶子孩子，其余两个起点位于内部孩子 abc 之下。a、b 等单字符重复还受最短长度限制。不能根据接口注释或理论后缀树性质宣称这个迭代器列出了所有重复子串/所有出现。若要通用出现计数，需要实现相应的路径查询和后代遍历；MachineOutliner 则在它提供的候选上继续做目标和成本选择。
+
+<!-- manual-lab:ch11-suffix-candidates -->
+
+```sh
+# 读取 11.4.1 中已编译并运行的 LLVM API 实验结果。
+python3 -B - "$CODEGEN_LAB/algorithms.json" <<'PY_SUFFIX'
+import json, sys
+result = json.load(open(sys.argv[1]))["repeated"]
+assert result == [{"text":"abc", "starts":[0,6]}, {"text":"bc", "starts":[1,7]}]
+print(json.dumps(result, ensure_ascii=False, indent=2))
+PY_SUFFIX
+```
+
+这里只返回 abc 与 bc；已出现三次的 ab 不在当前迭代器输出中。
 
 ## 11.6 本章小结
 

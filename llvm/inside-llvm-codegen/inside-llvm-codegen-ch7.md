@@ -4,6 +4,24 @@
 
 本章的 C、LLVM IR 和完整 MIR 文件用途不同：C/IR 输入能直接交给对应工具；正文只展示 MIR 的 `body` 或调试日志时，它们是阅读用节选，完整 YAML 在 runner 的输出目录。源码节选依赖 LLVM 内部上下文，不是独立程序。BPF 的结果使用本地工作区构建，结果 JSON 记录其相对上游提交的修改文件。我们验证了 IR、机器指令约束和生成过程，没有在目标处理器上执行生成的程序。
 
+本章命令使用 **Bash**。先执行下面的初始化，再在同一个 Bash 会话中按正文顺序执行后续命令；输出目录会保留，便于比较各阶段文件。需要 LLVM 18.1.8 的 Debug/assertions 工具和本章涉及的后端，以及 Python 3。
+
+<!-- manual-lab:ch7-setup -->
+
+```sh
+set -euo pipefail
+export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
+export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
+export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
+BOOK_INPUT="$BOOK_ROOT/experiments/ch7"
+CODEGEN_LAB=$(mktemp -d)
+"$LLVM_BUILD/bin/llc" --version > "$CODEGEN_LAB/llc-version.txt"
+cat "$CODEGEN_LAB/llc-version.txt"
+printf '本章输出目录：%s\n' "$CODEGEN_LAB"
+```
+
+确认版本为 18.1.8，并在注册目标中找到 BPF、AArch64。本章所有输出都写入 `$CODEGEN_LAB`，`$BOOK_INPUT` 中的输入文件只读。
+
 ## 7.1 指令选择的处理流程
 
 LLVM IR 描述计算语义；机器指令还要符合目标的操作码、操作数形式、寄存器约束和调用约定。指令选择可能把多个 IR 运算合成一条机器指令，也可能把一个运算拆成多条指令或运行库调用。“选择”因此包括必要的表示转换和合法化，并非简单查找一张 IR opcode 对机器 opcode 的表。
@@ -78,6 +96,20 @@ int caller(void) {
 }
 ```
 
+从清单 7-1 对应的完整文件生成 IR，并验证其结构：
+
+<!-- manual-lab:ch7-clang-callee -->
+
+```sh
+"$LLVM_BUILD/bin/clang" --target=bpfel -mcpu=v1 -O0 \
+  -fno-discard-value-names -S -emit-llvm "$BOOK_INPUT/callee.c" \
+  -o "$CODEGEN_LAB/callee.ll"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/callee.ll"
+sed -n '/^define /,/^}/p' "$CODEGEN_LAB/callee.ll"
+```
+
+输出中 `callee` 使用 i64，`caller` 返回 i32，四字节 `%f` 对象的 store/load 没有被改成 i64；下面展示的是同一生成文件中的函数节选。
+
 **代码清单 7-2　Clang 18 生成的两个函数（属性定义见完整 callee.ll）**
 
 ```llvm
@@ -139,6 +171,31 @@ join:
 }
 ```
 
+为包含寄存器加法、立即数加法、i32 访存和 PHI 的共同输入生成 BPF v1 MIR，同时保留各 DAG 阶段与匹配日志：
+
+<!-- manual-lab:ch7-bpf-v1-selection -->
+
+```sh
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/selection.ll"
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O0 \
+  -fast-isel=false -verify-machineinstrs -stop-after=finalize-isel \
+  -debug-only=isel,isel-dump "$BOOK_INPUT/selection.ll" \
+  -o "$CODEGEN_LAB/bpf-v1.mir" 2> "$CODEGEN_LAB/bpf-v1.log"
+python3 - "$CODEGEN_LAB/bpf-v1.mir" "$CODEGEN_LAB/bpf-v1.log" <<'PYCODE'
+import pathlib, re, sys
+mir, log = (pathlib.Path(p).read_text() for p in sys.argv[1:])
+bodies = dict(re.findall(r'^name:\s+(\S+).*?^body:\s+\|\n(.*?)(?=^\.\.\.)', mir, re.M | re.S))
+assert 'ADD_rr' in bodies['add_reg']
+assert 'ADD_ri' in bodies['add_imm'] and ', 42' in bodies['add_imm']
+assert 'PHI' in bodies['choose']
+assert 'ch,glue = EntryToken' in log
+print(bodies['choose'])
+print('ADD_rr / ADD_ri 42 / PHI / EntryToken 两结果检查通过')
+PYCODE
+```
+
+`choose` 的机器 PHI 仍在。日志 `$CODEGEN_LAB/bpf-v1.log` 还会供 7.2.4 的匹配过程分析使用，不能只保存最终汇编来代替这些阶段信息。
+
 **代码清单 7-4　finalize-isel 后 choose 的实际 MIR body**
 
 ```yaml
@@ -191,6 +248,40 @@ PHI 在此阶段仍存在。后续 PHI 消除会在 CFG 边上实现相应赋值
 
 有符号窄整数也要考虑 ABI。下面给参数和返回值明确添加 `signext`，使符号扩展的义务可见；只写一个模 2^16 的加法，并不能要求所有上下文都保留相同扩展序列。
 
+在同一输入上切换到 v3，再单独生成 i16、i128 和向量合法化用例。所有运行都禁止 FastISel，以便固定 SelectionDAG 路径：
+
+<!-- manual-lab:ch7-bpf-type-legalization -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v3 -O0 \
+  -fast-isel=false -verify-machineinstrs -stop-after=finalize-isel \
+  "$BOOK_INPUT/selection.ll" -o "$CODEGEN_LAB/bpf-v3.mir"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/legalization.ll"
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O0 \
+  -fast-isel=false -verify-machineinstrs -stop-after=finalize-isel \
+  "$BOOK_INPUT/legalization.ll" -o "$CODEGEN_LAB/bpf-legalization.mir"
+python3 - "$CODEGEN_LAB" <<'PYCODE'
+import pathlib, re, sys
+out = pathlib.Path(sys.argv[1])
+def bodies(name):
+    return dict(re.findall(r'^name:\s+(\S+).*?^body:\s+\|\n(.*?)(?=^\.\.\.)', (out/name).read_text(), re.M | re.S))
+v1, v3, legal = (bodies(n) for n in ['bpf-v1.mir', 'bpf-v3.mir', 'bpf-legalization.mir'])
+assert 'ADD_rr ' in v1['add32'] and 'ADD_rr_32' not in v1['add32']
+assert v1['add32'].count('(s32)') == 3
+assert all(op in v3['add32'] for op in ['LDW32', 'ADD_rr_32', 'STW32'])
+assert all(op in legal['add16_signed'] for op in ['SLL_ri', 'SRA_ri', ', 48'])
+wide = legal['add128']
+assert wide.count('LDD ') == 4 and wide.count('STD ') == 2
+assert wide.count('ADD_rr ') == 3 and 'JUGT_rr ' in wide and 'PHI ' in wide
+assert legal['vector_add'].count('ADD_rr ') == 2 and legal['vector_add'].count('STD ') == 2
+for name, value in [('v1 add32', v1['add32']), ('v3 add32', v3['add32']), ('i16 signext', legal['add16_signed']), ('i128', wide)]:
+    print(name, value, sep='\n')
+print('向量标量化为两条 ADD_rr 的检查通过')
+PYCODE
+```
+
+v1 的计算寄存器变宽而 `(s32)` 访存保持不变；v3 选择 ALU32 形式。i16 的两次移位、i128 的进位路径和向量两个 lane 的独立加法都可以在完整 MIR 中检查。
+
 **代码清单 7-5　合法化实验中的 i16 输入及 v1 实际输出**
 
 ```text
@@ -238,11 +329,60 @@ entry:
 
 `Custom` 的例子可以查看 `BPFISelLowering` 对 `SELECT_CC`、比较或某些除法的处理。分支能力随 JmpExt/Jmp32 等特性变化；通用 `ISD::CondCode` 的数字不是 BPF 自定义比较指令编码。描述这类变换应写出条件和操作数，而不依赖某个十进制常量的偶然显示。
 
+运行软浮点负例时，显式接住预期失败；这样在 `set -e` 下也不会把“不支持”误当成整个实验提前结束：
+
+<!-- manual-lab:ch7-bpf-softfloat-negative -->
+
+```sh
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/softfloat.ll"
+if "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O0 -fast-isel=false \
+    "$BOOK_INPUT/softfloat.ll" -o "$CODEGEN_LAB/softfloat.s" \
+    > "$CODEGEN_LAB/softfloat.stdout" 2> "$CODEGEN_LAB/softfloat.log"; then
+  printf '%s\n' '错误：软浮点负例意外成功' >&2
+  exit 1
+else
+  softfloat_status=$?
+  test "$softfloat_status" -eq 1
+fi
+python3 - "$CODEGEN_LAB/softfloat.log" <<'PYCODE'
+import pathlib, sys
+text = pathlib.Path(sys.argv[1]).read_text()
+assert '__divdf3' in text and 'not supported' in text
+print(text)
+PYCODE
+```
+
+预期返回码为 1，且诊断明确指向 `__divdf3`。这里得到的是目标拒绝路径，不是一个可运行的 BPF 软件浮点实现。
+
 ### 7.2.4 机器指令选择
 
 `llvm-tblgen -gen-dag-isel` 读取目标的 TableGen 模式，生成 `MatcherTable`。这是一种供 `SelectCodeCommon` 解释执行的匹配字节码。本例实际表的 ADD 分支先尝试 `FI_ri` 的 frame-index 地址模式，之后才是 `ADD_ri/ADD_ri_32/ADD_rr/ADD_rr_32`。表中的整数有多种含义：匹配 opcode、跳过 scope 的长度、记录槽位、类型编号以及机器 opcode 的编码；不能把每个整数都理解为节点序号。
 
 下面截取本地 BPF 表中 ADD 分支。runner 每次实际生成该文件，并记录哈希；表的偏移和布局随模式集合改变，教材不要求固定偏移。
+
+直接运行 TableGen，并对照之前保存的实际 ADD 匹配日志：
+
+<!-- manual-lab:ch7-tablegen-dag-matcher -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-tblgen" -gen-dag-isel \
+  -I "$LLVM_SRC/llvm/include" -I "$LLVM_SRC/llvm/lib/Target/BPF" \
+  "$LLVM_SRC/llvm/lib/Target/BPF/BPF.td" \
+  -o "$CODEGEN_LAB/BPFGenDAGISel.inc"
+python3 - "$CODEGEN_LAB/BPFGenDAGISel.inc" "$CODEGEN_LAB/bpf-v1.log" <<'PYCODE'
+import pathlib, re, sys
+table, log = (pathlib.Path(p).read_text() for p in sys.argv[1:])
+assert 'MatcherTable' in table and 'BPF::ADD_ri' in table
+for line in table.splitlines():
+    if any(op in line for op in ['BPF::FI_ri', 'BPF::ADD_ri', 'BPF::ADD_rr']):
+        print(line)
+match = re.search(r'ISEL: Starting selection on root node: t\d+: i64 = add .*?ISEL: Match complete!', log, re.S)
+assert match is not None
+print(match[0])
+PYCODE
+```
+
+生成文件列出 `FI_ri` 和各 ADD 候选；实际 `add_reg` 日志最终出现 `ADD_rr`。输出偏移只属于当前生成表，不能作为跨版本的固定接口。
 
 **代码清单 7-7　实际生成的 ADD matcher 子表（节选）**
 
@@ -338,6 +478,30 @@ flowchart TD
 完成选择后，调度器给可发射节点确定顺序，`InstrEmitter` 根据机器节点创建 `MachineInstr`，为结果分配或复用虚拟寄存器，并维护跨块导出值。chain/glue 用于安排这个过程，通常不会作为机器指令的显式寄存器操作数保留下来。
 
 `EntryToken` 和 `TokenFactor` 不发射真实 MI；`CopyToReg/CopyFromReg` 在需要时产生 `COPY`，也可能直接复用已有寄存器映射。机器节点和最终指令也不是无条件一一对应，目标伪指令还可能在后续展开。
+
+使用 7.2.2 生成的 `callee.ll`，保存选择完成的 DAG 和 MIR：
+
+<!-- manual-lab:ch7-dag-to-mir -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O0 \
+  -fast-isel=false -verify-machineinstrs -stop-after=finalize-isel \
+  -debug-only=isel,isel-dump "$CODEGEN_LAB/callee.ll" \
+  -o "$CODEGEN_LAB/callee-finalize.mir" 2> "$CODEGEN_LAB/callee-finalize.log"
+python3 - "$CODEGEN_LAB/callee-finalize.mir" "$CODEGEN_LAB/callee-finalize.log" <<'PYCODE'
+import pathlib, re, sys
+mir, log = (pathlib.Path(p).read_text() for p in sys.argv[1:])
+bodies = dict(re.findall(r'^name:\s+(\S+).*?^body:\s+\|\n(.*?)(?=^\.\.\.)', mir, re.M | re.S))
+assert all(op in bodies['caller'] for op in ['STW ', 'LDW ', '(s32)'])
+selected = re.search(r'Selected selection DAG:.*?(?=Total amount of phi nodes)', log, re.S)
+assert selected is not None
+print(selected[0])
+print(bodies['callee'])
+print('caller 的四字节栈对象仍使用 STW / LDW')
+PYCODE
+```
+
+输出对应清单 7-10、7-11；`caller` 的四字节对象也经过独立断言。完整 MIR YAML 可以留给后续 Pass 继续处理，正文的 body 节选则只供阅读。
 
 **代码清单 7-10　callee 的实际 Selected DAG**
 
@@ -445,6 +609,34 @@ Register FastISel::fastEmitInst_rr(unsigned MachineInstOpcode,
 
 runner 对 `fastisel.ll` 的 i32/i64 加法显式设置 `-global-isel=false -fast-isel=true -fast-isel-abort=3`。级别 3 不允许 FastISel 静默回退，因此成功且出现 `ADDWrr/ADDXrr` 才能作为这两个输入确实走过 FastISel 的证据。这个检查不证明其他输入、其他优化级别或其他目标也有同样支持范围。
 
+下面先重新生成 FastISel 发射器，再用禁止回退的配置处理完整输入：
+
+<!-- manual-lab:ch7-fastisel -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-tblgen" -gen-fast-isel \
+  -I "$LLVM_SRC/llvm/include" -I "$LLVM_SRC/llvm/lib/Target/AArch64" \
+  "$LLVM_SRC/llvm/lib/Target/AArch64/AArch64.td" \
+  -o "$CODEGEN_LAB/AArch64GenFastISel.inc"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/fastisel.ll"
+"$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -mcpu=generic -O0 \
+  -global-isel=false -fast-isel=true -fast-isel-abort=3 \
+  -verify-machineinstrs -stop-after=finalize-isel -debug-only=isel \
+  "$BOOK_INPUT/fastisel.ll" -o "$CODEGEN_LAB/fastisel.mir" \
+  2> "$CODEGEN_LAB/fastisel.log"
+python3 - "$CODEGEN_LAB/AArch64GenFastISel.inc" "$CODEGEN_LAB/fastisel.mir" <<'PYCODE'
+import pathlib, re, sys
+inc, mir = (pathlib.Path(p).read_text() for p in sys.argv[1:])
+assert 'fastEmit_ISD_ADD' in inc and 'AArch64::ADDXrr' in inc
+assert 'ADDWrr' in mir and 'ADDXrr' in mir
+print(re.search(r'unsigned fastEmit_ISD_ADD_MVT_i64_rr\(.*?^}', inc, re.M | re.S)[0])
+for body in re.findall(r'^body:\s+\|\n(.*?)(?=^\.\.\.)', mir, re.M | re.S):
+    print(body)
+PYCODE
+```
+
+TableGen 发射器和最终 MIR 分别给出 `ADDXrr`，i32 用例产生 `ADDWrr`；退出成功且 `-fast-isel-abort=3` 未触发，表明这两个用例没有回退。
+
 ## 7.4 全局指令选择算法原理与实现
 
 ### 7.4.1 全局指令选择的阶段
@@ -526,6 +718,24 @@ entry:
   RET_ReallyLR implicit $w0
 ```
 
+先验证教材 C 示例，再用固定的 `globalisel.ll` 观察 IRTranslator。两份 IR 分别保存，后续阶段始终以手写输入为起点：
+
+<!-- manual-lab:ch7-gi-irtranslator -->
+
+```sh
+"$LLVM_BUILD/bin/clang" --target=aarch64-unknown-linux-gnu -mcpu=generic -O1 \
+  -S -emit-llvm "$BOOK_INPUT/globalisel.c" -o "$CODEGEN_LAB/globalisel-from-c.ll"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/globalisel-from-c.ll"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$BOOK_INPUT/globalisel.ll"
+"$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -mcpu=generic -O0 \
+  -global-isel=true -global-isel-abort=1 -verify-machineinstrs \
+  -stop-after=irtranslator "$BOOK_INPUT/globalisel.ll" \
+  -o "$CODEGEN_LAB/gi-irtranslator.mir"
+sed -n '/^name:/p; /^body:/,/^\.\.\.$/p' "$CODEGEN_LAB/gi-irtranslator.mir"
+```
+
+输出包括带 `s32` 的 add32、带 `s16` 的 add16，以及尚未选择 bank 的 G_OR；临时入口已经合并。
+
 **代码清单 7-23　IRTranslator 完成后 add32 的实际 MIR**
 
 ```yaml
@@ -562,6 +772,27 @@ bb.1.entry:
     $w0 = COPY %5(s32)
     RET_ReallyLR implicit $w0
 ```
+
+将停止点移到 Legalizer，直接对比前后 add16：
+
+<!-- manual-lab:ch7-gi-legalizer -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -mcpu=generic -O0 \
+  -global-isel=true -global-isel-abort=1 -verify-machineinstrs \
+  -stop-after=legalizer "$BOOK_INPUT/globalisel.ll" \
+  -o "$CODEGEN_LAB/gi-legalizer.mir"
+python3 - "$CODEGEN_LAB/gi-irtranslator.mir" "$CODEGEN_LAB/gi-legalizer.mir" <<'PYCODE'
+import pathlib, re, sys
+before, after = [dict(re.findall(r'^name:\s+(\S+).*?^body:\s+\|\n(.*?)(?=^\.\.\.)', pathlib.Path(p).read_text(), re.M | re.S))['add16'] for p in sys.argv[1:]]
+assert '(s16)' in before and 'G_ADD' in before
+assert re.search(r'\(s32\) = .*G_ADD', after)
+assert not re.search(r'\(s16\) = .*G_ADD', after)
+print('IRTranslator:', before, 'Legalizer:', after, sep='\n')
+PYCODE
+```
+
+s16 加法被 s32 加法替代，转换 artifact 的清理可以在同一函数的前后 body 中看到。
 
 **代码清单 7-25　add16 完成 Legalizer 后的实际 MIR**
 
@@ -662,6 +893,28 @@ fpr_cost = frequency * (1 + 2 * 4 + 5)
 assert (gpr_cost, fpr_cost) == (1, 14)
 ```
 
+运行 bank 选择并执行清单 7-27、7-32 对应的教学模型：
+
+<!-- manual-lab:ch7-gi-register-bank -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -mcpu=generic -O0 \
+  -global-isel=true -global-isel-abort=1 -verify-machineinstrs \
+  -stop-after=regbankselect "$BOOK_INPUT/globalisel.ll" \
+  -o "$CODEGEN_LAB/gi-regbankselect.mir"
+python3 - "$CODEGEN_LAB/gi-regbankselect.mir" <<'PYCODE'
+import pathlib, re, sys
+mir = pathlib.Path(sys.argv[1]).read_text()
+body = dict(re.findall(r'^name:\s+(\S+).*?^body:\s+\|\n(.*?)(?=^\.\.\.)', mir, re.M | re.S))['or32']
+assert 'gpr(s32)' in body and 'G_OR' in body
+print(body)
+PYCODE
+python3 "$BOOK_INPUT/models.py" > "$CODEGEN_LAB/teaching-models.json"
+cat "$CODEGEN_LAB/teaching-models.json"
+```
+
+实际 MIR 仍含 `G_OR`，但寄存器有 `gpr(s32)` bank/LLT 信息。模型另报告六个低位检查和假设成本 1/14；这不是 RegBankSelect 完整成本日志。
+
 **代码清单 7-33　RegBankSelect 后实际选择的 GPR bank**
 
 ```yaml
@@ -713,6 +966,27 @@ class GINodeEquiv<Instruction i, SDNode node> {
 }
 ```
 
+最后观察目标指令选择后的寄存器类和 opcode：
+
+<!-- manual-lab:ch7-gi-instruction-select -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -mcpu=generic -O0 \
+  -global-isel=true -global-isel-abort=1 -verify-machineinstrs \
+  -stop-after=instruction-select "$BOOK_INPUT/globalisel.ll" \
+  -o "$CODEGEN_LAB/gi-instruction-select.mir"
+python3 - "$CODEGEN_LAB/gi-instruction-select.mir" <<'PYCODE'
+import pathlib, re, sys
+mir = pathlib.Path(sys.argv[1]).read_text()
+bodies = dict(re.findall(r'^name:\s+(\S+).*?^body:\s+\|\n(.*?)(?=^\.\.\.)', mir, re.M | re.S))
+assert 'ADDWrr' in bodies['add32'] and 'G_ADD' not in bodies['add32']
+print(bodies['add32'])
+print(bodies['or32'])
+PYCODE
+```
+
+add32 变成 `ADDWrr`，or32 变成 `ORRWrr`，操作数被约束到具体寄存器类。四个命令都是从相同 IR 重放完整前缀，只改变停止点，不把缺少 YAML 头的 body 当作输入。
+
 **代码清单 7-35　G_ADD 对应声明及实际选择结果**
 
 ```text
@@ -754,14 +1028,7 @@ O0 仍有目标要求的 combine/lowering，不能简化成“四个 Pass 无优
 
 指令选择的关键是保持语义并满足目标约束：DAG 的值、chain、glue 表达不同依赖；合法化必须区分寄存器类型与内存宽度；TableGen 模式是可执行的匹配程序；GlobalISel 的 LLT、bank、寄存器类处于不同阶段。FastISel 和 GlobalISel 的实验必须说明回退配置，才能据输出判断实际路径。
 
-运行本章全部实验：
-
-```sh
-export LLVM_BUILD=${LLVM_BUILD:-/opt/llvm-project/build}
-export LLVM_SRC=${LLVM_SRC:-/opt/llvm-project}
-export BOOK_ROOT=/opt/coding/mlir-toy/llvm/inside-llvm-codegen
-python3 "$BOOK_ROOT/experiments/ch7/runner.py"
-```
+本章各阶段可按前面的命令直接运行。需要额外生成汇总 JSON 时，也可执行 `python3 "$BOOK_INPUT/runner.py"`。
 
 输出默认写入新临时目录，包含完整 IR/MIR、DAG 日志、生成的 TableGen 文件和 `results.json`；`--output` 可指定目录，`--summary` 可另存 JSON。`--bpf-only` 仅供部分后端尚未构建时探索，不能当作全章完成报告。
 

@@ -5,17 +5,22 @@
 
 支配关系在编译优化中非常重要，在 LLVM 中有众多分析和变换依赖于支配分析。例如中端优化 ADCE（Aggressive Dead Code Elimination，激进的死代码消除）、SimplifyCFG、BasicAliasAnalysis、LoopPass 等。本章将介绍支配相关的概念和算法。
 
-本章命令约定如下；已有工具即可运行，runner 不触发构建。
+本章命令使用 **Bash**，先执行下面的准备块，再在同一 shell 中按正文顺序执行后续命令。工具应为已构建的 LLVM 18.1.8；这些步骤不会启动构建。输入只读，所有生成文件写入 `CODEGEN_LAB` 指向的新临时目录。
+
+<!-- manual-lab:ch4-setup -->
 
 ```sh
+set -euo pipefail
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
-python3 "$BOOK_ROOT/experiments/ch4/runner.py"
+BOOK_INPUT="$BOOK_ROOT/experiments/ch4"
+CODEGEN_LAB=$(mktemp -d)
+printf '本章临时输出目录：%s\n' "$CODEGEN_LAB"
+"$LLVM_BUILD/bin/opt" --version
 ```
 
-可用 `--output-dir /tmp/ch4-output` 保留一个固定输出目录；结果 JSON 包含逐项断言和命令。失败样例的非零退出码是实验预期，runner 会核对诊断，不能把它们作为合法 IR / TD 使用。
-
+预期工具报告 LLVM 18.1.8。后续 `opt` 命令显式指定分析 Pass；本章不执行含循环的输入程序。
 ## 4.1 支配和逆支配
 
 本节首先介绍支配、逆支配等相关定义，然后分析支配和逆支配的具体含义。
@@ -79,6 +84,19 @@ X 支配 P，却不支配 Y，因为存在入口→Z→Y，所以 Y∈DF(X)。
 
 [graph7.ll](experiments/ch4/graph7.ll) 完整表示图 4-2 的 CFG。实验把 LLVM `print<domtree>` 和 `print<domfrontier>` 的输出解析为集合，与表 4-1 逐项比较，完全一致。例如 idom(6)=2、DF(3)={6}、DF(6)={7}。这里比较节点关系而非树的兄弟打印次序，因为后者不是分析语义。
 
+<!-- manual-lab:ch4-domtree-frontier -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/graph7.ll" -o "$CODEGEN_LAB/graph7.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/graph7.bc"
+"$LLVM_BUILD/bin/opt" \
+  '-passes=print<domtree>,print<domfrontier>,print<postdomtree>,verify<domtree>' \
+  -disable-output "$CODEGEN_LAB/graph7.bc" > "$CODEGEN_LAB/graph7.analysis.txt" 2>&1
+cat "$CODEGEN_LAB/graph7.analysis.txt"
+```
+
+预期 n6 在支配树中以 n2 为父节点，DF(n3)={n6}、DF(n6)={n7}；完整结果对应表 4-1。这里只运行与目标 CPU 无关的 IR 分析，不调用指令选择。
+
 2. 逆支配
 
 逆支配（post-dominance，也称为后支配）的定义是，如果从节点 w 出发到达每一个CFG 出口（CFG 可能有多个出口）的每一条路径都经过节点 v，则称节点 v 逆支配节点 w。使用符号 Post-Dom(w) 表示所有逆支配节点 w 的节点组成的集合。
@@ -102,6 +120,19 @@ flowchart TD
 此处省略只有一个实际出口时的虚拟根，边表示直接后支配。
 
 [postdom-roots.ll](experiments/ch4/postdom-roots.ll) 包含两个 ret 出口和一个自环 `%spin`。LLVM 实际打印的 PDT 使用 `<<exit node>>` 虚拟根，Roots 同时包含 `%exit1`、`%exit2` 和 `%spin`。这不是把“所有执行最终返回”作为前提，而是 LLVM 对无法到达真实出口区域的具体处理。
+
+<!-- manual-lab:ch4-postdom-roots -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/postdom-roots.ll" \
+  -o "$CODEGEN_LAB/postdom-roots.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/postdom-roots.bc"
+"$LLVM_BUILD/bin/opt" '-passes=print<postdomtree>' -disable-output \
+  "$CODEGEN_LAB/postdom-roots.bc" > "$CODEGEN_LAB/postdom-roots.txt" 2>&1
+cat "$CODEGEN_LAB/postdom-roots.txt"
+```
+
+预期 Roots 列出 exit1、exit2 和 spin，树顶有 `<<exit node>>`；本例含无限循环，仅分析它，不执行它。
 
 ### 4.1.2 支配和逆支配含义解析
 
@@ -197,6 +228,23 @@ LLVM 18 `SemiNCAInfo::runSemiNCA` 的实际结构：
 
 实验穷举了四个节点、没有入边指向入口的 4,096 个有向图（允许其他节点自环），其中 2,432 个节点全部入口可达。对每个可达图，删除节点法、Dom 集合迭代、按定义求 semi 后使用 NCA 三种结果相同。这是小规模交叉验证，不是任意图的数学证明。它覆盖许多循环、交叉边与不可归约小图；高效 link/eval 的路径压缩仍以 LLVM 源码为准，实验没有伪装实现整套 Semi-NCA 优化。
 
+有限图算法用现有入口交叉验证；这一命令还会复跑本章 LLVM 分析，结果独立保存在 model-checks：
+
+<!-- manual-lab:ch4-finite-graph-models -->
+
+```sh
+python3 "$BOOK_INPUT/runner.py" --output-dir "$CODEGEN_LAB/model-checks"
+python3 - "$CODEGEN_LAB/model-checks/results.json" <<'PYJSON'
+import json, sys
+names = {"four_node_graphs", "semidominator_need_not_dominate", "insert_edge_changes_dominance"}
+for row in json.load(open(sys.argv[1]))["checks"]:
+    if row["name"] in names:
+        print(json.dumps(row, ensure_ascii=False))
+PYJSON
+```
+
+预期报告 4,096 个枚举图、2,432 个全可达图，六节点例的 semi(4)=1/idom(4)=0，以及插入5→6后 idom(6)=1。
+
 ### 4.2.3 支配边界的实现
 
 LLVM 18 中需要区分普通 DominanceFrontier 和 IteratedDominanceFrontier：前者在 DominanceFrontierImpl.h 根据局部边界与支配树子节点的边界递推；后者在 GenericIteratedDominanceFrontier.h 中用支配树深度优先队列求定义块的 IDF，并可依据 LiveInBlocks 剪枝。不能把“所有节点完整 DF”都说成线性时间；完整边界集合本身最坏可有二次规模。
@@ -230,6 +278,20 @@ DominanceFrontier(x) {
 ```
 
 清单 4-1 的子树扫描结果也与直接 DF 定义在上述 2,432 个图上逐节点一致。另一个 [join-loop.ll](experiments/ch4/join-loop.ll) 将变量 x 分别定义在两个分支，再把汇合结果带回循环：mem2reg 实际在 `%join` 和 `%header` 各插入一个 PHI。先在 join 引入定义后还要继续计算其边界，这正是 IDF 中“迭代”的含义。
+
+<!-- manual-lab:ch4-iterated-frontier-phis -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/join-loop.ll" -o "$CODEGEN_LAB/join-loop.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/join-loop.bc"
+"$LLVM_BUILD/bin/opt" '-passes=mem2reg,verify,print<domfrontier>' -S \
+  "$CODEGEN_LAB/join-loop.bc" -o "$CODEGEN_LAB/join-loop.ssa.ll" \
+  2> "$CODEGEN_LAB/join-loop.frontier.txt"
+rg -n '^header:|^join:| = phi ' "$CODEGEN_LAB/join-loop.ssa.ll"
+cat "$CODEGEN_LAB/join-loop.frontier.txt"
+```
+
+预期 `%header` 与 `%join` 各有一个 PHI，体现新插入定义引出的迭代支配边界。
 
 ## 4.3 扩展阅读：支配树相关小课堂
 

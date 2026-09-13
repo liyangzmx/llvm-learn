@@ -13,17 +13,22 @@
 
 LLVM 的 LoopInfo 主要表示自然循环，不负责枚举 CFG 中所有可能的环。不可归约控制流仍是合法的 LLVM IR，也可以接受通用 CFG 或其他分析、优化；不能据此断言 LLVM 或其他现代编译器只支持自然循环。许多基于 LoopInfo 的循环变换依赖单入口和支配性质，因此本章按 LLVM 的习惯把自然循环简称为循环。下面介绍自然循环性质、LLVM 中的表示与规范化形式。
 
-本章命令约定如下；已有工具即可运行，runner 不触发构建。
+本章命令使用 **Bash**，先执行下面的准备块，再在同一 shell 中按正文顺序执行后续命令。工具应为已构建的 LLVM 18.1.8；这些步骤不会启动构建。输入只读，所有生成文件写入 `CODEGEN_LAB` 指向的新临时目录。
+
+<!-- manual-lab:ch5-setup -->
 
 ```sh
+set -euo pipefail
 export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
 export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
 export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
-python3 "$BOOK_ROOT/experiments/ch5/runner.py"
+BOOK_INPUT="$BOOK_ROOT/experiments/ch5"
+CODEGEN_LAB=$(mktemp -d)
+printf '本章临时输出目录：%s\n' "$CODEGEN_LAB"
+"$LLVM_BUILD/bin/opt" --version
 ```
 
-可用 `--output-dir /tmp/ch5-output` 保留一个固定输出目录；结果 JSON 包含逐项断言和命令。失败样例的非零退出码是实验预期，runner 会核对诊断，不能把它们作为合法 IR / TD 使用。
-
+预期工具报告 LLVM 18.1.8。后面的 `opt` 命令显式指定 Pass；使用解释器时，返回码 0 表示输入中 `main` 的检查通过，不表示在 BPF 内核或 JIT 上运行过。
 ## 5.1 自然循环
 
 自然循环的定义有许多的描述方式，直观地描述是“只有单入口、内部基本块可以构成环的子图”。下面在入口可达 CFG 子图中，采用支配关系（参考第 4 章）来给出自然循环的正式定义。首先我们需要用支配关系定义回边（Back Edge）。
@@ -114,6 +119,20 @@ LLVM IR 和 Machine IR 的基本块 / 跳转不直接形成独立的嵌套循环
 
 本章用两份最小 IR 区分 LoopInfo 能表示的循环：[nested.ll](experiments/ch5/nested.ll) 打印出深度 1 和 2 的自然循环；[irreducible.ll](experiments/ch5/irreducible.ll) 的 left/right 构成双入口强连通区域，LoopInfo 没有为它打印自然循环。这两个输入都通过 verifier。由此可见“未出现在 LoopInfo 中”与“不是合法控制流”是两回事。
 
+<!-- manual-lab:ch5-loopinfo -->
+
+```sh
+for name in nested irreducible; do
+  "$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/$name.ll" -o "$CODEGEN_LAB/$name.bc"
+  "$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/$name.bc"
+  "$LLVM_BUILD/bin/opt" '-passes=print<loops>' -disable-output \
+    "$CODEGEN_LAB/$name.bc" > "$CODEGEN_LAB/$name.loops.txt" 2>&1
+  cat "$CODEGEN_LAB/$name.loops.txt"
+done
+```
+
+预期 nested 打印深度1和2的循环，irreducible 没有 `Loop at depth` 行；两个模块都能通过 verifier。
+
 ### 5.2.2 循环规范化
 
 自然循环的形式也是多样的，如可能会没有 Preheader，或者有多条回边等情况。如果循环具有不同形态，则后续循环相关的优化要分别适配这些形态，才能保证优化效果，这会增加循环优化算法实现的复杂度。本章重点介绍 LLVM 中 3 种常见的规范化形式：循环化简（Loop Simplify）形式、循环旋转（Loop Rotation）形式和循环封闭 SSA（Loop-Closed SSA，LCSSA）形式。将各种类型的循环尽可能转换为统一的循环形式，便于后续的循环优化。
@@ -167,6 +186,22 @@ preheader 只有一条后继边，只有 latch 回到 header，exit 的前驱仅
 
 [multi-latch.ll](experiments/ch5/multi-latch.ll) 同时包含两条进入 header 的外部路径、两个 latch 和一个有外部前驱的 exit。运行 `loop-simplify,verify,verify<domtree>,verify<loops>` 后，实验从输出 CFG 重新检查三项性质：外部入口汇合成唯一 preheader，两个 latch 汇合为一条回边，exit 的循环内退出路径被隔离为 dedicated exit。原输入和规范化输出解释执行均得到 `[0,5,10,0]`，覆盖跳过循环、零次迭代和两种 latch 路径。
 
+<!-- manual-lab:ch5-loop-simplify -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/multi-latch.ll" \
+  -o "$CODEGEN_LAB/multi-latch.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/multi-latch.bc"
+"$LLVM_BUILD/bin/opt" '-passes=loop-simplify,verify,verify<domtree>,verify<loops>' -S \
+  "$CODEGEN_LAB/multi-latch.bc" -o "$CODEGEN_LAB/multi-latch.simplified.ll"
+for ir in "$BOOK_INPUT/multi-latch.ll" "$CODEGEN_LAB/multi-latch.simplified.ll"; do
+  "$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel "$ir"
+done
+sed -n '/define i32 @multi(/,/^}/p' "$CODEGEN_LAB/multi-latch.simplified.ll"
+```
+
+预期输出增加外部入口汇合块、回边汇合块和专用退出块；变换前后的 main 均返回0，检查的四个函数结果为0/5/10/0。
+
 不要仅依据生成块名字判断成功：runner 从支配关系找回边和循环成员，再检查前驱、后继集合。本例只有普通分支，满足插入这些块的条件；带 indirectbr 等输入仍须由调用方检查变换结果。
 
 2. 循环旋转形式
@@ -209,10 +244,21 @@ int test(int n) {
 
 [book-loop.c](experiments/ch5/book-loop.c) 包含清单 5-1 和检查入口。先用 Clang 生成 IR，经过 `mem2reg,loop-simplify,lcssa`，再运行：
 
+<!-- manual-lab:ch5-loop-rotate -->
+
 ```sh
+"$LLVM_BUILD/bin/clang" --target=bpfel -O0 -Xclang -disable-O0-optnone \
+  -fno-discard-value-names -S -emit-llvm "$BOOK_INPUT/book-loop.c" \
+  -o "$CODEGEN_LAB/book-loop.ll"
+"$LLVM_BUILD/bin/opt" -passes=mem2reg,loop-simplify,lcssa,verify -S \
+  "$CODEGEN_LAB/book-loop.ll" -o "$CODEGEN_LAB/before-rotate.ll"
 "$LLVM_BUILD/bin/opt" \
-  '-passes=function(loop(loop-rotate),verify,verify<loops>,verify<domtree>)' \
-  -S before-rotate.ll -o rotated.ll
+  '-passes=function(loop(loop-rotate),verify,verify<loops>,verify<domtree>)' -S \
+  "$CODEGEN_LAB/before-rotate.ll" -o "$CODEGEN_LAB/rotated.ll"
+for ir in "$CODEGEN_LAB/before-rotate.ll" "$CODEGEN_LAB/rotated.ll"; do
+  "$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel "$ir"
+done
+sed -n '/define.*@test(/,/^}/p' "$CODEGEN_LAB/rotated.ll"
 ```
 
 这里显式写出函数 / 循环适配层，避免把后面的 verify 误解析成 loop pass。实际输出把 for.body 变为循环头，for.inc 同时承担 latch 和 exiting，入口增加守卫分支；守卫的跳过路径直接到 for.end，循环退出先经过独立退出块。对 n=`-1,0,1,5,8,12`，前后输出都是 `1,1,1,120,40320,479001600`，零次迭代仍返回 1。测试没有越过 C 有符号整数的可表示范围。
@@ -289,6 +335,21 @@ exit:
 LLVM 18 中，`LCSSAPass::run`（新 Pass Manager）及 `LCSSAWrapperPass`（旧 Pass Manager）调用 LCSSA 构造逻辑。旧管理器中的 `LCSSAVerificationPass` 主要是供 `LPPassManager` 判断哪些 Pass 要保持 LCSSA 的标记，其 `runOnFunction` 本身直接返回 false，并非独立遍历检查器；LLVM 18 的旧 `LPPassManager` 中显式逐循环 LCSSA assert 还位于 `#if 0` 中；`LCSSAWrapperPass::verifyAnalysis` 等路径另有受配置控制的检查，底层使用 `Loop::isLCSSAForm` / `isRecursivelyLCSSAForm`。这里验证的是 LCSSA 形式，不是循环不变值。本章使用新 Pass Manager，工具为启用断言的 Debug 构建。
 
 实验验证新增的是 `%last.lcssa = phi i32 [ %last, %header ]`，而出口 add 改用该值。解释执行前后，`closed(0,true)=11`、`closed(1,false)=24`、`closed(4,true)=14`；同时覆盖零次、一次和多次迭代。PHI 只有一个 incoming 仍是合法 IR，它保留循环边界信息，不要求当前有多个入边。
+
+<!-- manual-lab:ch5-lcssa -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/lcssa.ll" -o "$CODEGEN_LAB/lcssa.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output "$CODEGEN_LAB/lcssa.bc"
+"$LLVM_BUILD/bin/opt" -passes=lcssa,verify -S "$CODEGEN_LAB/lcssa.bc" \
+  -o "$CODEGEN_LAB/lcssa.after.ll"
+for ir in "$BOOK_INPUT/lcssa.ll" "$CODEGEN_LAB/lcssa.after.ll"; do
+  "$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel "$ir"
+done
+sed -n '/^exit:/,/^}/p' "$CODEGEN_LAB/lcssa.after.ll"
+```
+
+预期出口出现 `%last.lcssa` PHI，add 使用它；两个执行命令均返回0，三个调用结果为11/24/14。
 
 ## 5.3 本章小结
 

@@ -4,6 +4,17 @@
 
 本章以 LLVM 18.1.8 的 BPF 实现说明接口边界，并提供两组实际实验：独立的 `Book.td` 描述生成，以及 BPF 从 IR 到对象文件的闭环。完整输入和 runner 位于 [experiments/ch13](experiments/ch13/runner.py)，检查结果见 [实验记录](review/experiments-ch13.json)。原书转写另存于 [origin](origin/inside-llvm-codegen-ch13.md)。
 
+沿用第 1 章构建，在同一个 Bash 会话中依次执行本章命令：
+
+<!-- manual-lab:ch13-setup -->
+```sh
+export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
+export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
+export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
+BOOK_INPUT="$BOOK_ROOT/experiments/ch13"
+CODEGEN_LAB=$(mktemp -d)
+```
+
 ## 13.1 适配新后端的各个阶段
 
 先确定一个可交付的最小目标：支持哪些整数宽度、算术操作、控制流、函数参数和返回值；输出汇编还是可重定位对象；运行环境如何装载和调用代码。对于尚不支持的输入，后端需要正确降级或给出诊断，不能静默生成错误代码。
@@ -91,14 +102,26 @@ BPF 将 R10 作为帧指针，R11 是 LLVM 后端使用的伪栈指针；二者�
 
 例如 `add r1, r2, r3` 按此定义得到指令字 `0x16c0`。runner 从 TableGen 输出的 JSON 记录读取每个编码位，代入寄存器编码后检查这一结果。它验证的是记录中的位域定义；将指令字写成什么字节顺序还要由实际 CodeEmitter/目标约定决定。
 
+<!-- manual-lab:ch13-tablegen -->
 ```sh
-CODEGEN_LAB=$(mktemp -d)
 for generator in register-info instr-info asm-writer emitter dag-isel; do
   "$LLVM_BUILD/bin/llvm-tblgen" \
     -I "$LLVM_SRC/llvm/include" "-gen-$generator" \
     "$BOOK_ROOT/experiments/ch13/Book.td" \
     -o "$CODEGEN_LAB/BookGen-$generator.inc"
 done
+"$LLVM_BUILD/bin/llvm-tblgen" -I "$LLVM_SRC/llvm/include" \
+  --dump-json "$BOOK_INPUT/Book.td" -o "$CODEGEN_LAB/Book-records.json"
+python3 - "$CODEGEN_LAB/Book-records.json" <<'PY'
+import json, sys
+bits = json.load(open(sys.argv[1]))['ADDrr']['Inst']
+values = {'dst': 1, 'lhs': 2, 'rhs': 3}
+word = sum((b if isinstance(b, int) else
+            (values[b['var']] >> b['index']) & 1) << i
+           for i, b in enumerate(bits))
+assert word == 0x16c0
+print(f'add r1,r2,r3: {word:#06x}')
+PY
 ```
 
 这些生成步骤已经纳入实验。`InstructionSet`、寄存器类、操作数、模式和编码字段是相互衔接的；但生成文件还引用目标 C++ 类及钩子。因此，`Book.td` 是完整的 **TableGen 输入**，不是已经注册、可由 `llc` 选择的完整后端。将生成器通过误写成“后端已完成”会遗漏本章其余所有适配工作。
@@ -115,6 +138,7 @@ done
 - `call_external`：调用一个只有声明的外部函数，检查调用 lowering 与符号重定位。
 - `stack_roundtrip`：通过 volatile 栈对象存取，检查寻址选择和最终帧索引消除。
 
+<!-- manual-lab:ch13-select -->
 ```sh
 "$LLVM_BUILD/bin/opt" -passes=verify -disable-output \
   "$BOOK_ROOT/experiments/ch13/backend.ll"
@@ -122,6 +146,7 @@ done
   -verify-machineinstrs -stop-after=finalize-isel \
   "$BOOK_ROOT/experiments/ch13/backend.ll" \
   -o "$CODEGEN_LAB/selected.mir"
+rg -n 'ADD_rr|COPY|RET' "$CODEGEN_LAB/selected.mir"
 ```
 
 选择后检查 `ADD_rr` 等目标指令，不要求某个虚拟寄存器始终叫 `%3`。这一阶段的 MIR 仍可能包含虚拟寄存器、COPY、PHI 和 FrameIndex；其存在本身不说明选择失败。应根据停止点判断哪些不变量已经建立，哪些要由后续阶段完成。
@@ -132,21 +157,29 @@ done
 
 使用上述 `stack_roundtrip` 生成完整汇编：
 
+<!-- manual-lab:ch13-assembly -->
 ```sh
 "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 \
   -verify-machineinstrs "$BOOK_ROOT/experiments/ch13/backend.ll" \
   -o "$CODEGEN_LAB/backend.s"
+cat "$CODEGEN_LAB/backend.s"
 ```
 
 应分别确认对象大小、对齐、基址与偏移、访存宽度以及是否残留未消除的帧索引。只看到一条 store 并不能证明溢出正确；还需验证对应的重载、寄存器别名和使用位置。高压力与跨调用的例子见第 10、11 章。
 
+本例 `add64` 应为 `r0 = r1; r0 += r2; exit`；`stack_roundtrip` 应同时包含 `*(u64 *)(r10 - 8) = r1` 和 `r0 = *(u64 *)(r10 - 8)`；`call_external` 仍包含 `call external`。
+
 ABI 的拒绝路径同样需要实验。[six-arguments.ll](experiments/ch13/six-arguments.ll) 是合法 LLVM IR，但其第六个 i64 参数会触及 LLVM 18 BPF 不支持的栈传参路径：
 
+<!-- manual-lab:ch13-unsupported-arguments -->
 ```sh
-"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 \
+if "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 \
   "$BOOK_ROOT/experiments/ch13/six-arguments.ll" \
-  -o "$CODEGEN_LAB/unsupported.s"
-# 此命令预期失败：stack arguments are not supported
+  -o "$CODEGEN_LAB/unsupported.s" 2> "$CODEGEN_LAB/unsupported.stderr"; then
+  echo '错误：本例预期拒绝栈参数，却编译成功' >&2
+  exit 1
+fi
+rg -F 'stack arguments are not supported' "$CODEGEN_LAB/unsupported.stderr"
 ```
 
 runner 检查非零退出码及该诊断。TD 中出现 `CCAssignToStack` 后备规则，不表示后端已经实现栈参数的完整读写和 ABI；要继续看 `LowerFormalArguments` 和 `LowerCall` 的实际处理。这一实验不涉及 BPF 内核装载，说明的是当前 LLVM 后端的能力边界。
@@ -155,6 +188,7 @@ runner 检查非零退出码及该诊断。TD 中出现 `CCAssignToStack` 后备
 
 用同一个输入分别生成小端、大端 BPF 对象，检查目标头、重定位和反汇编：
 
+<!-- manual-lab:ch13-objects -->
 ```sh
 for triple in bpfel bpfeb; do
   "$LLVM_BUILD/bin/llc" "-mtriple=$triple" -mcpu=v1 -O2 \

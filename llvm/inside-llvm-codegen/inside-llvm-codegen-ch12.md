@@ -4,14 +4,25 @@
 
 经过寄存器分配、栈帧布局和机器优化，后端得到可发射的MachineInstr。目标AsmPrinter把它们及标签、节和符号等事件交给MC层，由MC输出汇编文本或可重定位目标文件。`.o`只是链接/装载的输入，采用ELF格式不等于已经成为可执行文件；BPF对象还需要相应装载、解释或JIT环境。
 
+<!-- manual-lab:ch12-setup -->
+
 ```sh
-export LLVM_BUILD=${LLVM_BUILD:-/opt/llvm-project/build}
-export LLVM_SRC=${LLVM_SRC:-/opt/llvm-project}
-export BOOK_ROOT=/opt/coding/mlir-toy/llvm/inside-llvm-codegen
-python3 "$BOOK_ROOT/experiments/ch12/runner.py"
+set -euo pipefail
+export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
+export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
+export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
+BOOK_INPUT="$BOOK_ROOT/experiments/ch12"
+CODEGEN_LAB=$(mktemp -d)
+export BOOK_INPUT CODEGEN_LAB
+"$LLVM_BUILD/bin/llc" --version
+printf '实验输出目录：%s\n' "$CODEGEN_LAB"
 ```
 
-运行器默认把IR、MIR、汇编、目标文件、MC编码、反汇编和重定位输出写到临时目录，也可指定 `--out`。本章实测覆盖编译、组装、机器指令校验和反汇编，没有装载BPF程序到内核执行。
+以下命令按正文顺序在同一个 Bash 会话运行；输入取自本章实验目录，所有新文件写入刚创建的临时目录。
+
+
+
+下文直接生成 IR、MIR、汇编、目标文件、MC 编码、反汇编和重定位输出；自动运行器仍提供 `--out` 和 JSON 汇总。本章实测覆盖编译、组装、机器指令校验和反汇编，没有装载BPF程序到内核执行。
 
 ## 12.1 MC
 
@@ -48,6 +59,16 @@ MC opcode数字来自生成枚举，不能当作指令编码。下面是本次 `
 ```
 
 MachineInstr 中的操作码 ADD_ri 表示寄存器和立即数相加的操作， 与 MCInst 的操作码 ADD_ri 对应；$r0 对应 <MCOperand Reg:1> ；1 是立即数， 对应 MCInst 中的<MCOperand Imm:1>。
+
+<!-- manual-lab:ch12-mcinst -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-mc" --triple=bpfel --show-inst "$BOOK_INPUT/add.s" \
+  > "$CODEGEN_LAB/add-inst.txt"
+cat "$CODEGEN_LAB/add-inst.txt"
+```
+
+输出展示 ADD_ri 的 MC opcode 和两个寄存器操作数，不能把枚举编号当作字节编码。
 
 ## 12.2 机器码生成过程
 
@@ -99,6 +120,20 @@ int test(int a, int b)
 
 代码清单12-2使用C++引用。运行器实际执行 `clang++ --target=bpfel -mcpu=generic -O2 -S test.cpp`，同时生成IR与目标文件；随后用llc在 `prologepilog` 后导出MIR并执行机器校验。
 
+<!-- manual-lab:ch12-clang-and-mir -->
+
+```sh
+"$LLVM_BUILD/bin/clang++" --target=bpfel -mcpu=generic -O2 -S \
+  "$BOOK_INPUT/test.cpp" -o "$CODEGEN_LAB/test.s"
+"$LLVM_BUILD/bin/clang++" --target=bpfel -mcpu=generic -O2 -S -emit-llvm \
+  "$BOOK_INPUT/test.cpp" -o "$CODEGEN_LAB/test.ll"
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
+  -stop-after=prologepilog "$CODEGEN_LAB/test.ll" -o "$CODEGEN_LAB/test.mir"
+sed -n '/^body:/,$p' "$CODEGEN_LAB/test.mir"
+```
+
+MIR 中栈对象已经变为 R10-8/R10-4，外部引用参数调用的符号为 _Z4swapRiS_。
+
 **代码清单 12-3 代码清单 12-2 对应的 MIR**
 
 ```text
@@ -133,6 +168,21 @@ bb.0.entry:
 ```
 
 通用 BPF 指令由 `BPFMCInstLower::Lower` 转为 MCInst，`BPFAsmPrinter::emitInstruction` 还先尝试 BTF 特殊 lowering。运行器对 `encoding.s` 使用 `llvm-mc --triple=bpfel --show-inst --show-encoding` 同时查看MCInst与字节编码。这里普通指令恰好一一对应，不能推广到伪指令、指示符、隐式寄存器与所有目标。
+
+<!-- manual-lab:ch12-mc-encoding -->
+
+```sh
+for triple in bpfel bpfeb; do
+  "$LLVM_BUILD/bin/llvm-mc" --triple="$triple" --show-inst --show-encoding \
+    "$BOOK_INPUT/encoding.s" > "$CODEGEN_LAB/encoding-$triple.txt"
+done
+"$LLVM_BUILD/bin/llvm-mc" --triple=bpfel --filetype=obj "$BOOK_INPUT/encoding.s" \
+  -o "$CODEGEN_LAB/encoding.o"
+cat "$CODEGEN_LAB/encoding-bpfel.txt"
+cat "$CODEGEN_LAB/encoding-bpfeb.txt"
+```
+
+两种输出覆盖基础指令与双槽 LD_imm64；首条 MOV 在小端/大端分别以 bf 10 / bf 01 开头。
 
 **代码清单 12-4 MC 片段**
 
@@ -266,11 +316,21 @@ Inst{51-48} = dst (0)
 
 **代码清单 12-8 编译与反汇编命令**
 
+<!-- manual-lab:ch12-object-and-relocations -->
+
 ```sh
-"$LLVM_BUILD/bin/clang++" --target=bpfel -mcpu=generic -O2 -c test.cpp -o test.o
-"$LLVM_BUILD/bin/llvm-objdump" -d test.o
-"$LLVM_BUILD/bin/llvm-readobj" --sections --symbols --relocations test.o
+"$LLVM_BUILD/bin/clang++" --target=bpfel -mcpu=generic -O2 -c \
+  "$BOOK_INPUT/test.cpp" -o "$CODEGEN_LAB/test.o"
+"$LLVM_BUILD/bin/llvm-objdump" -d "$CODEGEN_LAB/test.o" > "$CODEGEN_LAB/test.dis"
+"$LLVM_BUILD/bin/llvm-readobj" --sections --symbols --relocations \
+  "$CODEGEN_LAB/test.o" > "$CODEGEN_LAB/test-object.txt"
+cat "$CODEGEN_LAB/test.dis"
+cat "$CODEGEN_LAB/test-object.txt"
 ```
+
+反汇编为 15 条指令；readobj 记录 0x60 的 R_BPF_64_32 调用重定位和 .eh_frame 的 R_BPF_64_ABS64。
+
+
 
 反汇编得到15条指令，占120字节：
 
@@ -329,6 +389,28 @@ Section (3) .rel.text {
 2. 指示符信息
 
 汇编文本可交替切换 `.text`、`.data`、`.rodata`，同一 MCSection 的片段会累计到该节。ELF 中也可能有同名但属性、组或身份不同的节，不能仅凭节名相同就保证无条件合并。具体布局和重定位处理由对象格式及链接阶段决定。
+
+<!-- manual-lab:ch12-assembly-roundtrip -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-mc" --triple=bpfel --filetype=obj "$CODEGEN_LAB/test.s" \
+  -o "$CODEGEN_LAB/reassembled.o"
+"$LLVM_BUILD/bin/llvm-objdump" -d "$CODEGEN_LAB/reassembled.o" \
+  > "$CODEGEN_LAB/reassembled.dis"
+python3 -B - "$CODEGEN_LAB" <<'PY_ROUNDTRIP'
+from pathlib import Path
+import re, sys
+out = Path(sys.argv[1])
+def instructions(name):
+    return [line.strip() for line in (out / name).read_text().splitlines()
+            if re.match(r"\s*[0-9]+:", line)]
+a, b = instructions("test.dis"), instructions("reassembled.dis")
+assert a == b and len(a) == 15
+print("汇编再组装：15 条解码指令完全一致")
+PY_ROUNDTRIP
+```
+
+比较排除了对象文件名称等头部信息，只验证每条解码指令一致；没有要求辅助节逐字节相同。
 
 ## 12.3 本章小结
 

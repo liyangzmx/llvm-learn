@@ -18,15 +18,25 @@ flowchart TD
 
 `-O0` 不运行整个序列，但通用路径仍会加入局部栈槽分配。是否真正处理栈槽，还取决于目标是否需要虚拟基址寄存器。本章的例子刻意分别测试一个 Pass，避免把后续 Pass 的效果误归给当前算法。
 
-复现实验只需运行以下命令，输出默认进入新临时目录；可用 `--out /tmp/ch9` 指定目录。所有输入位于 [experiments/ch9](experiments/ch9/runner.py)。
+先设置工具、输入和输出目录，随后逐节运行命令。完整自动检查仍可通过 [runner.py](experiments/ch9/runner.py) 重跑。
+
+<!-- manual-lab:ch9-setup -->
 
 ```sh
-LLVM_BUILD=${LLVM_BUILD:-/opt/llvm-project/build}
-LLVM_SRC=${LLVM_SRC:-/opt/llvm-project}
-BOOK_ROOT=/opt/coding/mlir-toy/llvm/inside-llvm-codegen
-export LLVM_BUILD LLVM_SRC BOOK_ROOT
-python3 "$BOOK_ROOT/experiments/ch9/runner.py"
+set -euo pipefail
+export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
+export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
+export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
+BOOK_INPUT="$BOOK_ROOT/experiments/ch9"
+CODEGEN_LAB=$(mktemp -d)
+export BOOK_INPUT CODEGEN_LAB
+"$LLVM_BUILD/bin/llc" --version
+printf '实验输出目录：%s\n' "$CODEGEN_LAB"
 ```
+
+以下命令按正文顺序在同一个 Bash 会话运行；输入取自本章实验目录，所有新文件写入刚创建的临时目录。
+
+
 
 ## 9.1 前期尾代码重复
 
@@ -142,6 +152,29 @@ if.end5:                                         ; preds = %if.else4, %if.then3
 
 实验指定 `bpfel`、`-mcpu=v4`、`-O2`。这里使用 v4 是因为输入含有符号余数，不把 generic BPF 的指令能力当成前提。分别在 `early-tailduplication` 前后截取 MIR：默认阈值保留 7 个块；增加 `-tail-dup-size=10` 后为 6 个块，公共 `if.end` 尾部复制到两条前驱路径。阈值变大后仍不会强迫所有块被复制，特别是 return 约束仍然成立。
 
+<!-- manual-lab:ch9-taildup -->
+
+```sh
+"$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/tail.ll" -o "$CODEGEN_LAB/tail.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify "$CODEGEN_LAB/tail.bc" -disable-output
+for variant in before default size10; do
+  case "$variant" in
+    before) TAIL_FLAGS=(-stop-before=early-tailduplication) ;;
+    default) TAIL_FLAGS=(-stop-after=early-tailduplication) ;;
+    size10) TAIL_FLAGS=(-stop-after=early-tailduplication -tail-dup-size=10) ;;
+  esac
+  "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v4 -O2 -verify-machineinstrs \
+    "${TAIL_FLAGS[@]}" "$BOOK_INPUT/tail.ll" -o "$CODEGEN_LAB/tail-$variant.mir"
+done
+for variant in before default size10; do
+  printf '%s: ' "$variant"
+  sed -n '/^body:/,$p' "$CODEGEN_LAB/tail-$variant.mir" | \
+    awk '/^[[:space:]]*bb\.[0-9]+[^:]*:/ {n++} END {print n " blocks"}'
+done
+```
+
+输出依次为 7、7、6 个基本块；进一步打开 `tail-size10.mir` 的 body，可看到公共尾部副本。
+
 ## 9.2 PHI 优化
 
 `OptimizePHIs` 解决两类问题：单值 PHI/COPY 环和死 PHI 环。单值环的所有外部输入都可追溯到同一个值，因此整个环不需要真正的合流。例如 `R2 = PHI(R1,R1)` 可以用 R1 代替；`R2 = PHI(R1,R2)` 中的自引用也不引入另一个外部值。多个 PHI 相互引用时，算法需在访问集合中避免无限递归，并追过可处理的 COPY；不能只逐条比较输入寄存器编号。
@@ -155,6 +188,16 @@ R0 = PHI(R1, R2)
 死环则不需要有共同外部值。只要环内定义的结果除了调试用途和相互引用，没有真正流向外部的计算，就可删除。反过来，看到“PHI 形成环”不能立刻判死，循环归纳变量也常形成这样的依赖环。
 
 实验 `phi.mir` 构造一个菱形 CFG，汇聚处 `%1 = PHI %0, %bb.1, %0, %bb.2`。运行 `-run-pass=opt-phis` 后 PHI 消失，返回值直接 `COPY %0`。这验证了最简单的单值情形；循环情形的判定边界以上述源码为准。
+
+<!-- manual-lab:ch9-phi -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
+  -run-pass=opt-phis "$BOOK_INPUT/phi.mir" -o "$CODEGEN_LAB/phi.mir"
+sed -n '/^body:/,$p' "$CODEGEN_LAB/phi.mir"
+```
+
+结果中机器 PHI 消失，返回值改为直接 `COPY %0`。
 
 ## 9.3 栈着色
 
@@ -322,6 +365,39 @@ exit:
 
 清单 9-8 是算法说明，`address_of/use` 不是可编译语法。栈对象的地址计算可能被移动，且循环回边会带来跨块活跃性，文件行号区间不能代替 CFG 数据流。LLVM 18 使用前向数据流，并可把生命周期开始推迟到首次使用；对象逃逸和生命周期外实际使用又可能迫使分析采用更保守的范围。这里的“使用”及逃逸依据实现中的 frame-index、内存操作数等信息判定，并不等于所有指针地址计算都立即读取对象。错误合并会使两个仍活跃对象互相覆盖，因此不确定时保留独立槽。
 
+<!-- manual-lab:ch9-stack-coloring -->
+
+```sh
+"$LLVM_BUILD/bin/clang" --target=aarch64-unknown-linux-gnu -O2 -S -emit-llvm \
+  "$BOOK_INPUT/stack.c" -o "$CODEGEN_LAB/stack.ll"
+for point in before after; do
+  "$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -O2 -verify-machineinstrs \
+    "-stop-$point=stack-coloring" "$CODEGEN_LAB/stack.ll" \
+    -o "$CODEGEN_LAB/stack-$point.mir"
+done
+"$LLVM_BUILD/bin/llc" -mtriple=aarch64-unknown-linux-gnu -O2 -verify-machineinstrs \
+  -stop-after=stack-coloring "$BOOK_INPUT/stack-marked.ll" \
+  -o "$CODEGEN_LAB/stack-marked.mir"
+sed -n '/^stack:/,/^body:/p' "$CODEGEN_LAB/stack-after.mir"
+sed -n '/^stack:/,/^body:/p' "$CODEGEN_LAB/stack-marked.mir"
+
+"$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/lifetime.ll" -o "$CODEGEN_LAB/lifetime.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify "$CODEGEN_LAB/lifetime.bc" -disable-output
+for point in before after pei; do
+  case "$point" in
+    before) STOP_POINT=-stop-before=stack-coloring ;;
+    after) STOP_POINT=-stop-after=stack-coloring ;;
+    pei) STOP_POINT=-stop-after=prologepilog ;;
+  esac
+  "$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -O2 -verify-machineinstrs \
+    "$STOP_POINT" "$BOOK_INPUT/lifetime.ll" -o "$CODEGEN_LAB/lifetime-$point.mir"
+done
+sed -n '/^body:/,$p' "$CODEGEN_LAB/lifetime-after.mir"
+sed -n '/^body:/,$p' "$CODEGEN_LAB/lifetime-pei.mir"
+```
+
+AArch64 的原始/标记版分别保留 3/2 个 4096 字节槽；BPF 顺序生命周期例子合并为一个 64 字节槽，PEI 后出现 R10 相对偏移。
+
 ## 9.4 栈槽分配
 
 `LocalStackSlotPass` 在 `TargetRegisterInfo::requiresVirtualBaseRegisters(MF)` 为真且存在局部对象时，预先安排局部对象相对布局。它通过 `needsFrameBaseReg` 等接口判断某些引用是否需要虚拟基址寄存器。如果需要，就在寄存器分配前引入基址计算，使后续分配器统一处理这个寄存器，并让多个访问有机会共享基址。
@@ -347,6 +423,16 @@ RET implicit $r0
 ```
 
 `-run-pass=dead-mi-elimination` 删除 `%2` 的 COPY 和 `%1` 的 ADD，只留下从 R1 到 R0 的返回路径。验证器通过，但这不代表 DCE 可以任意删除任一没有显式输出的指令。
+
+<!-- manual-lab:ch9-dead-mi -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
+  -run-pass=dead-mi-elimination "$BOOK_INPUT/dce.mir" -o "$CODEGEN_LAB/dce.mir"
+sed -n '/^body:/,$p' "$CODEGEN_LAB/dce.mir"
+```
+
+无用的 ADD 和后续 COPY 都被删除，保留返回所需的 R1→R0 路径。
 
 ## 9.6 ILP 优化之 If-Conversion
 
@@ -489,6 +575,28 @@ bb.0.entry:
 
 四块变成一块，包含两条 `CMOV32rr`，而分支两侧算术都保留。本实验验证结构变化；未运行 X86 硬件性能测试，也不把条件选择假定为恒定优于分支。
 
+<!-- manual-lab:ch9-if-conversion -->
+
+```sh
+"$LLVM_BUILD/bin/clang++" --target=x86_64-unknown-linux-gnu -O0 \
+  -Xclang -disable-O0-optnone -S -emit-llvm "$BOOK_INPUT/if-conversion.cpp" \
+  -o "$CODEGEN_LAB/if-raw.ll"
+"$LLVM_BUILD/bin/opt" -passes=mem2reg -S "$CODEGEN_LAB/if-raw.ll" \
+  -o "$CODEGEN_LAB/if.ll"
+for variant in before disabled enabled; do
+  case "$variant" in
+    before) IFCVT_FLAGS=(-stop-before=early-ifcvt) ;;
+    disabled) IFCVT_FLAGS=(-stop-after=early-ifcvt) ;;
+    enabled) IFCVT_FLAGS=(-stop-after=early-ifcvt -x86-early-ifcvt) ;;
+  esac
+  "$LLVM_BUILD/bin/llc" -mtriple=x86_64-unknown-linux-gnu -O2 -verify-machineinstrs \
+    "${IFCVT_FLAGS[@]}" "$CODEGEN_LAB/if.ll" -o "$CODEGEN_LAB/if-$variant.mir"
+done
+sed -n '/^body:/,$p' "$CODEGEN_LAB/if-enabled.mir"
+```
+
+默认关闭时仍是四块；显式开启后输出只有一个块，并包含两条 CMOV32rr。
+
 ## 9.7 循环不变量外提
 
 循环不变指令的输入在循环内不变，因而可能只计算一次。一个值“只有一个 SSA 定义”并不足以证明循环不变：由循环 PHI 或随迭代变化的加载计算出的值，每次动态执行仍可能不同。
@@ -507,6 +615,16 @@ void fill(long *out, long a, long b) {
 MachineLICM 按循环层次寻找候选，判断所有输入定义是否来自循环外或已证明不变的指令，并检查可移动性、内存别名、调用和物理寄存器影响。加载还需证明循环内不会改变所读内存。可能陷阱或不可安全推测执行的操作，要证明移动不会引入原先不执行的行为；不能把“支配每个循环退出”当成全部合法指令的统一必要条件。安全乘法可以从条件执行路径外提，而会故障的加载可能不行。
 
 外提位置通常为循环 preheader，并且必须保持对所有用途的支配关系；没有可用 preheader 时，能否创建或采用其他位置取决于实现与目标。外提也可能延长活跃区间，导致溢出。因此 LLVM 18 还评估寄存器压力、廉价重算和收益，并非找到不变量就移动。
+
+<!-- manual-lab:ch9-licm -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
+  -run-pass=early-machinelicm "$BOOK_INPUT/licm.mir" -o "$CODEGEN_LAB/licm.mir"
+sed -n '/^body:/,$p' "$CODEGEN_LAB/licm.mir"
+```
+
+MUL_rr 出现在 bb.1 循环头之前的入口块，store 和归纳变量更新仍在循环中。
 
 ## 9.8 公共子表达式消除
 
@@ -554,6 +672,24 @@ SD %10, %4, 0
 
 独立的 `cse.mir` 还验证了 BPF 同块内两次 `ADD_ri %0,7` 合并为一次，后续加法使用同一结果两次。MachineCSE 属于机器级 Pass；IR 层的 GVN 等算法也能消除冗余计算，但它们的输入和机会不同。
 
+<!-- manual-lab:ch9-cse -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
+  -run-pass=machine-cse "$BOOK_INPUT/cse.mir" -o "$CODEGEN_LAB/cse.mir"
+"$LLVM_BUILD/bin/llvm-as" "$BOOK_INPUT/cse.ll" -o "$CODEGEN_LAB/cse.bc"
+"$LLVM_BUILD/bin/opt" -passes=verify "$CODEGEN_LAB/cse.bc" -disable-output
+for point in before after; do
+  "$LLVM_BUILD/bin/llc" -mtriple=riscv64-unknown-linux-gnu -O2 -verify-machineinstrs \
+    "-stop-$point=machine-cse" "$BOOK_INPUT/cse.ll" \
+    -o "$CODEGEN_LAB/cse-riscv-$point.mir"
+done
+sed -n '/^body:/,$p' "$CODEGEN_LAB/cse.mir"
+sed -n '/^body:/,$p' "$CODEGEN_LAB/cse-riscv-after.mir"
+```
+
+BPF 的两个重复立即数加法合为一个；RISCV 的第二块复用早先结果，四条 store 保留。
+
 ## 9.9 代码下沉
 
 下沉推迟计算，使不需要结果的路径有机会完全不执行该指令。它也可能缩短结果的活跃区间。与 LICM 相反方向的移动并不矛盾：二者依赖不同的控制流与频率条件。
@@ -570,6 +706,16 @@ SD %10, %4, 0
 - 关键边可能需要先计划拆分，更新 CFG、PHI 入边和频率，再执行移动；不能在共享后继的入口无条件插入一条只属于某条入边的计算。
 
 `sink-insts-to-avoid-spills` 所关联的循环内压力优化还有额外候选规则，不能将其与所有普通下沉混成一套必要充分条件。每次选择的插入点还需位于 PHI 等块入口特殊指令之后，并保持调试信息有效。
+
+<!-- manual-lab:ch9-machine-sink -->
+
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=generic -verify-machineinstrs \
+  -run-pass=machine-sink "$BOOK_INPUT/sink.mir" -o "$CODEGEN_LAB/sink.mir"
+sed -n '/^body:/,$p' "$CODEGEN_LAB/sink.mir"
+```
+
+ADD_ri 移入唯一使用它的 bb.1，返回零的另一条路径不再执行该加法。
 
 ## 9.10 窥孔优化
 
