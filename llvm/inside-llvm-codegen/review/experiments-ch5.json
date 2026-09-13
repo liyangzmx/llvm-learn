@@ -1,0 +1,407 @@
+{
+  "chapter": 5,
+  "status": "passed",
+  "tools": {
+    "clang": [
+      "clang version 18.1.8 (https://github.com/llvm/llvm-project.git 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)",
+      "Target: arm64-apple-darwin24.6.0",
+      "Thread model: posix"
+    ],
+    "lli": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ],
+    "llvm-as": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ],
+    "opt": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ]
+  },
+  "checks": [
+    {
+      "name": "loop_simplify_three_properties",
+      "status": "passed",
+      "before": {
+        "blocks": [
+          "body",
+          "header",
+          "latch1",
+          "latch2"
+        ],
+        "latches": [
+          "latch1",
+          "latch2"
+        ],
+        "entering": [
+          "left",
+          "right"
+        ],
+        "preheader": false,
+        "dedicated_exits": false,
+        "exits": [
+          "exit"
+        ]
+      },
+      "after": {
+        "blocks": [
+          "body",
+          "header",
+          "header.backedge",
+          "latch1",
+          "latch2"
+        ],
+        "latches": [
+          "header.backedge"
+        ],
+        "entering": [
+          "header.preheader"
+        ],
+        "preheader": true,
+        "dedicated_exits": true,
+        "exits": [
+          "exit.loopexit"
+        ]
+      }
+    },
+    {
+      "name": "simplify_semantics",
+      "status": "passed",
+      "expected": [
+        0,
+        5,
+        10,
+        0
+      ]
+    },
+    {
+      "name": "lcssa_exit_phi",
+      "status": "passed"
+    },
+    {
+      "name": "lcssa_semantics",
+      "status": "passed",
+      "expected": [
+        11,
+        24,
+        14
+      ]
+    },
+    {
+      "name": "rotation_changes_cfg",
+      "status": "passed",
+      "old_cfg": {
+        "entry": [
+          "for.cond"
+        ],
+        "for.cond": [
+          "for.body",
+          "for.end"
+        ],
+        "for.body": [
+          "for.inc"
+        ],
+        "for.inc": [
+          "for.cond"
+        ],
+        "for.end": []
+      },
+      "new_cfg": {
+        "entry": [
+          "for.body.lr.ph",
+          "for.end"
+        ],
+        "for.body.lr.ph": [
+          "for.body"
+        ],
+        "for.body": [
+          "for.inc"
+        ],
+        "for.inc": [
+          "for.body",
+          "for.cond.for.end_crit_edge"
+        ],
+        "for.cond.for.end_crit_edge": [
+          "for.end"
+        ],
+        "for.end": []
+      },
+      "rotated_properties": {
+        "blocks": [
+          "for.body",
+          "for.inc"
+        ],
+        "latches": [
+          "for.inc"
+        ],
+        "entering": [
+          "for.body.lr.ph"
+        ],
+        "preheader": true,
+        "dedicated_exits": true,
+        "exits": [
+          "for.cond.for.end_crit_edge"
+        ]
+      }
+    },
+    {
+      "name": "rotation_zero_one_many",
+      "status": "passed",
+      "inputs": [
+        -1,
+        0,
+        1,
+        5,
+        8,
+        12
+      ],
+      "expected": [
+        1,
+        1,
+        1,
+        120,
+        40320,
+        479001600
+      ]
+    },
+    {
+      "name": "nested_loopinfo",
+      "status": "passed",
+      "report": "Loop info for function 'nested':\nLoop at depth 1 containing: %outer.header<header><exiting>,%inner.header,%outer.latch<latch>,%inner.latch\n    Loop at depth 2 containing: %inner.header<header><exiting>,%inner.latch<latch>\n"
+    },
+    {
+      "name": "irreducible_not_loopinfo",
+      "status": "passed",
+      "report": "Loop info for function 'irreducible':\n"
+    }
+  ],
+  "commands": [
+    {
+      "tool": "llvm-as",
+      "args": [
+        "$INPUT/multi-latch.ll",
+        "-o",
+        "$OUT/multi-latch.bc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$INPUT/multi-latch.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-as",
+      "args": [
+        "$INPUT/lcssa.ll",
+        "-o",
+        "$OUT/lcssa.bc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$INPUT/lcssa.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-as",
+      "args": [
+        "$INPUT/irreducible.ll",
+        "-o",
+        "$OUT/irreducible.bc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$INPUT/irreducible.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-as",
+      "args": [
+        "$INPUT/nested.ll",
+        "-o",
+        "$OUT/nested.bc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$INPUT/nested.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=loop-simplify,verify,verify<domtree>,verify<loops>",
+        "-S",
+        "$INPUT/multi-latch.ll",
+        "-o",
+        "$OUT/simplified.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "lli",
+      "args": [
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "$INPUT/multi-latch.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "lli",
+      "args": [
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "$OUT/simplified.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=lcssa,verify",
+        "-S",
+        "$INPUT/lcssa.ll",
+        "-o",
+        "$OUT/closed.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "lli",
+      "args": [
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "$INPUT/lcssa.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "lli",
+      "args": [
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "$OUT/closed.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "clang",
+      "args": [
+        "--target=bpfel",
+        "-O0",
+        "-Xclang",
+        "-disable-O0-optnone",
+        "-fno-discard-value-names",
+        "-S",
+        "-emit-llvm",
+        "$INPUT/book-loop.c",
+        "-o",
+        "$OUT/book-loop.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=mem2reg,loop-simplify,lcssa,verify",
+        "-S",
+        "$OUT/book-loop.ll",
+        "-o",
+        "$OUT/before-rotate.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=function(loop(loop-rotate),verify,verify<loops>,verify<domtree>)",
+        "-S",
+        "$OUT/before-rotate.ll",
+        "-o",
+        "$OUT/rotated.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "lli",
+      "args": [
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "$OUT/before-rotate.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "lli",
+      "args": [
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "$OUT/rotated.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=print<loops>",
+        "-disable-output",
+        "$INPUT/nested.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=print<loops>",
+        "-disable-output",
+        "$INPUT/irreducible.ll"
+      ],
+      "returncode": 0
+    }
+  ],
+  "tool_files": {
+    "llvm-as": {
+      "size": 55732168,
+      "mtime_ns": 1789310523159266218
+    },
+    "opt": {
+      "size": 240030080,
+      "mtime_ns": 1789310524349395777
+    },
+    "lli": {
+      "size": 148776176,
+      "mtime_ns": 1789310522910676098
+    },
+    "clang": {
+      "size": 474422136,
+      "mtime_ns": 1789310516990791139
+    }
+  }
+}

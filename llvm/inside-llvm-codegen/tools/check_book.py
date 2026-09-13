@@ -67,12 +67,14 @@ for section in manifest['sections']:
         if missing:
             errors.append(f'{key}: missing listing identifiers {sorted(missing)}')
         counts[key] = {'section_headings': len(target_sections), 'listing_identifiers': len(original_listings), 'source_chars': len(source), 'corrected_chars': len(target)}
-        if len(target) < len(source) * .55:
-            warnings.append(f'{key}: corrected text <55% of original; inspect for omissions')
+        # The revised chapters are now independently authored teaching material.
+        # Keep topic/listing coverage checks, but do not require the length of the
+        # original prose or historical dumps to survive an authorized rewrite.
 if seen != list(range(1, manifest['page_count'] + 1)):
     errors.append('PDF page coverage is not exactly 1..435')
 
-documents = list(ROOT.glob('*.md')) + list((ROOT / 'origin').glob('*.md')) + list((ROOT / 'review').glob('*.md'))
+documents = (list(ROOT.glob('*.md')) + list((ROOT / 'origin').glob('*.md'))
+             + list((ROOT / 'review').glob('*.md')) + list((ROOT / 'experiments').rglob('*.md')))
 links = 0
 images = set()
 for document in documents:

@@ -1,0 +1,11 @@
+--- a/llvm/lib/Target/BPF/BPFMIChecking.cpp
++++ b/llvm/lib/Target/BPF/BPFMIChecking.cpp
+@@ -217,7 +217,7 @@
+         newOpcode = BPF::XXORD;
+         break;
+       case BPF::XFORW32:
+-        newOpcode = BPF::XOR5W32;
++        newOpcode = BPF::XORW32;
+         break;
+       case BPF::XFORD:
+         newOpcode = BPF::XORD;

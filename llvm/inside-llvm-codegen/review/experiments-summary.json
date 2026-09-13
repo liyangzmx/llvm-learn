@@ -1,0 +1,179 @@
+{
+  "time_utc": "2026-09-13T15:13:52.944669+00:00",
+  "output_directory": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7",
+  "chapters": [
+    {
+      "chapter": 1,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch1/runner.py",
+        "--output-dir",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "report": "review/experiments-ch1.json"
+    },
+    {
+      "chapter": 2,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch2/runner.py",
+        "--output-dir",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch2"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "report": "review/experiments-ch2.json"
+    },
+    {
+      "chapter": 3,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch3/runner.py",
+        "--output-dir",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch3"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "report": "review/experiments-ch3.json"
+    },
+    {
+      "chapter": 4,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch4/runner.py",
+        "--output-dir",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch4"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "report": "review/experiments-ch4.json"
+    },
+    {
+      "chapter": 5,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch5/runner.py",
+        "--output-dir",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch5"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "report": "review/experiments-ch5.json"
+    },
+    {
+      "chapter": 6,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch6/runner.py",
+        "--output-dir",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch6"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "report": "review/experiments-ch6.json"
+    },
+    {
+      "chapter": 7,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch7/runner.py",
+        "--output",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch7"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "report": "review/experiments-ch7.json"
+    },
+    {
+      "chapter": 8,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch8/runner.py",
+        "--output",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch8"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "report": "review/experiments-ch8.json"
+    },
+    {
+      "chapter": 9,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/runner.py",
+        "--out",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "report": "review/experiments-ch9.json"
+    },
+    {
+      "chapter": 10,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/runner.py",
+        "--out",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "report": "review/experiments-ch10.json"
+    },
+    {
+      "chapter": 11,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch11/runner.py",
+        "--out",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch11"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "report": "review/experiments-ch11.json"
+    },
+    {
+      "chapter": 12,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch12/runner.py",
+        "--out",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch12"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "report": "review/experiments-ch12.json"
+    },
+    {
+      "chapter": 13,
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch13/runner.py",
+        "--output-dir",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "report": "review/experiments-ch13.json"
+    }
+  ],
+  "tools_unchanged_during_run": true,
+  "inputs_unchanged_during_run": true,
+  "passed": true,
+  "scope": "Chapter-specific checks; foreign-target objects are not executed by the host. See each report for exact coverage."
+}

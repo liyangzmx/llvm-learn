@@ -1,16 +1,22 @@
 # 第 6 章 TableGen 介绍
 
-> LLVM 18.1.8 静态校订版。原书基于 LLVM 15.0.1；核对本地 `/opt/llvm-project`，提交 `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`。
-> 保留全章叙述、清单与原图；已直接修正已确认的语义、API、命令与代码错误。原图和历史调试输出用于对照，不代表 LLVM 18 重新生成的结果。未编译 LLVM，未执行 C/C++、IR、MIR 或 TableGen 示例。
-> 本章原文见 [origin/inside-llvm-codegen-ch6.md](origin/inside-llvm-codegen-ch6.md)，逐清单核查记录见 [review/ch6.md](review/ch6.md)。
-
-Chapter 6 第 6 章
-
-TableGen 介绍
+> 以 LLVM 18.1.8 为基线，结合本地源码、可复现实验和实际输出重写校核。原始书稿另存 [origin](origin/inside-llvm-codegen-ch6.md)；本章以当前正文为准。
+> 实验入口：[runner.py](experiments/ch6/runner.py)，记录：[源码核查](review/ch6.md) · [实验结果 JSON](review/experiments-ch6.json)。实验输入在 `experiments/ch6/`，默认把中间输出写入临时目录。
 
 编译器最为基础的功能之一是将高级语言转换成可以在硬件上执行的机器码，为了支持尽可能多的硬件，通用编译器需要为每一款硬件都实现这一转换。为了更好地生成高质量的目标机器码，编译器后端开发者需要了解目标机器的指令集信息（包括具体支持哪些指令、指令有什么属性、应该使用什么寄存器、指令间存在什么样的依赖）。虽然每一款不同的硬件指令集都不相同，但都包含指令、寄存器、调用约定等信息，所以可以将这些信息进行抽象。这样编译器后端实现时就可以分为两层：具体硬件信息和与硬件无关的编译框架。不同的目标硬件都包含了丰富的指令、寄存器信息等，直接描述这些信息将会非常冗杂，并且很难做到格式统一，所以很有必要设计一种通用的后端信息描述语言，这就是目标描述语言 TableGen。
 
 因为 TableGen 和代码生成过程密切相关，所以本章简单介绍 TableGen 的词法、语法，并且演示如何从目标描述语言转换为 C++ 代码，从而和编译器的代码生成框架结合起来。本章最后将以指令匹配为例介绍如何写 TD 文件。
+
+本章命令约定如下；已有工具即可运行，runner 不触发构建。
+
+```sh
+export LLVM_BUILD="${LLVM_BUILD:-/opt/llvm-project/build}"
+export LLVM_SRC="${LLVM_SRC:-/opt/llvm-project}"
+export BOOK_ROOT="${BOOK_ROOT:-/opt/coding/mlir-toy/llvm/inside-llvm-codegen}"
+python3 "$BOOK_ROOT/experiments/ch6/runner.py"
+```
+
+可用 `--output-dir /tmp/ch6-output` 保留一个固定输出目录；结果 JSON 包含逐项断言和命令。失败样例的非零退出码是实验预期，runner 会核对诊断，不能把它们作为合法 IR / TD 使用。
 
 ## 6.1 目标描述语言
 
@@ -60,11 +66,13 @@ TokVarName ::= "$" ualpha (ualpha | "0"..."9")*
 
 注意：TokVarName 仅仅适用于 DAG 中。
 
-5）特殊运算符：TableGen 还提供了“ !”运算符，以“ !”开头，后跟一些运算。例如，!add 表示对多个操作数进行求和计算，“ !”运算符可以认为是 TableGen 内置的处理方式。关于“!”运算符的更多介绍可以参见官网○一。
+5）特殊运算符：TableGen 还提供了“ !”运算符，以“ !”开头，后跟一些运算。例如，!add 表示对多个操作数进行求和计算，“ !”运算符可以认为是 TableGen 内置的处理方式。完整运算符说明见本地 [TableGen/ProgRef.rst](/opt/llvm-project/llvm/docs/TableGen/ProgRef.rst)。
 
 6）基本分隔符：TableGen 还提供了一些基础符号（参见 6.1.2 节），例如 –、+、[、]、{、}、(、)、<、>、:、;、.、...、 =、?、# 等，这些符号作为分界符通常要配合语法来使用，例如<> 用于定义模板参数，[] 用于定义列表数据。
 
 7）其他词法：TableGen 提供了 include 语法，可以在本文件中引入其他的 TD 文件，并提供了预处理的功能，详细内容可以参考官网。
+
+[language.td](experiments/ch6/language.td) 是本章的独立输入。实际 `llvm-tblgen --dump-json` 输出确认：`-42` 为有符号整数，`0x2A` 与 `0b101010` 都为 42；多行 code 字段作为字符串保留，未在 TableGen 前端执行其中的 C++ 文字。
 
 ### 6.1.2 语法
 
@@ -98,8 +106,6 @@ DAG 节点的语法可写作 `(operator argument1, argument2, …, argumentn)`�
 
 TableGen 中的值可以通过如代码清单 6-4 所示的文法进行描述。
 
-○一 具体可参见 https://llvm.org/docs/TableGen/ProgRef.html。
-
 **代码清单 6-4 值的文法**
 
 ```text
@@ -114,11 +120,13 @@ SliceElement  ::=  Value | Value "..." Value | Value "-" Value | Value TokIntege
 
 值可以分为 3 类，分别是简单值、后缀值以及复合值。其中：
 
-1）简单值（SimpleValue）可以是整数、字符串或者代码。例如“ int a = 1;”表示变量a 的赋值为 1。
+1）简单值（SimpleValue）可以是整数、字符串或者代码。例如字段定义 `int a = 1;` 中，1 是简单值；这条字段定义语句本身不是一个值。
 
 2）后缀值（ValueSuffix*）可从位数组 / 列表中选取元素，或访问记录字段。`let a{1...3} = 0b110;` 是部分位赋值语句，不是给整个 a 重新赋值；它把 a 的第 1、2、3 位分别设为 1、1、0，其余位保留。例如记录内先写 `bits<4> a = 0;`，再执行该 let 才能确定 a 为 `0b0110`。没有初值时，未赋的位仍可能是 `?`。LLVM 18 仍接受原书的 `1-3` 范围写法，但文档已将连字符形式标为弃用，建议使用 `1...3`。
 
 3）复合值（Value“ #” [Value]）表示将多个值通过连接符“ #”进行组合。例如“ let str = "12" # "ab";”表示将两个字符串连接形成一个新的值。
+
+实验给 a 的初值设为 0，再执行 `let a{1...3}=0b110`，得到四位值 `0110`；列表 `[10,20,30]` 的切片 `[2,0]` 得到 `[30,10]`；拼接得到 `12ab`，嵌套 dag 的直接参数计数为 2。两个反例也已运行：给不存在的字段赋值、重复给同一位赋值，分别被 TableGen 诊断为 unknown field 和“more than once”。
 
 3. 记录
 
@@ -150,15 +158,15 @@ class TestInst {
 }
 def ADD: TestInst {
     let asmname="add";
-    let encoding{31-26}=1;
+    let encoding{31...26}=1;
 }
 def MUL: TestInst {
     let asmname="mul";
-    let encoding{31-26}=2;
+    let encoding{31...26}=2;
 }
 ```
 
-代码清单 6-6 先定义 TestInst，再通过 def 实例化 ADD 和 MUL。在实例化的过程中，要用 let 关键字对 class 中定义的字段进行赋值，例如class 中定义了 asmname，在 ADD 中通过 let asmname="add" 对 asmname 进行赋值。
+[records.td](experiments/ch6/records.td) 包含清单 6-5、6-6，实际 JSON 确认 ADD / MUL 的高六位分别编码 1 / 2，低 26 位仍未赋值。代码清单 6-6 先定义 TestInst，再通过 def 实例化 ADD 和 MUL。在实例化的过程中，要用 let 关键字对 class 中定义的字段进行赋值，例如class 中定义了 asmname，在 ADD 中通过 let asmname="add" 对 asmname 进行赋值。
 
 我们还可以定义 class 层次，并通过继承的方式来使用（所以它非常类似于 C++ 中的class）。使用 class 可以大大简化记录的定义，将公共的信息通过 class 定义，然后通过 def进行实例化。
 
@@ -189,7 +197,7 @@ def MyBackend_rr : Instr<0b1111, "rr">;
 def MyBackend_rm : Instr<0b0000, "rm">;
 ```
 
-`defm MyBackend_ : RegInstr;` 为内部 rr、rm 名称加上前缀，得到 MyBackend_rr、MyBackend_rm。清单 6-9 根据字段继承关系展示预期记录内容；它是静态推导，不是本次执行 llvm-tblgen 后采集的输出。
+`defm MyBackend_ : RegInstr;` 为内部 rr、rm 名称加上前缀，得到 MyBackend_rr、MyBackend_rm。实际 JSON 的 `!instanceof.Instr` 恰好列出这两个记录，字段名是 name，分别为 rr / rm。清单 6-9 将这些已生成的字段用便于阅读的记录格式列出。
 
 **代码清单 6-9 生成的 MyBackend_rm 和 MyBackend_rr 记录示例**
 
@@ -349,21 +357,22 @@ let Constraints = "$dst = $src2" in {
 
 `Inst{63-56}` 在 BPF 的 TableGen 编码值中表示首个 opcode 字节，`BPFMCCodeEmitter::encodeInstruction` 先发射它；不要把这里的位编号与内存中小端 64 位整数的低 8 位混淆。ALU/JMP 的 opcode 字节共有同一种位域布局，但 class 值区分 ALU64、ALU、JMP 等。`Constraints = "$dst = $src2"` 是 tied operand（二地址）约束，交换律属性是另一个字段 `isCommutable`。
 
-使用 llvm-tblgen 可以解析完整 BPF.td 及其 include 文件，命令如清单 6-11。假定 PATH 中已有版本匹配的 llvm-tblgen；本次不构建或运行该工具。下面路径指向当前工作树，其中 BPF 文件有用户未提交改动，因此直接执行会反映用户版本。本文源码核对则读取 `git show HEAD:llvm/lib/Target/BPF/...` 的 LLVM 18.1.8 基线；若以后要复现基线生成结果，应使用内容相同的干净源码目录。
+BPF 示例固定使用提交 `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`。runner 用 `git archive` 只读导出所需 include 和 BPF 目录到临时目录，再运行 TableGen，使正文生成物有固定来源，也不会修改 LLVM 源文件。实验另用当前工作树运行相同的 DAG 选择器、指令描述和编码器生成命令；本次三份输出均与基线逐字节相同，SHA-256 记录在 JSON 中。工作树有文本修改并不自动意味着这三份生成物存在语义差异。以下命令使用相同方法得到可查看的固定输出目录。
 
 **代码清单 6-11 使用 llvm-tblgen 命令将 TD 文件转换为记录**
 
 ```sh
-llvm-tblgen \
-  -I /opt/llvm-project/llvm/include \
-  -I /opt/llvm-project/llvm/lib/Target/BPF \
+python3 "$BOOK_ROOT/experiments/ch6/runner.py" --output-dir /tmp/ch6-output
+"$LLVM_BUILD/bin/llvm-tblgen" \
+  -I /tmp/ch6-output/llvm18-source/llvm/include \
+  -I /tmp/ch6-output/llvm18-source/llvm/lib/Target/BPF \
   --print-records \
-  /opt/llvm-project/llvm/lib/Target/BPF/BPF.td
+  /tmp/ch6-output/llvm18-source/llvm/lib/Target/BPF/BPF.td
 ```
 
 下面以 ADD_rr 为例展示生成的记录的部分片段，如代码清单 6-12 所示。
 
-> 清单 6-12 是相关记录字段的节选，省略了大量属性和完整编码位；它不是完整生成文件。列出的字段在 LLVM 18 基线仍成立，未重新运行 TableGen 采集。
+> 清单 6-12 摘取实际记录中的相关字段，省略大量属性与编码位。runner 从完整 JSON 验证四个 ADD 变体、Size=8、绑定约束和 move 代价标记；节选不能代替完整 TD 输入。
 
 **代码清单 6-12 生成 ADD_rr 记录的代码片段**
 
@@ -409,23 +418,62 @@ def ADD_ri_32 {
 
 仍以 BPF 为例，将清单 6-11 的 `--print-records` 改为 `-gen-dag-isel`，并增加 `-o BPFGenDAGISel.inc`，可生成 SelectionDAG 指令选择器代码。其中 MatcherTable 描述把已降低、合法化后的 SelectionDAG 匹配为目标机器节点的过程，不直接匹配 LLVM IR。清单 6-13 实际是 ISD::ADD 的整个 opcode 分支节选，包含立即数和不同位宽等候选，并非 ADD_rr 独占的匹配序列。
 
-> 本清单保留原书生成表的历史偏移，用于与第 7 章对照。注释标题应理解为“包含 ADD_rr 候选的 ADD 分支”；`OPC_CheckOpcode Constant` 对应立即数候选。LLVM 18 生成的编号、字节偏移和顺序未验证，不能硬编码这些历史值。
+> 清单 6-13 取自本章实际生成的 BPFGenDAGISel.inc，展示完整 ADD opcode 分支。字节偏移只用于阅读这一次生成物，测试检查匹配动作与符号，不把偏移当成稳定接口。
 
-**代码清单 6-13 ADD_rr 指令对应的匹配片段**
+**代码清单 6-13 包含 ADD_rr 的完整 ADD 匹配分支**
 
-```text
-/* 2449*/ /*SwitchOpcode*/ 83, TARGET_VAL(ISD::ADD),// ->2535
-……
-/*  2473*/    OPC_MoveChild1,
-/*  2474*/    OPC_CheckOpcode, TARGET_VAL(ISD::Constant),
-……
-/*  2481*/    OPC_MoveParent,
-/*  2482*/    OPC_CheckType, MVT::i64,
-……
-/*  2497*/    OPC_MoveParent,
-/*  2498*/    OPC_CheckType, MVT::i32,
-……
+```cpp
+/*  2518*/ /*SwitchOpcode*/ 68, TARGET_VAL(ISD::ADD),// ->2589
+/*  2521*/  OPC_Scope, 11, /*->2534*/ // 2 children in Scope
+/*  2523*/   OPC_RecordNode, // #0 = $addr
+/*  2524*/   OPC_CheckTypeI64,
+/*  2525*/   OPC_CheckComplexPat1, /*#*/0, // SelectFIAddr:$addr #1 #2
+/*  2527*/   OPC_MorphNodeTo1None, TARGET_VAL(BPF::FI_ri),
+                 MVT::i64, 2/*#Ops*/, 1, 2,
+             // Src: FIri:{ *:[i64] }:$addr - Complexity = 9
+             // Dst: (FI_ri:{ *:[i64] } FIri:{ *:[i64] }:$addr)
+/*  2534*/  /*Scope*/ 53, /*->2588*/
+/*  2535*/   OPC_RecordChild0, // #0 = $src2
+/*  2536*/   OPC_RecordChild1, // #1 = $imm
+/*  2537*/   OPC_Scope, 30, /*->2569*/ // 3 children in Scope
+/*  2539*/    OPC_MoveChild1,
+/*  2540*/    OPC_CheckOpcode, TARGET_VAL(ISD::Constant),
+/*  2543*/    OPC_Scope, 11, /*->2556*/ // 2 children in Scope
+/*  2545*/     OPC_CheckPredicate0,  // Predicate_i64immSExt32
+/*  2546*/     OPC_MoveParent,
+/*  2547*/     OPC_CheckTypeI64,
+/*  2548*/     OPC_EmitConvertToTarget1,
+/*  2549*/     OPC_MorphNodeTo1None, TARGET_VAL(BPF::ADD_ri),
+                   MVT::i64, 2/*#Ops*/, 0, 2,
+               // Src: (add:{ *:[i64] } GPR:{ *:[i64] }:$src2, (imm:{ *:[i64] })<<P:Predicate_i64immSExt32>>:$imm) - Complexity = 7
+               // Dst: (ADD_ri:{ *:[i64] } GPR:{ *:[i64] }:$src2, (imm:{ *:[i64] }):$imm)
+/*  2556*/    /*Scope*/ 11, /*->2568*/
+/*  2557*/     OPC_CheckPredicate0,  // Predicate_i32immSExt32
+/*  2558*/     OPC_MoveParent,
+/*  2559*/     OPC_CheckTypeI32,
+/*  2560*/     OPC_EmitConvertToTarget1,
+/*  2561*/     OPC_MorphNodeTo1None, TARGET_VAL(BPF::ADD_ri_32),
+                   MVT::i32, 2/*#Ops*/, 0, 2,
+               // Src: (add:{ *:[i32] } GPR32:{ *:[i32] }:$src2, (imm:{ *:[i32] })<<P:Predicate_i32immSExt32>>:$imm) - Complexity = 7
+               // Dst: (ADD_ri_32:{ *:[i32] } GPR32:{ *:[i32] }:$src2, (imm:{ *:[i32] }):$imm)
+/*  2568*/    0, /*End of Scope*/
+/*  2569*/   /*Scope*/ 8, /*->2578*/
+/*  2570*/    OPC_CheckTypeI64,
+/*  2571*/    OPC_MorphNodeTo1None, TARGET_VAL(BPF::ADD_rr),
+                  MVT::i64, 2/*#Ops*/, 0, 1,
+              // Src: (add:{ *:[i64] } i64:{ *:[i64] }:$src2, i64:{ *:[i64] }:$src) - Complexity = 3
+              // Dst: (ADD_rr:{ *:[i64] } i64:{ *:[i64] }:$src2, i64:{ *:[i64] }:$src)
+/*  2578*/   /*Scope*/ 8, /*->2587*/
+/*  2579*/    OPC_CheckTypeI32,
+/*  2580*/    OPC_MorphNodeTo1None, TARGET_VAL(BPF::ADD_rr_32),
+                  MVT::i32, 2/*#Ops*/, 0, 1,
+              // Src: (add:{ *:[i32] } i32:{ *:[i32] }:$src2, i32:{ *:[i32] }:$src) - Complexity = 3
+              // Dst: (ADD_rr_32:{ *:[i32] } i32:{ *:[i32] }:$src2, i32:{ *:[i32] }:$src)
+/*  2587*/   0, /*End of Scope*/
+/*  2588*/  0, /*End of Scope*/
 ```
+
+实际生成表先尝试 FrameIndex 地址形式 FI_ri，之后尝试 i64 / i32 立即数变体，最后尝试两个寄存器变体。这说明一条源 ADD 不是只能映射到一个 ADD_rr；合法类型、常量谓词、地址模式及候选优先级共同决定匹配路径。
 
 第 7 章会介绍如何使用指令匹配表。生成器先解析 ADD_rr 的 `Pattern = [(set GPR:$dst, (add i64:$src2, i64:$src))]`，将 add 记录关联到 ISD::ADD，并对两个输入和结果进行类型推导。这里要求 i64 DAG 值，并不要求已分配物理寄存器。`set` 描述结果的类型 / 名称关系，不是最终发射的目标指令：匹配成功时，目标结果节点由 ADD_rr 这个 Instruction 记录确定，概念上为 `dst = ADD_rr(src2, src)`。GPR 类约束来自模式和机器指令操作数；`$dst = $src2` 的绑定还会由后续二地址处理保证。图 6-2 中的 set 应按这一含义理解，而不能当作额外生成的 COPY 或真实指令。
 
@@ -472,18 +520,18 @@ class Pat<dag pattern, dag result> : Pattern<pattern, [result]>;
 
 生成匹配表时，TableGen 前端遇到使用 def : Pat 定义的记录时，会生成一个匿名的记录，其中 PatternToMatch 字段是待匹配信息，ResultInstrs 是输出信息，然后工具链后端从记录中抓取相关信息，从而生成匹配信息。例如在代码清单 6-14中，两个 def : Pat 定义的记录实际会生成两个匿名记录。相应记录如代码清单 6-16 所示。
 
-> 以下为原书匿名记录的字段示意。匿名编号依解析顺序变化，不能作为跨版本稳定标识。
+> 以下匿名记录来自本章生成的 JSON，字段以可读形式重排。匿名编号由解析顺序决定，使用规则内容识别模式，不在工具或测试中写死编号。
 
 **代码清单 6-16 隐式模板**
 
 ```text
-def anonymous_3928 {
+def anonymous_7228 {
     dag PatternToMatch = (BPFcall imm:$dst);
     list<dag> ResultInstrs = [(JAL imm:$dst)];
     list<Predicate> Predicates = [];
     int AddedComplexity = 0;
 }
-def anonymous_3929 {
+def anonymous_7229 {
     dag PatternToMatch = (BPFcall GPR:$dst);
     list<dag> ResultInstrs = [(JALX GPR:$dst)];
     list<Predicate> Predicates = [];
@@ -583,7 +631,7 @@ let Predicates = [BPFNoALU32] in {
 **代码清单 6-21 解析后得到的 LDW 记录**
 
 ```tablegen
-// LLVM 18 基线相关字段的静态展开示意，其余字段省略。
+// 实际生成记录的相关字段，其余字段省略。
 def LDW {
   string Namespace = "BPF";
   list<Predicate> Predicates = [BPFNoALU32];
@@ -595,6 +643,14 @@ def LDW {
 ```
 
 可以看到，LDW 记录本身的匹配模式（字段 Pattern）包含了 ADDRri 记录，而 ADDRri又使用了字段 SelectFunc 将其工作委托到对应的 C++ 函数中，生成器提取这些信息并生成对 SelectAddr 方法的调用。LDW 的 `zextloadi32` 读取 32 位内存、零扩展为 i64 寄存器值，不是读取 64 位内存；启用 ALU32 时会使用其他受谓词约束的模式，例如 LDW32。
+
+实际运行还生成了 BPFGenInstrInfo.inc 和 BPFGenMCCodeEmitter.inc。DAG 选择器中可直接看到以下调用：
+
+```cpp
+return SelectAddr(N, Result[NextRes+0].first, Result[NextRes+1].first);
+```
+
+它验证了 SelectFunc 的字符串经生成器变成命名方法调用，以及 NumOperands=2 对应两个结果槽。生成器执行成功只证明 TD 可解析且相应后端可生成代码；SelectAddr 对实际 DAG 地址的选择、最终指令编码与目标运行行为属于后续代码生成章节，不能由这一个生成结果推出。
 
 ### 6.3.3 匹配规则支撑类
 
@@ -612,15 +668,15 @@ LLVM 的 TableGen 与 GCC 的机器描述语言都用于描述目标相关信息
 
 ## LLVM 18 源码核查记录
 
-本章已覆盖清单 6-1 至 6-21。清单中的文法与模式片段、历史生成表、完整方法定义已分别说明用途；涉及生成器输出的内容均未冒充本次运行结果。完整记录见 [review/ch6.md](review/ch6.md)。
+本章已覆盖清单 6-1 至 6-21。文法、记录展开、反例诊断、BPF 指令记录与三种代码生成器均已运行；C++ SelectAddr 方法按源码核对，选择表使用本章实际生成内容。完整记录见 [review/ch6.md](review/ch6.md)。
 
 - `llvm/docs/TableGen/ProgRef.rst:164、336、916`、`llvm/lib/TableGen/TGParser.cpp:229、969、3450`：词法、位范围赋值、class / multiclass / defm 的语义。
 - `llvm/include/llvm/Target/Target.td:518、569`、`llvm/utils/TableGen/CodeGenInstruction.cpp:328`：指令字段和操作数绑定。
 - BPF 基线 `BPFInstrInfo.td:273、297、543、570`：ALU 的 off 参数、LOAD 的 ModOp 参数和 LDW 谓词；`BPFISelDAGToDAG.cpp:104`：SelectAddr。
 - `llvm/include/llvm/Target/TargetSelectionDAG.td:933、1951、1973`、`llvm/utils/TableGen/DAGISelMatcherEmitter.cpp:1110`：Pat / PatFrag / ComplexPattern 及命名回调生成。
 
-本地 BPF.td、BPFInstrInfo.td、BPFInstrFormats.td、BPFRegisterInfo.td 等存在用户未提交修改。本章 BPF TD 核对使用 `git show HEAD:<path>` 的 18.1.8 内容，未修改这些文件；正文命令若直接执行，则读取当前工作树，结果可能不同。
+本地 BPF.td、BPFInstrInfo.td、BPFInstrFormats.td、BPFRegisterInfo.td 等存在用户未提交修改。本章 BPF TD 核对使用该提交的 18.1.8 内容，未修改这些文件；正文生成物取自固定源快照，runner 同时记录工作树生成物的比较。当前三种生成输出完全一致。
 
-## 待后续运行验证
+## 实验覆盖与边界
 
-未编译 LLVM，未执行 llvm-tblgen 或任何 IR 示例。后续应先确定使用干净 LLVM 18.1.8 基线还是本地定制 BPF，再运行词法 / 记录示例，生成 BPFGenDAGISel.inc，并用完整输入检查 ADD、JAL / JALX、LDW / LDW32 的选择及地址边界。MatcherTable 字节偏移、匿名记录编号、完整记录打印和 BPF 大小端编码均未运行复现；保留的历史值不应成为断言。
+本章实验已关闭语法、记录字段、multiclass 展开和 BPF 生成器验证项，结果见 review/experiments-ch6.json。源快照固定到 18.1.8，实际生成的 MatcherTable、指令描述和 MC 编码器写到输出目录。目标机器最终编码、地址边界下的选择和运行性能不是 TableGen 解析实验本身的结论。

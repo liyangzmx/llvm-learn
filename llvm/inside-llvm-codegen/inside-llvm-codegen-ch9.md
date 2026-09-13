@@ -1,200 +1,104 @@
-# 第 9 章基于 SSA 形式的编译优化
+# 第 9 章 基于 SSA 形式的编译优化
 
-> 校订基线：本书 LLVM 15（示例 15.0.1）；本章依据 `/opt/llvm-project` 的 LLVM 18.1.8，HEAD `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff` 作静态源码核查。未编译 LLVM，未执行本章 C/C++、LLVM IR、MIR 或汇编命令；具体输出与性能仍待运行确认。
-> 保留原章全部章节、示例与图版。正文及文字代码按核查结果修订；原书图片和折叠页版面仅作对照，图片中的旧编号、版本结果和排印错误不代表 LLVM 18 输出。逐项记录见 [第 9 章校核记录](review/ch9.md)。
+> 本章以 LLVM 18.1.8（源码 HEAD `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`）的实现和本地实验为准。原书 LLVM 15.0.1 全文留在 `origin/`；本章保留节次和清单编号，重写过时推导与输出。实验使用 Debug、Assertions 构建，MIR 命令启用 `-verify-machineinstrs`，结果见 [校核记录](review/ch9.md) 和 [实验结果](review/experiments-ch9.json)。
 
-<!-- PDF page 217; printed page 204 -->
+机器级优化处理的是已经选成目标指令的 MIR。寄存器分配前的这一组 Pass 通常使用虚拟寄存器 SSA：每个虚拟寄存器只有一个定义，控制流汇聚处使用机器 PHI。SSA 简化了追溯定义、判定等价和移动指令的工作，但没有消除内存别名、物理寄存器副作用或目标约束。寄存器分配准备阶段会销毁 PHI、转换两地址指令，届时 MIR 不再具有同样的 SSA 性质。
 
-Chapter 9 第 9 章
+`TargetPassConfig::addMachinePasses` 在优化级别不是 `None` 时调用 `addMachineSSAOptimization`。通用顺序如下；`addILPOpts` 是目标钩子，目标还可以替换或禁用 Pass。
 
-基于 SSA 形式的编译优化
+```mermaid
+flowchart TD
+ A[前期尾代码重复] --> B[PHI 优化]
+ B --> C[栈着色] --> D[局部栈槽预布局]
+ D --> E[死机器指令消除] --> F[目标 ILP 优化]
+ F --> G[前期 Machine LICM] --> H[Machine CSE]
+ H --> I[Machine Sinking] --> J[Peephole Optimizer]
+ J --> K[再次消除死机器指令]
+```
 
-在代码生成过程中也会进行编译优化，分别是在寄存器分配前和寄存器分配后进行。其中寄存器分配前的优化主要是基于 SSA 形式的优化，寄存器分配后的优化是基于非 SSA形式的优化，本章主要介绍寄存器分配前的优化，第 11 章会介绍寄存器分配后的优化。
+`-O0` 不运行整个序列，但通用路径仍会加入局部栈槽分配。是否真正处理栈槽，还取决于目标是否需要虚拟基址寄存器。本章的例子刻意分别测试一个 Pass，避免把后续 Pass 的效果误归给当前算法。
 
-目前基于 SSA 形式的机器指令优化主要包括尾代码重复、Phi 优化、栈着色等优化，具体如图 9-1 所示。
+复现实验只需运行以下命令，输出默认进入新临时目录；可用 `--out /tmp/ch9` 指定目录。所有输入位于 [experiments/ch9](experiments/ch9/runner.py)。
 
-![图 9-1 基于 SSA 形式的机器指令优化](origin/assets/figures/p217-9-1.png)
-
-**图 9-1 基于 SSA 形式的机器指令优化**
-
-<!-- PDF page 218; printed page 205 -->
-
-每个优化的 Pass 功能如下。
-
-1）前期尾代码重复（early tail duplication）：用于消除跳转指令。由于寄存器分配前后都会进行尾代码重复的优化，因此这里使用“前期”与寄存器分配后的尾代码重复优化进行区分。
-
-2）Phi 优化：消除没有非调试实际用途的死 PHI 环，以及能够追溯到同一个外部输入值的 PHI/COPY 环；后一类也包括源等于目的的自引用。并非只检查所有源、目的是否相同。
-
-3）栈着色（stack coloring）：优化局部变量的布局，减少栈空间的使用○一。
-
-4）栈槽分配（local stack slot allocation）：在目标需要时预布局局部栈对象并引入虚拟基址寄存器，最终帧索引消除仍由寄存器分配后的 PEI 完成。
-
-5）死指令消除（dead machine instruction elim）：根据基本块中 LiveIn、LiveOut 信息，从后向前依次遍历 MI 指令，将死指令删除。
-
-6）ILP（指令级并行，Instruction-Level Parallelism）优化：依赖特定后端架构的特性进行并行指令优化。例如GPU、AArch64、x86 都可以使用 If-Conversion 将控制依赖变成数据依赖。
-
-7）前期循环不变量外提（early machine LICM）：将循环不变量提出循环体，优化循环执行效率，加“前期”是为了与寄存器分配后的 LICM 进行区别。
-
-8）公共表达式消除（machine CSE）：消除代码中的公共表达式，以减少不必要的计算。
-
-9）代码下沉（machine sinking）：将分支节点的代码下沉到不同的分支中，本质上是将代码执行向后推迟，可能会因为分支不执行而获得执行收益。
-
-10）窥孔优化（peephole optimizer）：对相邻指令进行局部优化。注意，因为窥孔优化可能产生新的死代码，所以会再次执行死指令消除操作。
-
-本章将对上述优化逐一介绍。
+```sh
+LLVM_BUILD=${LLVM_BUILD:-/opt/llvm-project/build}
+LLVM_SRC=${LLVM_SRC:-/opt/llvm-project}
+BOOK_ROOT=/opt/coding/mlir-toy/llvm/inside-llvm-codegen
+export LLVM_BUILD LLVM_SRC BOOK_ROOT
+python3 "$BOOK_ROOT/experiments/ch9/runner.py"
+```
 
 ## 9.1 前期尾代码重复
 
-> LLVM 18 流水线：`TargetPassConfig::addMachinePasses` 在优化级别不是 `None` 时调用 `addMachineSSAOptimization`，默认次序与本章各节一致，末尾再次运行 DCE。`addILPOpts` 是目标钩子；不是每个目标都会加入 EarlyIfConverter。`-O0` 通用路径仍加入 LocalStackSlotAllocation，但该 Pass 还检查目标是否需要虚拟基址寄存器。
-
-本节将对（前期）尾代码重复优化的原理、如何判断优化收益、如何执行优化进行介绍。
-
 ### 9.1.1 尾代码重复原理
 
-尾代码重复的基本原理是，如果两个基本块之间存在跳转指令，那么将后继基本块里的代码提升到前驱基本块中可以移除跳转指令，示例如代码清单 9-1 所示。
+尾代码重复把公共后继块的指令复制到合适的前驱末尾，消除原先到该块的跳转。它可能增加静态代码量，却缩短热路径并为常量传播、PHI 化简和布局提供机会。是否更快需要测量，不能从少了一条 `jmp` 直接推出。
 
-**代码清单 9-1 两个基本块之间存在跳转指令示例**
+**代码清单 9-1 两个分支汇聚后返回的 C++ 例子**
 
-```text
-bool isEven(int x, int y)
-{
-```
-
-○一参考论文的地址为 https://gcc.gnu.org/pub/gcc/summit/2003/Optimal%20Stack%20Slot%20Assignment.pdf。
-
-<!-- PDF page 219; printed page 206 -->
-
-```text
-    bool retValue = false;
+```cpp
+bool isEven(int x) {
+    bool result;
     if (x % 2 == 0)
-        retValue = true;
+        result = true;
     else
-        retValue = false;
-    return retValue;
+        result = false;
+    return result;
 }
 ```
 
-该代码片段对应的 CFG 如图 9-2a 所示。在图 9-2a 中，基本块 4 是基本块 2 和基本块3 的汇聚节点，基本块 2 和基本块 3 通常都会通过一个无条件跳转指令（图 9-2a 中的 jmp指令）到达基本块 4。当然也可以进行基本块布局优化，让其中一个基本块和基本块 4 相邻，这样可以节约一个 jmp 指令，这就是第 11 章要介绍的分支折叠。为了追求更高性能，可以将基本块 4 的代码重复放到基本块 2 和基本块 3 的尾部，然后删除基本块 4，从而得到
+在概念 CFG 中，可以把共同的返回块复制到两个赋值块末尾。但这个示意不保证由优化后的 Clang 产生：前端或中端可能直接把函数化简为一次比较。还必须区分概念变换与 EarlyTailDuplicate 的实际限制——LLVM 18 的寄存器分配前路径拒绝包含 return 的候选。
 
-**图 9-2b 所示的 CFG。这就是尾代码重复优化的整个过程。**
+```mermaid
+flowchart LR
+ subgraph before[变换前]
+ E[条件] --> T[赋值 true]
+ E --> F[赋值 false]
+ T --> R[公共尾部]
+ F --> R
+ end
+ subgraph after[概念变换后]
+ E2[条件] --> T2[赋值 true 和尾部副本]
+ E2 --> F2[赋值 false 和尾部副本]
+ end
+```
 
-![图 9-2 尾代码重复示意图](origin/assets/figures/p219-9-2.png)
-
-**图 9-2 尾代码重复示意图**
-
-比较图 9-2a 和图 9-2b 可以看出，图 9-2b 将 jmp 指令消除，执行效率更高，但是由于要将基本块 4 的代码重复放到基本块 2 和基本块 3 中，当基本块 4 的代码比较大时会增加代码量。为了控制代码量，LLVM 提供了参数 tail-dup-size 来控制最大重复的指令数。
-
-目前 LLVM 尾代码优化主要在后端实现，包括寄存器分配前优化和寄存器分配后优化。在寄存器分配前进行的优化需要考虑优化对寄存器分配的影响。直观上看，将两个基本块的代码合并到一个基本块可能会增大变量的活跃区间，从而导致更多的寄存器冲突（参见第10 章）。所以尾代码重复优化会对重复代码进行更多的限制，例如包含 call、ret 指令的代码片段（这些指令对寄存器分配影响更大）不允许重复。
-
-另外，因为尾代码重复会影响控制流，对于一些场景来说和第 11 章介绍的分支折叠优化效果相同，所以在进行尾代码优化时对基本块的布局有一定的要求（基本块之间一定存在跳转指令到达的情况）。典型的尾代码重复优化场景有如下两类。
-
-1. 冗余 jmp 指令优化
-
-基本块 CurBB 和前驱基本块之间存在 jmp 指令（见图 9-3a），并且这两个基本块不相邻
-
-<!-- PDF page 220; printed page 207 -->
-
-（11.2.1 节介绍的分支折叠也无法优化这种情况，必须调整基本块的布局后才可能通过分支折叠消除相邻基本块之间的 jmp 指令），可以将 CurBB 代码重复放到前驱基本块中，得到的结果如图 9-3b 所示。
-
-![图 9-3 尾代码重复场景：冗余 jmp 指令优化](origin/assets/figures/p220-9-3.png)
-
-**图 9-3 尾代码重复场景：冗余 jmp 指令优化**
-
-2. 汇聚基本块优化
-
-如果基本块作为汇聚节点，且基本块和后继基本块不相邻，则当基本块重复有收益时（例如不超过允许的最大重复指令数）会进行尾代码重复。例如在图 9-4a 中，CurBB 和两个后继基本块都不相邻，可以将 CurBB 重复放到前驱基本块中，得到的结果如图 9-4b 所示；或者在图 9-4c 中，CurBB 和唯一的后继基本块不相邻，可以将 CurBB 重复放到前驱基本块中，得到的结果如图 9-4d 所示。
-
-> 尾代码重复用更大的静态代码量换取减少跳转和后续优化机会，收益取决于目标与运行路径。
-
-SSA 形式的尾代码重复实现比较复杂，主要原因是优化后还要保持 SSA 形式；非 SSA形式的尾代码优化相对简单（参见 11.2.2 节），两者原理相同（主要区别是 MIR 性质不同，优化时限制不同）。
-
-尾代码重复优化一般先判断是否有收益，只有在有收益的情况下才会进行优化。
+已有直通关系、能直接合并的相邻块和必须跳转才能到达的公共尾块，具有不同收益。不能仅以两个块是否相邻决定能否重复；`TailDuplicator` 还会询问目标的分支分析接口，并考虑是否处于基本块布局阶段。
 
 ### 9.1.2 尾代码收益判断
 
-是否可以对基本块进行尾代码重复优化，可以从以下方面来考虑。
+LLVM 18 的 `shouldTailDuplicate` 先判定结构和指令是否合法，再估算大小。需要掌握以下约束。
 
-1）只有特定的基本块结构才能进行尾代码重复优化，在一些场景下不能进行优化，例如单基本块循环不能进行优化（如果优化，则会导致无限循环重复）。
+- 不展开自循环，也不随意处理异常入口、地址被引用或不可分析的控制流。
+- `-tail-dup-size` 默认值是 2。未显式覆盖时，面向最小代码量的限制通常更紧；寄存器分配前以间接跳转结束的块另有 `TailDupIndirectBranchSize`，默认 20。它们是候选成本限制，不是“最多复制多少个基本块”。
+- 指令带 `isNotDuplicable`、`isConvergent`，或属于不能安全重复的内联汇编分支等情况，会被拒绝。收敛性约束与多执行通道之间的会合有关，不能把它等同于普通控制依赖。
+- 分配前还拒绝 call、return 等候选，避免调用引起的寄存器压力和后续保存/恢复代码膨胀。分配后取消的是这项阶段限制，指令自身的不可重复属性仍有效。
+- 复制到某个前驱必须保持该前驱的其他出边语义。前驱只有一个后继、存在可消除的无条件跳转，是最容易理解的情况；源码还有布局与合并的专门处理。
 
-2）确定最大重复的指令数，可以通过参数设置 `-tail-dup-size`（对应 `TailDuplicateSize`，默认值为 2）实现。当要求代码量最小化时，最大重复指令数为 1。如果优化发生在寄存器分配之前，且基本块最后
-
-<!-- PDF page 221; printed page 208 -->
-
-一条指令为间接跳转指令，则最大允许重复的指令数为 TailDupIndirectBranchSize（默认值为 20）。
-
-![图 9-4 尾代码重复：汇聚基本块优化](origin/assets/figures/p221-9-4.png)
-
-**图 9-4 尾代码重复：汇聚基本块优化**
-
-3）如果有指令明确不可以重复，则放弃执行尾代码重复优化。在 TD 文件中设置指令属性 isNotDuplicable = 1，表示指令不可重复（例如 BPF 后端中 ret 指令不可重复）。
-
-4）如果指令带有 `isConvergent` 属性，则放弃尾代码重复。该属性约束与执行它的其他线程/执行通道的会合关系，不能简单理解为所有场合都不可复制；这里是 TailDuplicator 为保证语义采用的保守禁止规则。
-
-5）如果优化发生在寄存器分配之前，且基本块中包含 ret、call 等指令，则放弃执行尾代码重复优化。ret 指令重复后可能会导致更多的代码“膨胀”（例如在 PEI 中，在 ret 指令之前通常会插入额外的 CSR（Callee Saved Register，被调用者保存寄存器）指令），而 call
-
-<!-- PDF page 222; printed page 209 -->
-
-指令重复可能会导致更多的寄存器溢出。
-
-6）如果基本块中指令有汇编指令，且包含分支指令，则放弃优化。因为在一些场景中重复会导致逻辑错误（例如无法为 φ 函数准确寻找插入位置）。
-
-7）如果基本块中所有指令数超过最大重复的指令数，则放弃优化。
-
-8）通常只有能将待复制代码直接拼接到末尾的前驱才可接收复制。LLVM 18 会综合前驱后继数、分支可分析性、是否直通、布局模式、基本块可合并性等条件；不要把这几个说明性条件理解为完整的必要充分判定。
-
-9）如果所有的前驱基本块的最后一条指令不是无条件跳转指令，则放弃优化。
+大小满足阈值只是必要检查之一。分支概率、寄存器压力、直通关系和目标能力都可能改变收益。
 
 ### 9.1.3 执行尾代码重复优化
 
-尾代码重复优化实现思路如下。
+分配前复制一条定义虚拟寄存器的指令时，必须为副本创建新虚拟寄存器，并重写副本内的数据依赖。PHI 的值由所复制到的前驱入边决定，不能把原 PHI 原封不动放进前驱。算法相应生成 COPY、移除旧 PHI 入边，并使用 SSA 更新机制修复流向其他块的用途。最后更新后继、前驱和概率；只有原块确实无须保留时才删除它。循环中的 PHI 尤其要按变换后的 CFG 入边重新建立，不能沿用原基本块编号。
 
-1）对基本块的每一个前驱基本块都尝试进行尾代码合并。当前驱基本块只有一个后继基本块且最后一条指令为无条件跳转指令时开始执行代码重复优化，这分为以下两步。
+**代码清单 9-2 用于保留控制流的 C++ 说明**
 
-① 删除前驱基本块最后一条无条件跳转指令。
-
-② 将基本块中的每条指令重复放到前驱基本块中。如果是 φ 函数，指令重复操作本质上是在进行 φ 函数析构（执行方式为在前驱基本块最后位置增加 COPY 指令，并移除 φ 函数中对应前驱基本块的操作数）；如果是一般指令，则进行代码重复时要保证 SSA 属性；最后更新 CFG 图，即移除原来的后继基本块，并增加新的后继基本块。
-
-2）如果基本块被重复放到了其全部前驱基本块中，则尝试将基本块也放到其相邻基本块中，之后就可以将基本块移除。
-
-3）对循环场景做特殊处理可能需要重构 φ 函数，如图 9-5 所示。在图 9-5a 的基础上，对基本块 b2 进行尾代码重复优化，分别在基本块 b1 和 b3 后重复 b2 的代码，可以得到
-
-**图 9-5b 所示的结果。对比图 9-5a 和图 9-5b 可以发现除了放置重复代码外，还需要考虑基**
-
-本块 b3 中 φ 函数的变化，图 9-5a 中 φ 函数的源寄存器主要来自 b1 和 b3，图 9-5b 中 φ 函数的源寄存器也很可能来自 b2 和 b3，所以在 b3 中要重构 φ 函数。
-
-![图 9-5 尾代码重复：循环场景的特殊处理](origin/assets/figures/p222-9-5.png)
-
-**图 9-5 尾代码重复：循环场景的特殊处理**
-
-下面构造一个简单的尾代码重复优化示例，如代码清单 9-2 所示。
-
-<!-- PDF page 223; printed page 210 -->
-
-**代码清单 9-2 尾代码重复优化示例**
-
-```text
-bool isEven(int x, int y)
-{
-    bool returnValue = false;
-    if (x % 2 == 0)
-        returnValue = true;
-    else
-        returnValue = false;
-
-    if (y % 3 == 0)
-        returnValue = true;
-    else
-        returnValue = false;
-
-    return returnValue;
+```cpp
+bool isEven(int x, int y) {
+    bool result = false;
+    if (x % 2 == 0) result = true;
+    else result = false;
+    if (y % 3 == 0) result = true;
+    else result = false;
+    return result;
 }
 ```
 
-下面的 IR 是为观察机器级尾代码重复而调整了基本块文本顺序的输入示例：将 if.end 放到 if.then3、if.else4 后，制造不相邻布局。它本身并非尾代码重复优化的输出；实际优化作用于后续的 MIR。代码中的第一个 if 结果随后被覆盖，在其他优化组合下可能先被中端消除，因此仅改变文本顺序并不能保证 LLVM 18 一定触发此 Pass。
+这个函数的最终返回值只依赖 `y % 3 == 0`：第二组赋值覆盖了第一组。它是控制流教学输入，名称不能被当成函数真实语义。为了稳定观察后端，实验直接提供以下 IR，未先运行能删去第一组分支的中端流水线。
 
-**代码清单 9-3 为观察尾代码重复准备的 LLVM IR 输入**
+**代码清单 9-3 tail.ll：尾代码重复的完整 IR**
 
-```text
+```llvm
 define dso_local noundef zeroext i1 @isEven(i32 noundef %x, i32 noundef %y) {
 entry:
     %x.addr = alloca i32, align 4
@@ -219,11 +123,6 @@ if.else:                                          ; preds = %entry
 if.then3:                                         ; preds = %if.end
     store i8 1, ptr %returnValue, align 1
     br label %if.end5
-```
-
-<!-- PDF page 224; printed page 211 -->
-
-```text
 if.else4:                                        ; preds = %if.end
     store i8 0, ptr %returnValue, align 1
     br label %if.end5
@@ -241,71 +140,29 @@ if.end5:                                         ; preds = %if.else4, %if.then3
 }
 ```
 
-原书实验使用 `-tail-dup-size=5`，并通过 Compiler Explorer 观察图 9-6 中的 MIR 变化。该阈值数的是 TailDuplicator 处理的机器指令，而不是 LLVM IR 文本行；IR 基本块这里有 4 条指令，不能由行数推出阈值。LLVM 18 是否触发、需要多大阈值，需在固定目标和优化流水线后比较 Pass 前后 MIR。
+实验指定 `bpfel`、`-mcpu=v4`、`-O2`。这里使用 v4 是因为输入含有符号余数，不把 generic BPF 的指令能力当成前提。分别在 `early-tailduplication` 前后截取 MIR：默认阈值保留 7 个块；增加 `-tail-dup-size=10` 后为 6 个块，公共 `if.end` 尾部复制到两条前驱路径。阈值变大后仍不会强迫所有块被复制，特别是 return 约束仍然成立。
 
-**图 9-6 尾代码重复优化前后的区别**
+## 9.2 PHI 优化
 
-<!-- PDF page 225; printed page 212 -->
+`OptimizePHIs` 解决两类问题：单值 PHI/COPY 环和死 PHI 环。单值环的所有外部输入都可追溯到同一个值，因此整个环不需要真正的合流。例如 `R2 = PHI(R1,R1)` 可以用 R1 代替；`R2 = PHI(R1,R2)` 中的自引用也不引入另一个外部值。多个 PHI 相互引用时，算法需在访问集合中避免无限递归，并追过可处理的 COPY；不能只逐条比较输入寄存器编号。
 
-## 9.2 Phi 优化
+```text
+R2 = PHI(R0, R1)
+R0 = PHI(R1, R2)
+# 若该 PHI 环的唯一外部值为 R1，则环内结果都可替换为 R1。
+```
 
-Phi 优化主要针对两种场景进行。
+死环则不需要有共同外部值。只要环内定义的结果除了调试用途和相互引用，没有真正流向外部的计算，就可删除。反过来，看到“PHI 形成环”不能立刻判死，循环归纳变量也常形成这样的依赖环。
 
-1. φ 函数的多个源都使用的是同一个寄存器
-
-φ 函数的多个源使用的是同一个寄存器（即在 SSA 形式中并不需要真正的 φ 函数），主要有以下三种形式。
-
-1）形式 1：φ 函数的源寄存器完全相同。例如，φ 函数的两个源寄存器相同，都是 R1。
-
-R2 = φ(R1, R1)
-
-2）形式 2 ：φ 函数有多个源寄存器，其中一个或者多个源寄存器使用了目的寄存器，且除目的寄存器外，其他的源寄存器都完全相同。例如，下面 φ 函数中的两个源寄存器分别是 R1 和 R2，其中 R2 是目的寄存器。
-
-R2 = φ(R1, R2)
-
-3）形式 3 ：多个 φ 函数相互为源，构成循环，并且除了循环的源寄存器外，所有 φ 函数使用的源寄存器都相同。例如，多个 φ 函数中 R2 和 R0 相互使用，并且都还使用了相同的源寄存器，即 R2 中的两个源寄存器分别是 R1 和 R0，R0 中的两个源寄存器分别是 R1 和R2。
-
-R2 = φ(R0, R1)
-
-…
-
-R0 = φ(R1, R2)
-
-上述三种形式都可以删除 R2，并且将使用 R2 的地方直接替换为 R1。
-
-当然在实际代码优化中还可能会遇到一些变形，如一些 φ 函数中的源寄存器使用COPY 指令进行中转：
-
-R0 = COPY R1
-
-R2 = φ(R0, R1)
-
-在该例中，R2 可以使用 R1 进行替换，并删除 R2。但 R0 = COPY R1 的指令并不会被删除，而是在后续的简单寄存器合并中进行处理。
-
-2. φ 函数定义的寄存器只在其他 φ 函数中使用
-
-第二个优化场景是 φ 函数定义的寄存器只在其他 φ 函数中使用，并且这些 φ 函数相互使用彼此定义的寄存器，最后形成环，符合这样条件的 φ 函数是死代码，如下所示。
-
-R2 = φ(R0, R1)
-
-…
-
-R0 = φ(R1, R2)
-
-<!-- PDF page 226; printed page 213 -->
-
-…
-
-R1 = φ(R0, R2)
-
-R0，R1，R2 使用 φ 函数定义，并且这三个 φ 函数形成了循环，说明是无效的 φ 函数定义，可以将这三个 φ 函数都删除。
+实验 `phi.mir` 构造一个菱形 CFG，汇聚处 `%1 = PHI %0, %bb.1, %0, %bb.2`。运行 `-run-pass=opt-phis` 后 PHI 消失，返回值直接 `COPY %0`。这验证了最简单的单值情形；循环情形的判定边界以上述源码为准。
 
 ## 9.3 栈着色
 
-LLVM 3.2 中正式引入栈着色实现，栈着色主要是优化栈变量的分配，减少栈空间的使用。下面通过例子来看栈着色的作用，例子对应的 C 代码如代码清单 9-4 所示。
+栈着色合并生命周期不重叠的局部栈对象，让它们共享物理存储。它处理的是局部对象；第 10 章的 StackSlotColoring 主要处理寄存器分配产生的溢出槽，两者所处阶段和输入不同。
 
-**代码清单 9-4 栈着色示例的 C 代码**
+**代码清单 9-4 局部数组生命周期示例**
 
-```text
+```c
 void bar(char *, int);
 void foo(int var) {
 A: {
@@ -327,265 +184,209 @@ B:
 }
 ```
 
-在上述代码中，z 的生命周期在代码块 A 后结束，空间有机会被随后使用的 x、y 复用。x、y 在两条控制流路径中被选择，但在汇聚块 B 仍通过 p 访问其中一个数组；不能说 if 后完全不再使用数组。按路径推导的理想空间复用可以得到代码清单 9-5 的示意，但真实编译器需要生命周期、别名与逃逸分析证明安全。
+z 的作用域在 A 后结束；x、y 中有一个地址经 p 到达 B，因此不能在 `if` 结束处随意结束两者生命周期。若只按真实访问路径想象复用空间，可写出下面的存储复用示意。
 
-**代码清单 9-5 代码清单 9-4 最为理想的优化结果**
+**代码清单 9-5 在额外语义前提下的理想存储复用示意**
 
-```text
+```c
 void foo(int var) {
-    char x[4096];
+    char storage[4096];
     char *p;
-    bar(x, 0);
-    if (var) {
-        p = x;
-```
-
-<!-- PDF page 227; printed page 214 -->
-
-```text
-    } else {
-        bar(x, 1);
-        p = x + 1024;
+    bar(storage, 0);
+    if (var) p = storage;
+    else {
+        bar(storage, 1);
+        p = storage + 1024;
     }
     bar(p, 2);
 }
 ```
 
-原书在其 GCC/LLVM 版本与实验配置下观察到图 9-7 的不同栈布局。这是历史实验结果；本次未运行 LLVM 18，不能据图宣称当前 GCC 或 LLVM 必然无法生成某种布局。
+这不是对任意外部 `bar` 的通用源码等价变换证明。地址逃逸、保存地址后的比较以及对象生命周期的合同，均会影响可证明性。机器栈着色依据 IR 的有效生命周期合同和实际用途工作，不以这段手改 C 代替证明。
 
-![图 9-7 LLVM 栈布局、GCC 栈布局、理想栈布局](origin/assets/figures/p227-9-7.png)
+用本章 Clang 18 AArch64 命令生成的 IR 仍只给 z 添加了 lifetime intrinsic。下面保留完整可解析的 IR，包括 bar/intrinsic 声明和属性组；runner 同时输出这一 `stack.ll` 文件。
 
-**图 9-7 LLVM 栈布局、GCC 栈布局、理想栈布局**
+**代码清单 9-6 Clang 18 实际生成的完整 stack.ll**
 
-> 原书图 9-7 描述其历史实验布局，p 有机会保存在寄存器中；当前是否溢出到栈由分配结果决定。LLVM 18 通过生命周期标记、实际使用与 CFG 数据流分析重叠，不是只比较词法作用域。x/y 的复用和原书与 GCC 的比较仍需指定版本后实测。
+```llvm
+; ModuleID = '/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/stack.c'
+source_filename = "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/stack.c"
+target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
+target triple = "aarch64-unknown-linux-gnu"
 
-LLVM 的机器级栈着色依赖 LIFETIME_START/LIFETIME_END 等生命周期信息。Clang 在 LLVM IR 层生成的是 `llvm.lifetime.start`、`llvm.lifetime.end` intrinsic；在指令选择中它们可降低为 MIR 的生命周期伪指令。不能把前端 IR intrinsic 和机器伪指令混为一层。下面保留原书由 Clang 15 获得的输入示例。
-
-**代码清单 9-6 与代码清单 9-4 对应的历史 LLVM IR 示例**
-
-```text
-define dso_local void @foo(i32 noundef %var) local_unnamed_addr {
+; Function Attrs: nounwind uwtable
+define dso_local void @foo(i32 noundef %var) local_unnamed_addr #0 {
 entry:
-    %z = alloca [4096 x i8], align 16
-    %x = alloca [4096 x i8], align 16
-    %y = alloca [4096 x i8], align 16
-    call void @llvm.lifetime.start.p0(i64 4096, ptr nonnull %z)
-    call void @bar(ptr noundef nonnull %z, i32 noundef 0)
-    call void @llvm.lifetime.end.p0(i64 4096, ptr nonnull %z)
-    %tobool.not = icmp eq i32 %var, 0
-    br i1 %tobool.not, label %if.else, label %B
-```
+  %z = alloca [4096 x i8], align 1
+  %x = alloca [4096 x i8], align 1
+  %y = alloca [4096 x i8], align 1
+  call void @llvm.lifetime.start.p0(i64 4096, ptr nonnull %z) #3
+  call void @bar(ptr noundef nonnull %z, i32 noundef 0) #3
+  call void @llvm.lifetime.end.p0(i64 4096, ptr nonnull %z) #3
+  %tobool.not = icmp eq i32 %var, 0
+  br i1 %tobool.not, label %if.else, label %B
 
-<!-- PDF page 228; printed page 215 -->
-
-```text
 if.else:                                          ; preds = %entry
-    call void @bar(ptr noundef nonnull %y, i32 noundef 1)
-    %add.ptr = getelementptr inbounds i8, ptr %y, i64 1024
-    br label %B
+  call void @bar(ptr noundef nonnull %y, i32 noundef 1) #3
+  %add.ptr = getelementptr inbounds i8, ptr %y, i64 1024
+  br label %B
 
 B:                                                ; preds = %entry, %if.else
-    %p.0 = phi ptr [ %add.ptr, %if.else ], [ %x, %entry ]
-    call void @bar(ptr noundef nonnull %p.0, i32 noundef 2)
-    ret void
+  %p.0 = phi ptr [ %add.ptr, %if.else ], [ %x, %entry ]
+  call void @bar(ptr noundef nonnull %p.0, i32 noundef 2) #3
+  ret void
 }
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: readwrite)
+declare void @llvm.lifetime.start.p0(i64 immarg, ptr nocapture) #1
+
+declare void @bar(ptr noundef, i32 noundef) local_unnamed_addr #2
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: readwrite)
+declare void @llvm.lifetime.end.p0(i64 immarg, ptr nocapture) #1
+
+attributes #0 = { nounwind uwtable "frame-pointer"="non-leaf" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
+attributes #1 = { mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: readwrite) }
+attributes #2 = { "frame-pointer"="non-leaf" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="generic" "target-features"="+fp-armv8,+neon,+v8a,-fmv" }
+attributes #3 = { nounwind }
+
+!llvm.module.flags = !{!0, !1, !2, !3, !4}
+!llvm.ident = !{!5}
+
+!0 = !{i32 1, !"wchar_size", i32 4}
+!1 = !{i32 8, !"PIC Level", i32 2}
+!2 = !{i32 7, !"PIE Level", i32 2}
+!3 = !{i32 7, !"uwtable", i32 2}
+!4 = !{i32 7, !"frame-pointer", i32 1}
+!5 = !{!"clang version 18.1.8 (https://github.com/llvm/llvm-project.git 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)"}
 ```
 
-其中 llvm.lifetime.start.p0、llvm.lifetime.end.p0 在指令选择时会变成伪指令 LIFETIME_ START、LIFETIME_END。
+`llvm.lifetime.start/end` 是 IR intrinsic，在指令选择后成为 MIR 的 `LIFETIME_START/END`。栈着色识别标记，结合 CFG 计算对象活跃范围，寻找互不重叠的对象；通常先处理较大的槽，采用启发式合并，不能保证得到最小帧。合并时需维护 FrameIndex、内存操作数、别名及调试信息。对应 IR alloca 的用途也可能被重映射，但不能说原 alloca 一定全部删除。最后清除已处理的机器生命周期伪指令。
 
-栈着色的基本思路如下。
+清单 9-6 的实验在栈着色前后都保留 3 个大小为 4096 的槽。仅看到某个 pass 消除了 lifetime 伪指令，不意味着发生了空间合并。下面为 x/y 提供明确有效的生命周期边界，用独立 IR 测试这些信息的影响。
 
-1）识别 MIR 中所有的伪指令 LIFETIME_START、LIFETIME_END。由于栈着色会合并栈变量，因此当伪指令个数较少时就没必要执行栈着色优化，例如伪指令个数少于 2 个。
+**代码清单 9-7 stack-marked.ll：显式添加 x/y 生命周期**
 
-2）识别活跃变量，计算变量的活跃区间（死变量的活跃区间为空）。
+```llvm
+define dso_local void @foo(i32 noundef %var) local_unnamed_addr {
+entry:
+  %z = alloca [4096 x i8], align 1
+  %x = alloca [4096 x i8], align 1
+  %y = alloca [4096 x i8], align 1
+  call void @llvm.lifetime.start.p0(i64 4096, ptr nonnull %z)
+  call void @bar(ptr noundef nonnull %z, i32 noundef 0)
+  call void @llvm.lifetime.end.p0(i64 4096, ptr nonnull %z)
+  call void @llvm.lifetime.start.p0(i64 4096, ptr %x)
+  call void @llvm.lifetime.start.p0(i64 4096, ptr %y)
+  %tobool.not = icmp eq i32 %var, 0
+  br i1 %tobool.not, label %if.else, label %B
 
-3）根据变量的活跃区间判断是否可以合并。如果变量的活跃区间不冲突（即不重叠），则说明变量可以共享同一个栈槽，而共享同一个栈槽的变量可以合并它们的活跃区间。实际上要做到合并最优的变量活跃区间是非常困难的，该优化是一个 NP 难题，目前采用的是Greedy 算法。合并时会先对栈变量活跃区间进行排序（按照栈变量的存储空间从大到小排序），即最终目的是优先合并存储空间大的栈变量，并记录合并的栈变量信息。
+if.else:                                          ; preds = %entry
+  call void @bar(ptr noundef nonnull %y, i32 noundef 1)
+  %add.ptr = getelementptr inbounds i8, ptr %y, i64 1024
+  br label %B
 
-根据合并栈变量信息对 MIR 进行修改，这会涉及如下几种情况。
-
-① 对被合并槽关联的 AllocaInst 更新 IR 用途，以维护后续别名分析。必要时把目标 alloca 移到源 alloca 之前；不兼容指针类型会走 bitcast 分支（LLVM 18 一般使用不透明指针）。`remapInstructions` 明确保留原 alloca 指令，并非删除所有源 alloca 后只留一个。
-
-② 在所有使用栈变量的 Alloca 指令合并前，栈槽的指令都要替换为合并后的栈槽。
-
-③ 更新内存指令中别名信息。如果栈变量合并后仍然可以得到合并后变量的别名信息，则更新合并后栈变量的别名信息；如果无法计算得到别名信息，则将合并后的栈变量的别名信息清空。
-
-4）删除 MIR 中所有的 LIFETIME_START、LIFETIME_END 伪指令。
-
-在原书 IR 中只有 z 有生命周期 intrinsic，因此 x、y 的可复用范围缺少同样精细的标记。这能解释优化机会受限，但不能仅据这段裁剪后的 IR 断定 Clang 有错误。代码清单 9-7 显式添加标记，用于讨论它们怎样影响栈着色；这属于手写实验输入，LLVM 18 的实际结果留待验证。
-
-<!-- PDF page 229; printed page 216 -->
-
-**代码清单 9-7 为栈变量 x 和 y 显式增加伪指令**
-
-```text
-0 define dso_local void @foo(i32 noundef %var) local_unnamed_addr {
-1 entry:
-2   %z = alloca [4096 x i8], align 16
-3   %x = alloca [4096 x i8], align 16
-4   %y = alloca [4096 x i8], align 16
-5   call void @llvm.lifetime.start.p0(i64 4096, ptr nonnull %z)
-6   call void @bar(ptr noundef nonnull %z, i32 noundef 0)
-7   call void @llvm.lifetime.end.p0(i64 4096, ptr nonnull %z)
-8   %tobool.not = icmp eq i32 %var, 0
-9   call void @llvm.lifetime.start.p0(i64 4096, ptr nonnull %x)
-10   br i1 %tobool.not, label %if.else, label %B
-
-11 if.else:                                          ; preds = %entry
-12   call void @llvm.lifetime.start.p0(i64 4096, ptr nonnull %y)
-13   call void @bar(ptr noundef nonnull %y, i32 noundef 1)
-14   %add.ptr = getelementptr inbounds i8, ptr %y, i64 1024
-15   br label %B
-
-16 B:                                                ; preds = %entry, %if.else
-17   %p.0 = phi ptr [ %add.ptr, %if.else ], [ %x, %entry ]
-18   call void @bar(ptr noundef nonnull %p.0, i32 noundef 2)
-19   call void @llvm.lifetime.end.p0(i64 4096, ptr nonnull %x)
-20   call void @llvm.lifetime.end.p0(i64 4096, ptr nonnull %y)
-21   ret void
-22 }
-```
-
-按本例标记的文本位置可直观记作 z[5,7]、x[9,19]、y[12,20]，但 CFG 活跃性不能直接等同于文件行号区间。LLVM 18 会进行跨块数据流分析，并默认使用 `stackcoloring-lifetime-start-on-first-use=true` 的首次使用优化；必须按实现形成的 LiveInterval 判断是否重叠。
-
-z 在标记层面先结束，因而有与 x 或 y 复用槽的机会；x、y 是否还能复用要看按 CFG 建立的活跃区间、首次使用处理及逃逸信息。本次不把原书声称的 llc 结果当作 LLVM 18 的既成输出。
-
-在栈着色中要特别注意活跃变量分析。在 LLVM 3.9 之前，活跃变量分析使用的是后向数据流分析（参见 3.3.1 节），但是从 LLVM 3.9 开始使用的是前向数据流分析。之所以有这样的变化主要是因为在一些场景下基于后向数据流分析会得出不正确的结果，例如一些编译优化可能会导致栈变量在分配空间之前被使用。代码清单 9-8 演示了一个简单的例子。
-
-**代码清单 9-8 活跃变量分析示例**
-
-```text
-int bar() {
-    char b1[1024], b2[1024];
-    if (...) {
-        <uses of b2>
-        return y;
-    } else {
-        <uses of b1>
-        while (...) {
-            char b3[1024];
-```
-
-<!-- PDF page 230; printed page 217 -->
-
-```text
-            <uses of b3>
-        }
-    }
+B:                                                ; preds = %entry, %if.else
+  %p.0 = phi ptr [ %add.ptr, %if.else ], [ %x, %entry ]
+  call void @bar(ptr noundef nonnull %p.0, i32 noundef 2)
+  call void @llvm.lifetime.end.p0(i64 4096, ptr %x)
+  call void @llvm.lifetime.end.p0(i64 4096, ptr %y)
+  ret void
 }
+
+declare void @bar(ptr, i32)
+declare void @llvm.lifetime.start.p0(i64 immarg, ptr nocapture)
+declare void @llvm.lifetime.end.p0(i64 immarg, ptr nocapture)
 ```
 
-代码清单 9-8 是含省略号和占位语句的算法示意，不能直接编译。优化移动栈地址计算或生命周期相关指令后，实际使用与声明的生命周期边界可能不再简单对应。风险是把真实重叠的栈对象误合并而相互覆盖，并非固定大小栈对象一定到循环内才真正分配物理空间。
+在 AArch64 上，这份输入的 x 槽合并进 z，MIR 中保留 `%stack.0.z` 与 `%stack.2.y` 两个对象。原来的 12288 字节对象容量变成 8192 字节；这是局部对象容量，不等于包含保存区、对齐等项目的整个函数帧大小。x/y 的地址和 PHI 用途导致分析保留其重叠可能性，不能从两条分支互斥推出本实现必然合并成一个 4096 字节槽。
 
-因此栈着色必须结合生命周期标记、对象实际使用和 CFG 数据流建立活跃区间。LLVM 18 的 `calculateLocalLiveness`、`calculateLiveIntervals`、`applyFirstUse` 共同完成这一过程；启用保护逃逸对象的选项时还会排除不安全范围。这里的历史版本演进仅作背景，不把“上移至定义位置”当作 LLVM 18 的完整实现规则。
+更小的正例 `lifetime.ll` 含两个顺序使用、各 64 字节的对象，每个对象的使用完整位于自己的 lifetime.start/end 之间。BPF 栈着色实测把两个槽合为一个，PEI 后访问相对 R10 的 -64 偏移。这个正例隔离了生命周期复用机制，也避免把 AArch64 大栈帧套用到 BPF。
+
+**代码清单 9-8 生命周期和实际使用必须同时建模的算法示意**
+
+```text
+entry:
+    address1 = address_of(stack_object_1)
+    address2 = address_of(stack_object_2)
+    branch condition, loop, exit
+loop:
+    lifetime_start(stack_object_1)
+    use(address1)
+    lifetime_end(stack_object_1)
+    use(address2)
+    branch more, loop, exit
+exit:
+    ...
+```
+
+清单 9-8 是算法说明，`address_of/use` 不是可编译语法。栈对象的地址计算可能被移动，且循环回边会带来跨块活跃性，文件行号区间不能代替 CFG 数据流。LLVM 18 使用前向数据流，并可把生命周期开始推迟到首次使用；对象逃逸和生命周期外实际使用又可能迫使分析采用更保守的范围。这里的“使用”及逃逸依据实现中的 frame-index、内存操作数等信息判定，并不等于所有指针地址计算都立即读取对象。错误合并会使两个仍活跃对象互相覆盖，因此不确定时保留独立槽。
 
 ## 9.4 栈槽分配
 
-`LocalStackSlotPass` 首先检查 `TargetRegisterInfo::requiresVirtualBaseRegisters(MF)`；若目标不要求或没有局部对象，直接返回。它计算局部对象的相对偏移，通过 `needsFrameBaseReg` 等目标接口决定是否插入虚拟基址寄存器，帮助后续满足寻址范围。它不负责一次性证明所有最终栈访问合法，也不会在这里完成整个函数栈帧的最终布局。栈对象的方向、对齐和栈保护分组仍须被遵守。
+`LocalStackSlotPass` 在 `TargetRegisterInfo::requiresVirtualBaseRegisters(MF)` 为真且存在局部对象时，预先安排局部对象相对布局。它通过 `needsFrameBaseReg` 等接口判断某些引用是否需要虚拟基址寄存器。如果需要，就在寄存器分配前引入基址计算，使后续分配器统一处理这个寄存器，并让多个访问有机会共享基址。
 
-栈槽分配是在 LLVM 2.8 中首次引入，最初该功能的实现放在 PEI（即前言 / 后序插入，参见 11.1 节）中。从 PEI 分离出该功能主要是为了解决在寄存器分配后一些栈变量访问指令可能仍然不合法的问题。例如 AArch64 对 load/store 指令有多种寻址模式：偏移寻址（offset addressing）、前变址寻址（pre-indexed addressing）、后变址寻址（post-indexed addressing）。而这些寻址模式又支持不同类型的数据访问，一些指令使用立即数作为偏移值，而偏移的范围在指令中有对应的约束。例如在 load/store 指令对中，32 位 LDP/STP 的立即数编码为有符号 7 位，按 4 字节缩放；编码范围为 [–64，63]，对应字节偏移为 [–256，252]○一，如果相对于基寄存器（base-register，通常为 FP）的栈变量偏
+这解决的是寻址范围问题。例如 AArch64 32 位 LDP/STP 的有符号 7 位立即数按 4 字节缩放，字节偏移为 -256 到 252；超范围访问不能原样编码。实际目标可能采用其他 load/store 形式，或者在 PEI 阶段用临时寄存器展开。不同寻址形式的立即数范围不能混为一谈。
 
-○一关于 load/store 指令格式可以参考 ARM 官方文档：https://developer.arm.com/documentation/ddi0596/2020-
-
-12/Index-by-Encoding/Loads-and-Stores。
-
-<!-- PDF page 231; printed page 218 -->
-
-移超过该范围，需要对指令进行改写（通常是引入一个新的寄存器，将原来指令变换成基于寄存器的访存指令）。这一操作在 PEI 阶段的执行性能较差○一，而将该工作调整至寄存器分配前，只需引入一个新的虚拟寄存器（由寄存器分配阶段统一完成虚拟寄存器到物理寄存器的映射）然后改写指令。
-
-> 预分配阶段引入虚拟基址寄存器，可由后续寄存器分配统一处理，多个栈访问也可能共享基址。PEI 在分配之后掌握更多最终帧信息；LocalStackSlotPass 只有实际插入了基址寄存器才设置 UseLocalStackAllocationBlock，否则 PEI 可重新布局以获得更好的对齐。原书列举的 AArch64 CSR/溢出字节估计不是所有函数或 LLVM 18 目标固定遵守的常量。
+本 Pass 不完成最终栈帧，也不负责证明所有最终访问已经合法。寄存器分配还可能新增溢出槽，PEI 才掌握最终保存区和对象偏移。预布局需遵守增长方向、对齐和栈保护分组等约束；仅当确实插入了基址寄存器时才设置使用局部预分配块的状态，否则 PEI 仍可重新布局。不能把原书对某目标保存区的固定字节估计推广到所有函数。
 
 ## 9.5 死指令消除
 
-死指令消除（也称为死代码消除）是编译优化中最基础的优化。
+一条指令的所有结果都不再需要，并且该指令没有必须保留的副作用，才可能删除。普通无用加法与 volatile 访问、调用、返回、栅栏不同：后几类不能仅按寄存器用途计数判死。物理寄存器也有隐式定义、别名和保留寄存器限制。
 
-死指令消除的思想可以简单概括为：如果变量 V 没有被使用（即除了定义变量 V 的指令外，没有任何指令使用变量 V），并且定义 V 的指令没有任何负面影响（指的是指令有volatile 属性，或者 call 等特殊指令），则可以删除定义变量 V 的指令。
+`DeadMachineInstructionElim` 在基本块内部反向扫描，跟踪物理寄存器活跃性，并查询虚拟寄存器的非调试用途。删除一个消费者后，它的输入定义可能成为新的死指令；函数级处理重复进行，直至一轮不再删除。传播方向是从已删除用途追溯到其定义，不能先删除仍被使用的定义。
 
-一个说明性方法是为变量记录非调试用途计数：删除 `V = COPY E` 后，E 的用途减少，可能进一步使定义 E 的指令成为死指令。依赖传播的方向是从删除的使用指令追溯其输入定义，而不是先删除仍被 COPY 使用的 E 再减少 V 的计数。
+实验 `dce.mir` 输入的核心如下：
 
-LLVM 的实现更为简单，其中有几个要点。
+```text
+%0:gpr = COPY $r1
+%1:gpr = ADD_ri %0, 7
+%2:gpr = COPY %1
+$r0 = COPY %0
+RET implicit $r0
+```
 
-1）从后向前处理基本块的指令，能够更为准确、快速地完成死指令的删除（参见3.3.1 节）。
-
-○一 PEI 在寄存器分配后才执行，因为此时寄存器已经分配完成，所以需要较为复杂的算法才能找到一个合
-
-适的寄存器完成指令变换，算法的复杂度为 O(n2)。
-
-<!-- PDF page 232; printed page 219 -->
-
-2）检测指令中使用的变量（指虚拟寄存器），指令中直接使用或者跨基本块的活跃变量（或者一些保留的物理寄存器）都需要识别。
-
-3）对于没有被使用的变量，删除定义该变量的指令。
-
-4）LLVM 18 的 `runOnMachineFunction` 反复调用 `eliminateDeadMI`，直到一轮不再删除指令。因此包含 COPY 在内的死依赖链也能逐步被清除；不能说该 Pass 不会进行递归/迭代清理。
+`-run-pass=dead-mi-elimination` 删除 `%2` 的 COPY 和 `%1` 的 ADD，只留下从 R1 到 R0 的返回路径。验证器通过，但这不代表 DCE 可以任意删除任一没有显式输出的指令。
 
 ## 9.6 ILP 优化之 If-Conversion
 
-ILP 优化和后端密切相关，本节介绍 ILP 优化中使用较为广泛的 If-Conversion 算法。If-Conversion 算法用于消除跳转指令，并将控制依赖转换成数据依赖。本节主要介绍LLVM 后端基于 MIR 的算法实现—EarlyIfConverter，它在寄存器分配之前执行。
+If-Conversion 把分支控制依赖变为数据选择或谓词执行。它可能减少错误预测和跳转，却会执行原先只在某一分支上执行的计算，并延长某些值的活跃期。因此安全性与收益必须分别检查。
 
-下面先看一段简单的 if-else 代码，如代码清单 9-9 所示。假设代码生成后的指令分别为 S1、S2、S3、S4。
-
-**代码清单 9-9 if-else 代码**
+**代码清单 9-9 原始控制流的伪代码**
 
 ```text
-if (A) {
-    B = 1;    // 指令S1
-    C = 2;    // 指令S2
-} else {
-    B = 3;    // 指令S3
-    C = 4;    // 指令S4
-}
+if (A) { z = S1(); q = S2(); }
+else   { z = S3(); q = S4(); }
+use(z, q);
 ```
 
-如果不进行 ILP 优化，当 A 为 true 时会执行 S1、S2，当 A 为 false 时会执行 S3、S4。生成的汇编代码如代码清单 9-10 所示，可以看到 goto 指令会根据 A 的值进行跳转。
-
-**代码清单 9-10 使用 goto 进行跳转**
+**代码清单 9-10 显式分支形式**
 
 ```text
-if (!A) goto Else;
-mov B, 1;  // S1
-mov C, 2;  // S2
-goto End;
-Else:
-mov B, 3;  // S3
-mov C, 4;  // S4
-End:
-
+if (!A) goto False;
+z = S1(); q = S2();
+goto Join;
+False:
+z = S3(); q = S4();
+Join:
+use(z, q);
 ```
 
-我们可以通过 If-Conversion 算法消除汇编指令中的 goto 指令（当然，执行该优化要求后端支持 select 指令）。假设用 p0 表示 A = true 时会执行 S1、S2，用 p1 表示 A = false 时会执行 S3、S4，最后得到的伪代码如代码清单 9-11 所示。
-
-**代码清单 9-11 goto 被消除的伪代码效果**
+**代码清单 9-11 可安全推测执行时的数据选择形式**
 
 ```text
-(p0)  mov    B, 1; // S1
-(p0)  mov    C, 2; // S2
-(p1)  mov    B, 3; // S3
-(p1)  mov    C, 4; // S4
+zt = S1(); qt = S2();
+zf = S3(); qf = S4();
+z = select(A, zt, zf);
+q = select(A, qt, qf);
+use(z, q);
 ```
 
-<!-- PDF page 233; printed page 220 -->
+清单 9-11 不适用于任意 S1～S4。未选择一侧若会写内存、发起调用、触发不可接受的故障或破坏物理寄存器状态，不能无条件执行。EarlyIfConverter 的 `SSAIfConv` 检查菱形/三角形结构、分支可分析性、PHI、目标 `canInsertSelect` 能力以及待移动指令是否可安全推测执行，再用关键路径等模型评估收益。“目标有谓词指令”与“目标能够生成所需 select”是不同接口条件。
 
-以下说明寄存器分配前 `EarlyIfConverter`/`SSAIfConv` 的主要过程。代码清单 9-9～9-11 是控制流与谓词执行的说明性伪代码；后端是否具有谓词指令，与 `canInsertSelect` 能否生成条件选择是相关但不同的能力。
+**代码清单 9-12 if-conversion.cpp：可复现的整数计算例子**
 
-1）后序遍历当前函数的支配树基本块节点。
-
-2）检查当前基本块是否可以进行 If- Conversion 优化，如果不符合优化约束条件，则跳过。LLVM 检查的约束条件非常严格，它只支持非常特定的场景下的优化，此处列举了比较重要的约束条件。
-
-① 控制流形态：只有满足特定控制流形态的代码才能执行优化，当前只支持对图 9-8 能够执行 If-Conversion 的两种控制流形态如图 9-8 所示的两种控制流形态做优化。
-
-② Head 的条件分支需要由 `TargetInstrInfo::analyzeBranch` 分析，并由目标接口确认可产生选择指令；并不要求所有架构都具有像 x86 EFLAGS 那样独立的条件码寄存器。
-
-③ 硬件支持 select 指令：Tail 中的 φ 函数需要被重写为 select 指令，以便将控制流转换成顺序指令。
-
-④ TBB 和 FBB 不能有活跃入参（Liveins）的物理寄存器：TBB、FBB 和 Head 基本块之间的指令依赖只能是虚拟寄存器间的数据依赖关系。
-
-⑤ TBB 和 FBB 不能有访存指令：TBB 和 FBB 指令会被移入 Head 基本块中，访存指令的移动可能会影响之后的访存一致性。
-
-下面以代码清单 9-12 中所示的源码为例，来看看 LLVM 中 If-Conversion 的优化过程。
-
-**代码清单 9-12 If-Conversion 的优化过程**
-
-```text
+```cpp
 int MUL(int x, int y, bool flag) {
     int aaa = y * x;
     int z = 0;
@@ -601,258 +402,124 @@ int MUL(int x, int y, bool flag) {
 }
 ```
 
-当编译器执行到 If-Conversion 的 Pass 前时，代码清单 9-12 对应的 MIR 如代码清单 9-13所示。
+实验先以 `-O0 -Xclang -disable-O0-optnone` 生成 IR，再单独运行 `mem2reg`，保留菱形 CFG。直接使用 Clang `-O2` 可能在进入这个机器 Pass 前已改变输入。以 X86-64 generic 为例，Pass 前 MIR 的 body 为：
 
-**代码清单 9-13 与代码清单 9-12 对应的 MIR（If-Conversion 优化前）**
-
-> 下面几个 MIR 清单用于展示变换，省略 YAML 头与部分元信息，不能直接当完整 `.mir` 文件输入。已修复物理寄存器 `$edi`、JCC 对 `$eflags` 的使用属性和最终单块 CFG 的陈旧 successors。具体寄存器编号和目标选择仍待 LLVM 18 实测。
+**代码清单 9-13 EarlyIfConverter 之前的实际 MIR**
 
 ```text
-Function Live Ins: $edi in %6, %esi in %7, $edx in %8
 bb.0.entry:
-```
-
-<!-- PDF page 234; printed page 221 -->
-
-```text
-successors: %bb.1, %bb.2;
+    successors: %bb.1(0x40000000), %bb.2(0x40000000)
     liveins: $edi, $esi, $edx
-    %8:gr32 = COPY $edx
-    %7:gr32 = COPY $esi
-    %6:gr32 = COPY $edi
-    %0:gr32 = nsw IMUL32rr %7:gr32, %6:gr32, implicit-def dead $eflags
-    TEST32rr %8:gr32, %8:gr32, implicit-def $eflags
+
+    %9:gr32 = COPY $edx
+    %8:gr32 = COPY $esi
+    %7:gr32 = COPY $edi
+    %0:gr32 = nsw IMUL32rr %8, %7, implicit-def dead $eflags
+    TEST32rr %9, %9, implicit-def $eflags
     JCC_1 %bb.2, 4, implicit $eflags
     JMP_1 %bb.1
 
-bb.1.if.then:
-; Predecessors: %bb.0
- successors: %bb.3
-    %1:gr32 = nsw IMUL32rr %0:gr32, %6:gr32, implicit-def dead $eflags
+  bb.1.if.then:
+    successors: %bb.3(0x80000000)
+
+    %1:gr32 = nsw IMUL32rr %8, %7, implicit-def dead $eflags
+    %2:gr32 = nsw IMUL32rr %7, %0, implicit-def dead $eflags
     JMP_1 %bb.3
 
-bb.2.if.else:
-; Predecessors: %bb.0
- successors: %bb.3
-    %2:gr32 = nsw ADD32rr %7:gr32, %6:gr32, implicit-def dead $eflags
-    %3:gr32 = nsw ADD32rr %0:gr32, %6:gr32, implicit-def dead $eflags
+  bb.2.if.else:
+    successors: %bb.3(0x80000000)
 
-bb.3.if.end:
-; Predecessors: %bb.2, %bb.1
-    %4:gr32 = PHI %2:gr32, %bb.2, %0:gr32, %bb.1
-        %5:gr32 = PHI %3:gr32, %bb.2, %1:gr32, %bb.1
-    %9:gr32 = nsw IMUL32rr %4:gr32, %5:gr32, implicit-def dead $eflags
-    $eax = COPY %9:gr32
+    %3:gr32 = nsw ADD32rr %8, %7, implicit-def dead $eflags
+    %4:gr32 = nsw ADD32rr %7, %0, implicit-def dead $eflags
+
+  bb.3.if.end:
+    %5:gr32 = PHI %3, %bb.2, %1, %bb.1
+    %6:gr32 = PHI %4, %bb.2, %2, %bb.1
+    %10:gr32 = nsw IMUL32rr %5, %6, implicit-def dead $eflags
+    $eax = COPY %10
     RET 0, $eax
 ```
 
-此时的控制流和支配树分别如图 9-9a 和图 9-9b 所示。
+LLVM 18 X86 的 `enableEarlyIfConversion()` 同时要求 CMOV 能力和 `-x86-early-ifcvt` 开关。该开关默认 false：默认实验前后都是 4 个基本块。显式打开后，本例无需 `-stress-early-ifcvt` 就能变换。以下两步是对实际算法的分解说明，不是额外的 Pass 截图。
 
-![图 9-9 代码清单 9-12 对应的控制流和支配树](origin/assets/figures/p234-9-9.png)
-
-**图 9-9 代码清单 9-12 对应的控制流和支配树**
-
-If-Conversion 执行步骤如下。
-
-1）按照支配树进行后序遍历，依次判断出节点 %bb.1、%bb.2、%bb.3 都不符合 If- Conversion 的优化形态。
-
-2）继续遍历，直至 Head = %bb.0，TBB = %bb.1，FBB = %bb.2，Tail = %bb.3。
-
-<!-- PDF page 235; printed page 222 -->
-
-3）从后向前遍历基本块 Head 指令，在 Head 中找到指令插入位置，以便能将基本块TBB 和 FBB 的指令移到 Head 中，插入位置为指令 TEST32rr %8:gr32, %8:gr32 之前。
-
-4）将 TBB 和 FBB 中除 Terminate 以外的指令移入 Head 中。此时，函数的 MIR 如代码清单 9-14 所示，移动的指令使用蓝色标出。
-
-**代码清单 9-14 将 TBB 和 FBB 中除 Terminate 以外的指令移入 Head 中**
+**代码清单 9-14 把可推测的两个分支计算移到 Head：概念中间态**
 
 ```text
-Function Live Ins: $edi in %6, %esi in %7, $edx in %8
-bb.0.entry:
-successors: %bb.1, %bb.2;
-    liveins: $edi, $esi, $edx
-    %8:gr32 = COPY $edx
-    %7:gr32 = COPY $esi
-    %6:gr32 = COPY $edi
-    %0:gr32 = nsw IMUL32rr %7:gr32, %6:gr32, implicit-def dead $eflags
-    %2:gr32 = nsw ADD32rr %7:gr32, %6:gr32, implicit-def dead $eflags
-    %3:gr32 = nsw ADD32rr %0:gr32, %6:gr32, implicit-def dead $eflags
-    %1:gr32 = nsw IMUL32rr %0:gr32, %6:gr32, implicit-def dead $eflags
-    TEST32rr %8:gr32, %8:gr32, implicit-def $eflags
-    JCC_1 %bb.2, 4, implicit $eflags
-    JMP_1 %bb.1
-
-bb.1.if.then:
-; Predecessors: %bb.0
-    successors: %bb.3
-    JMP_1 %bb.3
-
-bb.2.if.else:
-; Predecessors: %bb.0
-    successors: %bb.3
-
-bb.3.if.end:
-; Predecessors: %bb.2, %bb.1
-    %4:gr32 = PHI %2:gr32, %bb.2, %0:gr32, %bb.1
-        %5:gr32 = PHI %3:gr32, %bb.2, %1:gr32, %bb.1
-    %9:gr32 = nsw IMUL32rr %4:gr32, %5:gr32, implicit-def dead $eflags
-    $eax = COPY %9:gr32
-    RET 0, $eax
+Head:
+    aaa = y * x
+    z_false = y + x
+    q_false = x + aaa
+    z_true  = y * x
+    q_true  = x * aaa
+    test(flag)
+    # 此时还需将 Tail 的 PHI 改为选择，不能直接删去所有控制流。
 ```
 
-将基本块 Tail 中的 φ 函数用选择（select）指令（本例中是 CMOV32rr）进行重写替换，将相应的选择指令插入 TEST32rr %8:gr32, %8:gr32 之后，并删除原先的 φ 函数，如代码清单 9-15 所示。
-
-**代码清单 9-15 将 select 指令插入 Test32rr 后**
+**代码清单 9-15 把两个 PHI 替换为条件选择：实际指令片段**
 
 ```text
-Function Live Ins: $edi in %6, %esi in %7, $edx in %8
-bb.0.entry:
-successors: %bb.1, %bb.2;
-    liveins: $edi, $esi, $edx
+TEST32rr %9, %9, implicit-def $eflags
+%5:gr32 = CMOV32rr %1, %3, 4, implicit $eflags
+%6:gr32 = CMOV32rr %2, %4, 4, implicit $eflags
 ```
 
-<!-- PDF page 236; printed page 223 -->
+条件码 4 在这里表示等于零，因而 flag 为零时选择 false 一侧。必须在算术指令之后重新设置 flags，不能让先前的 ADD/IMUL 随意覆盖 select 依赖的状态。删除冗余分支并合并汇聚块后，得到下面的实际结果：
+
+**代码清单 9-16 显式启用 -x86-early-ifcvt 后的实际 MIR**
 
 ```text
-    %8:gr32 = COPY $edx
-    %7:gr32 = COPY $esi
-    %6:gr32 = COPY $edi
-    %0:gr32 = nsw IMUL32rr %7:gr32, %6:gr32, implicit-def dead $eflags
-    %2:gr32 = nsw ADD32rr %7:gr32, %6:gr32, implicit-def dead $eflags
-    %3:gr32 = nsw ADD32rr %0:gr32, %6:gr32, implicit-def dead $eflags
-    %1:gr32 = nsw IMUL32rr %0:gr32, %6:gr32, implicit-def dead $eflags
-    TEST32rr %8:gr32, %8:gr32, implicit-def $eflags
-    %4:gr32 = CMOV32rr %0:gr32, %2:gr32, 4, implicit $eflags
-    %5:gr32 = CMOV32rr %1:gr32, %3:gr32, 4, implicit $eflags
-    JCC_1 %bb.2, 4, implicit $eflags
-    JMP_1 %bb.1
-
-bb.1.if.then:
-; Predecessors: %bb.0
-successors: %bb.3
-    JMP_1 %bb.3
-
-bb.2.if.else:
-; Predecessors: %bb.0
- successors: %bb.3
-
-bb.3.if.end:
-; Predecessors: %bb.2, %bb.1
-    %9:gr32 = nsw IMUL32rr %4:gr32, %5:gr32, implicit-def dead $eflags
-    $eax = COPY %9:gr32
-    RET 0, $eax
-```
-
-删除基本块 TBB、FBB 以及基本块 Head 中的跳转指令，并将 Tail 和 Head 合并成一个基本块，最终经 If-Conversion 优化后的 MIR 如代码清单 9-16 所示。
-
-**代码清单 9-16 与代码清单 9-12 对应的 MIR（If-Conversion 优化后）**
-
-```text
-Function Live Ins: $edi in %6, %esi in %7, $edx in %8
 bb.0.entry:
     liveins: $edi, $esi, $edx
-    %8:gr32 = COPY $edx
-    %7:gr32 = COPY $esi
-    %6:gr32 = COPY $edi
-    %0:gr32 = nsw IMUL32rr %7:gr32, %6:gr32, implicit-def dead $eflags
-    %2:gr32 = nsw ADD32rr %7:gr32, %6:gr32, implicit-def dead $eflags
-    %3:gr32 = nsw ADD32rr %0:gr32, %6:gr32, implicit-def dead $eflags
-    %1:gr32 = nsw IMUL32rr %0:gr32, %6:gr32, implicit-def dead $eflags
-    TEST32rr %8:gr32, %8:gr32, implicit-def $eflags
-    %4:gr32 = CMOV32rr %0:gr32, %2:gr32, 4, implicit $eflags
-        %5:gr32 = CMOV32rr %1:gr32, %3:gr32, 4, implicit $eflags
-    %9:gr32 = nsw IMUL32rr %4:gr32, %5:gr32, implicit-def dead $eflags
-    $eax = COPY %9:gr32
+
+    %9:gr32 = COPY $edx
+    %8:gr32 = COPY $esi
+    %7:gr32 = COPY $edi
+    %0:gr32 = nsw IMUL32rr %8, %7, implicit-def dead $eflags
+    %3:gr32 = nsw ADD32rr %8, %7, implicit-def dead $eflags
+    %4:gr32 = nsw ADD32rr %7, %0, implicit-def dead $eflags
+    %1:gr32 = nsw IMUL32rr %8, %7, implicit-def dead $eflags
+    %2:gr32 = nsw IMUL32rr %7, %0, implicit-def dead $eflags
+    TEST32rr %9, %9, implicit-def $eflags
+    %5:gr32 = CMOV32rr %1, %3, 4, implicit $eflags
+    %6:gr32 = CMOV32rr %2, %4, 4, implicit $eflags
+    %10:gr32 = nsw IMUL32rr %5, %6, implicit-def dead $eflags
+    $eax = COPY %10
     RET 0, $eax
 ```
 
-<!-- PDF page 237; printed page 224 -->
-
-最后还要更新支配树和循环分析结果，由于细节较多，限于篇幅，这里不再展开。最后提一点，LLVM 实现的 If-Conversion 算法是一个简化版本，比较复杂的 If-Conversion 算法可以参考论文“On Predicated Execution”○一。
+四块变成一块，包含两条 `CMOV32rr`，而分支两侧算术都保留。本实验验证结构变化；未运行 X86 硬件性能测试，也不把条件选择假定为恒定优于分支。
 
 ## 9.7 循环不变量外提
 
-> LLVM 18 的 MachineLICM 除循环不变性外，还检查移动安全性、内存别名、是否保证执行、寄存器压力及收益。下列经典条件是保守算法说明，并非实现的必要充分条件：可安全推测执行的表达式即使不支配每个退出点也可能外提。示例中的 `cout`/`endl` 需在完整 C++ 程序中加入头文件和命名空间。
+循环不变指令的输入在循环内不变，因而可能只计算一次。一个值“只有一个 SSA 定义”并不足以证明循环不变：由循环 PHI 或随迭代变化的加载计算出的值，每次动态执行仍可能不同。
 
-LICM（循环不变量外提）优化通过减少不必要的重复运算，达到减少执行指令的目的。以代码清单 9-17 中的代码为例，每次循环迭代都为 tmp 变量赋一个常量值。实际上，赋值操作可以提到循环外面，这样仅需要进行一次赋值即可。
+**代码清单 9-17 外提循环不变乘法的 C 说明**
 
-**代码清单 9-17 循环不变量外提示例**
-
-```text
-void test()
-{
-    for (int i = 0; i < 10; ++i) {
-        int tmp = 100;
-        cout << tmp + i << endl;
-    }
+```c
+void fill(long *out, long a, long b) {
+    for (int i = 0; i != 10; ++i)
+        out[i] = a * b;
 }
 ```
 
-循环不变量外提优化的基本步骤如下。
+这里忽略 C 中有符号乘法溢出的调用输入；MIR 实验 `licm.mir` 直接指定机器整数计算以隔离外提。BPF `early-machinelicm` 把循环体内的 `MUL_rr` 移到前置块，循环里的 store 和归纳变量更新保留。
 
-1）识别自然循环（参考第 5 章）。
+MachineLICM 按循环层次寻找候选，判断所有输入定义是否来自循环外或已证明不变的指令，并检查可移动性、内存别名、调用和物理寄存器影响。加载还需证明循环内不会改变所读内存。可能陷阱或不可安全推测执行的操作，要证明移动不会引入原先不执行的行为；不能把“支配每个循环退出”当成全部合法指令的统一必要条件。安全乘法可以从条件执行路径外提，而会故障的加载可能不行。
 
-2）识别自然循环中的循环不变量。在自然循环中，若表达式仅被定义了一次，且这个定义在循环过程中是不变的，那么这个表达式就是循环不变的。
-
-3）判断循环不变量是否可以外提。若要外提，则表达式需要满足如下条件。
-
-① 表达式支配所有循环退出点。
-
-② 循环中表达式是唯一的定义点。
-
-③ 定义点支配所有使用点。
-
-4）将满足条件的循环不变量提到循环外，将可外提的表达式提到一个新的基本块中，并将该块放在循环之前，调整相应的跳转逻辑。
+外提位置通常为循环 preheader，并且必须保持对所有用途的支配关系；没有可用 preheader 时，能否创建或采用其他位置取决于实现与目标。外提也可能延长活跃区间，导致溢出。因此 LLVM 18 还评估寄存器压力、廉价重算和收益，并非找到不变量就移动。
 
 ## 9.8 公共子表达式消除
 
-在编译优化过程中，如果存在一个表达式 E 之前被计算过，且从之前的计算点到当前程序的执行点，E 用到的所有变量的值都没有发生过变化，那么 E 就被称为公共子表达式。E 的值不需要再进行重复运算，可直接重用，这种优化称为公共子表达式消除（即 CSE）。如果优化的范围仅在基本块内，则称为局部公共子表达式消除（local common subexpression
+公共子表达式消除用可复用的早先结果替代冗余计算。对 SSA 虚拟寄存器，单个寄存器本身不会在后面被重新定义；但内存、物理寄存器和指令 flags 仍可能改变等价性。LLVM 的 MachineCSE 使用支配树范围内的表达式表，处理可交换操作数和 COPY 等机会，并通过目标信息检查合法性。
 
-○一具体请参见 https://web.eecs.umich.edu/~mahlke/courses/583f12/reading/HPL-91-58.pdf。
+消除一个定义会减少计算，却可能延长另一个值的活跃区间。所以 CSE 不保证降低寄存器压力，也不保证所有输入都更快。跨块替换还要求早先结果支配该用途，不能因两条文本相同就从不相关分支直接复用。
 
-<!-- PDF page 238; printed page 225 -->
+**代码清单 9-18 cse.ll：跨基本块的重复计算**
 
-elimation）；如果优化范围在函数范围内覆盖了多个基本块，则称为全局公共子表达式消除（global common subexpression elimination）。
-
-公共子表达式消除为编译器提供了以下收益。
-
-1）优化代码大小：消除了冗余的代码序列，直接减少代码量。
-
-2）减少代码执行时间：减少了重复的运算，可以让程序的执行效率得到提升。
-
-3）助力其他优化：消除了无用的表达式，可以简化数据流、控制流的分析过程；消除冗余指令也让编译器可以更充分地使用指令的并发特性，以优化 CPU 的资源利用。
-
-4）对寄存器压力的影响需评估：消除一个定义可能减少指令和临时值，但复用较早的计算也可能延长其活跃区间、增大压力。LLVM 18 的 `isProfitableToCSE` 因而包含相关收益限制。
-
-如图 9-10a 所示，在左侧的表达式序列中，b 和 c 有相同的表达式：a + 6×2。在计算从 b 到 c 的过程中，变量 a 的值没有发生变化，所以 c 直接复用 b 的计算结果即可。因此，可以消除表达式 c = a + 6×2，将 e = a + c 替换为 e = a + b。进一步，d 和 e 产生了相同的表达式，且在计算从 d 到 e 的过程中，变量 a 和 b 的值没有发生过变化，因此可继续消除表达式 e = a + c，e 直接复用 d 的计算结果。公共子表达式消除的示意图如图 9-10b所示。
-
-![图 9-10 公共子表达式消除示意图](origin/assets/figures/p238-9-10.png)
-
-**图 9-10 公共子表达式消除示意图**
-
-> 原图算术值有误：a=10，b=c=22，因此 d=e=32。上述转写和下面校订图采用正确值。
-
-```mermaid
-flowchart LR
- A["a = 10"] --> B["b = a + 6×2 = 22"]
- B --> D["d = a + b = 32"]
- B --> C["c 复用 b"]
- D --> E["e 复用 d = 32"]
-```
-
-考虑有代码清单 9-18 所示的 IR 片段，该片段中 cse 函数接受 5 个入参，函数体内存在3 个基本块。其中，基本块 bb.0 中的 %a 与基本块 bb.1 中的 %c 都以 %x 和 %y 作为输入进行加法运算，但两个输入的顺序不同，而 %b 和 %d 的表达式完全相同。该 IR 片段将用于演示基本块之间的公共子表达式消除，即全局公共子表达式消除。
-
-**代码清单 9-18 公共子表达式消除示例**
-
-```text
+```llvm
 define void @cse(i32 %x, i32 %y, ptr %p1, ptr %p2, i1 %cond) {
 bb.0:
     %a = add i32 %x, %y
-```
-
-<!-- PDF page 239; printed page 226 -->
-
-```text
     store i32 %a, ptr %p1
     %b = zext i32 %a to i64
     store i64 %b, ptr %p2
@@ -870,173 +537,66 @@ bb.2:
 }
 ```
 
-这里使用 RISC-V-64 架构进行说明，启动该架构的编译选项为：llc -mtriple=riscv64。在 Compiler Explorer 中可以看到，经过公共子表达式消除优化前后的 MIR 变化如图 9-11 所示。
+以 RISCV64 generic、`-O2` 在 `machine-cse` 前后截取 MIR，ADDW/SLLI/SRLI 总数从 6 条变为 3 条。第二块的交换输入加法复用 `%0`，零扩展结果复用 `%10`；4 条 store 都仍然存在。这个 Pass 消除的是值计算，不据此认定有副作用的写操作也可删除。
 
-**图 9-11 公共子表达式消除优化前后 MIR 变化**
+```text
+# 优化前 bb.1 中的核心计算
+%11:gpr = ADDW %7, %6
+SW killed %11, %3, 0
+%12:gpr = SLLI %0, 32
+%13:gpr = SRLI killed %12, 32
+SD killed %13, %4, 0
 
-在公共子表达式消除优化前的 MIR 中，%1～%5 分别对应函数的 5 个入参。可以看到，%0 与 %11 的表达式中，操作数顺序不同，但由于它们的 MIR 操作为加法指令 ADDW，加法指令的两个操作数交换位置不影响结果（加法交换律），故而 %11:gpr = ADDW %7:gpr, %6:gpr 等价于 %11:gpr = ADDW %6:gpr, %7:gpr，又因为 %6 复制了 %1，%7 复制了 %2，从 %7 和 %6 被赋值一直执行到当前 %11 节点的过程中，%1 和 %2 未发生变化，所以可将 %11 进一步转换为 %11:gpr = ADDW %1:gpr, %2:gpr。该转换结果与 %0 节
+# 优化后 bb.1 中只剩下复用结果的存储
+SW %0, %3, 0
+SD %10, %4, 0
+```
 
-<!-- PDF page 240; printed page 227 -->
-
-点的表达式完全相同，所以 %11 将被作为公共子表达式消除，后面用到 %11 的地方都会用 %0 替代。同理，%9 和 %12 表达式相同，%12 被消除并用 %9 替代，%13 节点被转换为 %13:gpr = SRLI killed %9:gpr, 32，转换结果与 %10 节点处的表达式相同，所以 %13 也会被消除，并使用 %10 替代。最终生成如图 9-11 中右侧所示的序列。
-
-> 注意：公共子表达式消除优化不仅可以作用于 MIR，也可以作用于 LLVM IR 上。
+独立的 `cse.mir` 还验证了 BPF 同块内两次 `ADD_ri %0,7` 合并为一次，后续加法使用同一结果两次。MachineCSE 属于机器级 Pass；IR 层的 GVN 等算法也能消除冗余计算，但它们的输入和机会不同。
 
 ## 9.9 代码下沉
 
-代码下沉是为了减少执行的代码，例如定义的变量只在一个分支语句中使用，那么将变量定义下沉到分支中可以有效减少执行的代码。代码下沉的示意图如图 9-12 所示。
+下沉推迟计算，使不需要结果的路径有机会完全不执行该指令。它也可能缩短结果的活跃区间。与 LICM 相反方向的移动并不矛盾：二者依赖不同的控制流与频率条件。
 
-![图 9-12 代码下沉示意图](origin/assets/figures/p240-9-12.png)
+实验 `sink.mir` 的入口有 `%2 = ADD_ri %0,7`，但结果只在 bb.1 返回路径使用。运行 `machine-sink` 后，该 ADD 位于 bb.1，另一条返回零的路径无需计算它。其余控制流保持，验证器确认移动后的定义/用途合法。
 
-**图 9-12 代码下沉示意图**
+通用算法需要同时考虑下列事项。
 
-在图 9-12 左侧的图中，变量 v1 只在一个分支中使用，故将 v1 的定义下沉到使用它的分支中，得到如图 9-12 右侧图所示的结果。
+- 可处理 COPY 时先尝试消除中转，但须满足寄存器类和数据流限制。
+- 移动必须安全，不能跨越影响其内存或寄存器语义的指令；收敛操作、目标禁止移动的指令和隐式空检查相关条件也会限制下沉。
+- 找到的目标块必须支配所有真正用途。PHI 的使用位置在对应入边上，不能把它当作汇聚块中普通的使用。候选除直接后继，还可能包含特定支配树子节点。
+- 若同块中还有必须保留的用途，不能只把定义单独移动到其他块。算法可能分轮下沉依赖链，但每次移动都须维持定义可达性。
+- 目标不后支配原块，意味着有路径可能避开执行；目标循环深度更浅、活跃范围缩短等也可能带来收益。后支配、频率和压力是收益分析要素，不是无条件的速度保证。
+- 关键边可能需要先计划拆分，更新 CFG、PHI 入边和频率，再执行移动；不能在共享后继的入口无条件插入一条只属于某条入边的计算。
 
-代码下沉通过寻找较合适的后继/支配子节点减少执行或活跃区间。LLVM 18 的候选并不限于直接 CFG 后继，具体还需下列安全与收益检查。
-
-1）针对 COPY 指令进行优化（即进行 COPY 指令合并）。对于 dst = COPY src 这样的指令，如果 src 不是通过 COPY 指令定义，并且 src 和 dst 寄存器类型相同，则可以将所有的 dst 替换为 src，从而优化 COPY 指令。
-
-2）对于一般的指令：
-
-① 后端允许下沉，例如 ARM 后端对 CMP 指令有特殊约定，在一些情况下不能下沉。
-
-② 不能移动的指令，不允许下沉。
-
-③ 收敛指令（convergent instruction），不允许下沉。
-
-④ 用于保证实现 NULL Check（判空校验的指令）功能，不允许下沉。
-
-⑤ 如果定义和使用寄存器的指令在同一个基本块中，不允许下沉（仅仅下沉定义寄存器指令，而不下沉使用寄存器的指令会导致程序逻辑错误）。
-
-⑥ LLVM 18 的候选集合不仅包括 CFG 直接后继，也包括某些以当前块为直接支配者的支配树子节点。目标块必须正确支配所有用途（PHI 用途按入边处理），并满足安全与收益要求。
-
-⑦ 只有存在收益的场景才能下沉，收益场景主要如下。
-
-<!-- PDF page 241; printed page 228 -->
-
-- 目标块不后支配原块时，部分路径可避免执行该指令，因此作为收益机会；这并非对实际动态次数的严格保证。
-
-- 指令下沉前位于内部循环，下沉后位于外部循环。下沉后指令执行次数能大幅减少，若执行次数不能大幅减少则不能下沉。
-
-- 下沉的基本块逆支配指令下沉前的基本块，如果下沉后指令定义的寄存器是用在 φ函数中的，则可以继续下沉。
-
-- 下沉的基本块逆支配指令下沉前的基本块，同时指令还可以再下沉并且有收益，则继续下沉。
-
-> 注意：下沉的基本块逆支配指令下沉前的基本块，但指令不属于循环，则不能下沉。
-
-- 下沉的基本块逆支配指令下沉前的基本块，并且当前指令属于循环，下沉后指令中操作数的活跃区间变小或者寄存器压力没有增加则可以下沉。○一
-
-⑧ 若下沉后的基本块存在关键边，判断是否可以拆分关键边：能拆分则规划如何拆分关键边，不能拆分关键边则不能下沉。
-
-⑨ 计算下沉指令的位置（通常是 φ 函数后的第一条指令），并下沉代码。
-
-⑩ 拆分关键边，并更新拆分边后的频率。
-
-3）进行循环的特别情况处理，如果参数 SinkInstsIntoCycle 为 True（默认为 False），则进行下沉处理。
-
-在循环中，候选的下沉指令必须同时满足：
-
-- 是循环不变量。
-
-- 可以安全移动。
-
-- 不能下沉 GOT、常量。
-
-- 不是收敛指令（convergent instruction）。
-
-- 只有一处定义。
-
-> 注意：下沉循环指令需要满足支配属性，否则逻辑不正确。
+`sink-insts-to-avoid-spills` 所关联的循环内压力优化还有额外候选规则，不能将其与所有普通下沉混成一套必要充分条件。每次选择的插入点还需位于 PHI 等块入口特殊指令之后，并保持调试信息有效。
 
 ## 9.10 窥孔优化
 
-> 此节按典型模式解释通用 PeepholeOptimizer。`optimizeSelect`、`optimizeCompareInstr`、`optimizeLoadInstr` 等通过目标钩子实施，不能保证所有选择都变成逻辑运算或所有 load 都可折叠。加载折叠除寄存器用途外还受内存依赖、volatile/atomic、副作用与目标合法性约束；该 Pass 的搜索也不限于严格相邻两条指令。
+PeepholeOptimizer 对机器指令模式进行局部改写，但搜索范围不等于严格相邻两条指令。它以目标钩子和虚拟寄存器数据流为基础，改善后续合并与代码生成。通用实现的主要模式如下。
 
-窥孔优化主要是做一些琐碎的、细粒度的优化，优化策略和优化模式会随着目标架构的指令特征的变化而变化。窥孔优化的基本过程如下。遍历每一条待优化指令，然后判断每一条待优化指令与相关指令组成的指令序列是否存在可以优化的模式。如果是，则将匹配的指令序列转换成更高效的新指令序列；如果没有匹配上，则不做优化。因为窥孔优化
+| 模式 | 目的与边界 |
+|---|---|
+| 可交换的循环递归指令 | 当运算和循环 PHI 形成递归关系，交换可交换的源，使未来两地址约束与 PHI 值更容易共用寄存器；必须是合法交换。 |
+| 非合并友好的伪指令 | 追踪 REG_SEQUENCE、INSERT_SUBREG、EXTRACT_SUBREG、位转换等值来源，把能证明的中转化为更易合并的 COPY；并非每条此类指令都可删除。 |
+| 比较优化 | 目标可复用先前运算产生的条件码时，消除冗余比较；必须检查 flags 语义和中间破坏。 |
+| 选择优化 | 通过目标 `optimizeSelect` 简化 select；可能使用逻辑或条件指令，不保证统一变成与/或。 |
+| 条件跳转优化 | 通过 `optimizeCondBranch` 把测试和分支合成目标形式，如适用的按位测试跳转；掩码、位宽和分支方向都需吻合。 |
+| COPY 来源重写 | 绕过跨寄存器类的中转，在合法寄存器类/子寄存器范围内寻找更直接来源。 |
+| 冗余 COPY 消除 | 重用已存在的完整或子寄存器复制，正确维护各 lane，不能把部分定义视为整个寄存器定义。 |
+| 扩展结果复用 | 已扩展值的子寄存器有机会替代原输入的其他用途，帮助后续寄存器合并。 |
+| 立即数折叠 | 目标支持立即数操作数时，将常量定义折入消费者；仍受编码范围和定义用途约束。 |
+| 加载折叠 | 目标有等价寄存器—内存形式时，将独立 load 合入消费者；要求内存顺序、volatile/atomic、别名和使用次数等条件都允许。 |
 
-○一例如，使用和定义寄存器的指令位于同一循环，但是寄存器压力没有超过预定义的阈值—寄存器压力
+例如 `load p; add x,loaded` 不能仅凭目标存在内存 add 就合并：两条指令间若有可能写 p 的操作，移动读取时间便可能改变值。合并后若 load 还有其他用途，也不能直接删除它。类似地，比较和算术不只是结果数值一致，条件码的定义必须一致。
 
-模型并不准确，仅仅是一种估计方法。
-
-<!-- PDF page 242; printed page 229 -->
-
-需要遍历每条指令，所以它的时间复杂度随着需要匹配的指令序列的复杂度增加而增加。此外，因为窥孔优化针对特定指令场景，所以通用性不高。如果待编译代码具有较多的可优化指令序列，则优化效果明显；反之则效果一般。
-
-LLVM 在后端提供了一个多架构共用的窥孔优化 Pass，里面有 10 个左右的子优化项，下面简单介绍一下每个子优化项进行优化的条件和效果。
-
-1）操作数可交换指令优化：这个优化是为了在寄存器分配之后消除循环依赖产生的冗余复制指令而做的前置优化，主要是将循环里一些满足条件的三元操作数指令的两个源操作数交换位置。具体优化条件如下。
-
-条件 1：三元操作数指令和循环头里的 φ 函数形成了循环数据依赖（即 φ 函数用到了三元操作数指令的目的寄存器，三元操作数指令也使用了 φ 函数的目的寄存器）。
-
-条件 2 ：三元操作数的目的操作数和其中一个源操作数共用寄存器（即指令汇编形如add r1, r1, r2）。
-
-条件 3：三元操作数指令的两个源操作数是可交换的。
-
-条件 4 ：在使用三元操作数指令时，φ 函数的目的操作数不是条件 2 中共用寄存器的源操作数。
-
-如图 9-13 所示，ADD 指令满足上述条件，所以优化后 ADD 指令的 %2 和 %1 两个操作数就互换位置了。
-
-![图 9-13 操作数可交换指令优化示意图](origin/assets/figures/p242-9-13.png)
-
-**图 9-13 操作数可交换指令优化示意图**
-
-2）寄存器合并不友好指令优化：旨在识别和处理一些伪指令和拆分指令（如 REG_ SEQUENCE、INSERT_SUBREG 和 EXTRACT_SUBREG）以及 Bitcast 指令。因为通过这些指令无法看出寄存器的使用情况，寄存器合并优化不会对它们进行处理，所以将它们称为寄存器合并不友好指令。此优化就是为了识别出这些指令，然后在满足一定条件的情况下，可将这些指令转换为 COPY 指令，从而提高后续寄存器的合并优化（该优化是主要针对 COPY 指令）的效果。
-
-3）比较指令优化：如果目标架构减法指令具有直接设置条件码的特性，则可用带条件码的减法指令替代一部分比较指令，因此在比较指令与减法指令相邻且操作数相关的时候，可以将两者合并，从而消除冗余的比较指令。
-
-4）选择指令优化：将选择指令优化成与或、异或等逻辑运算指令。
-
-5）条件跳转指令优化：将条件跳转指令和其他的指令合并，生成另一种形式的条件跳转指令，从而删除冗余的指令。例如在 AArch64 后端可以将 and 和 cbnz 合并成 tbnz，如
-
-<!-- PDF page 243; printed page 230 -->
-
-**图 9-14 所示。**
-
-![图 9-14 将 and 和 cbnz 指令合并示意图](origin/assets/figures/p243-9-14.png)
-
-**图 9-14 将 and 和 cbnz 指令合并示意图**
-
-6）寄存器合并友好指令优化：将目的操作数和源操作数不同的寄存器类型的 COPY 指令优化成相同的寄存器类型的 COPY 指令，便于后面进行寄存器合并优化。如图 9-15 所示，可以将第二条 COPY 指令变成从 A 复制的 COPY 指令，从而避免了跨寄存器的复制操作。
-
-![图 9-15 COPY 指令优化示意图](origin/assets/figures/p243-9-15.png)
-
-**图 9-15 COPY 指令优化示意图**
-
-7）删除冗余复制优化：对于连续的 COPY 指令，如果第二个 COPY 指令的源寄存器是第一个 COPY 指令中源寄存器的子寄存器，则可以删除第二条 COPY 指令，并将用到第二条 COPY 指令的目的寄存器的地方替换为第一条 COPY 指令中目的寄存器的子寄存器，用例如图 9-16 所示。
-
-![图 9-16 删除冗余复制优化示意图](origin/assets/figures/p243-9-16.png)
-
-**图 9-16 删除冗余复制优化示意图**
-
-8）位扩展指令优化：当位扩展指令的源操作数寄存器还有其他使用点时，在满足数据流正确的情况下，将其他使用点替换为使用 COPY 位扩展指令的目的操作数寄存器。完成这个优化后，后续可以进一步做寄存器合并优化。
-
-9）常量折叠优化：做立即数的常量折叠。
-
-10）load 指令优化：这个优化针对的是“寄存器 – 内存”架构指令集中的内存加载指令（即 load 指令），因为这种指令集中的指令大部分都是可以直接操作内存的，所以在一些场景下可以将 load 指令折叠到运算指令里，从而减少生成代码的指令数。优化的主要过程如下。
-
-① 遍历函数中的每条 load 指令，并判断 load 指令是否满足以下条件。
-
-- load 指令具有可折叠属性（在指令信息中描述）。
-
-- 有一条指令 I 使用了 load 指令加载结果寄存器，并且这条指令 I 具有等价的可以直接操作内存的指令 I'。
-
-- load 指令到指令 I 之间没有其他指令会改变 load 指令结果寄存器中的值。
-
-② 如果满足①中的条件，则将指令 I 转变成指令 I' 的形式，并且如果 load 指令没有其
-
-<!-- PDF page 244; printed page 231 -->
-
-他使用点，就可以直接将其删除。
-
-除了上述的通用优化外，不同的目标架构也会根据自身架构特征新增一个或多个窥孔优化 Pass，如 AArch64 新增了 Aarch64MIPeephole Pass。因为这类 Pass 都是架构相关的，只有用到特定架构的时候才会用到它们，此处不再过多描述，读者可以根据需要阅读相关代码。
+一些模式通过改写输入而暂时留下无用定义，因此通用 SSA 流水线在 PeepholeOptimizer 后再运行一次 DCE。目标还可加入自己的机器窥孔 Pass，例如 AArch64 的目标专用简化；它们并不是本表中通用 Pass 的同义名。本节按源码核查模式，没有把全部架构专用模式逐一构造为运行样例。
 
 ## 9.11 本章小结
 
-本章主要介绍 LLVM 代码生成过程中基于 SSA 形式的编译优化，涵盖尾代码重复、栈槽分配、If-Conversion、代码下沉等优化算法，并通过示例演示了各算法的主要功能。
+机器 SSA 优化围绕定义—用途、CFG、生命周期和目标能力展开。合并与复制、外提与下沉都可能合理，关键是语义保持和具体收益。本章实测覆盖尾代码阈值、单值 PHI、死链清除、局部及全局 CSE、LICM、下沉、栈着色和 If-Conversion；局部栈槽预布局及窥孔各子模式以静态源码边界说明。机器验证器证明的是输入/输出结构满足机器 IR 约束，不能替代所有输入的语义等价证明或硬件性能测量。
 
-## LLVM 18 静态校核依据
-
-以下定位以本章所列 HEAD 为准；未运行验证的样例和历史性能比较不作为 LLVM 18 的复现实验结论。
+## LLVM 18 源码依据
 
 - [llvm/lib/CodeGen/TargetPassConfig.cpp:1094](/opt/llvm-project/llvm/lib/CodeGen/TargetPassConfig.cpp:1094)：`addMachinePasses / addMachineSSAOptimization`。
 - [llvm/lib/CodeGen/TailDuplicator.cpp:556](/opt/llvm-project/llvm/lib/CodeGen/TailDuplicator.cpp:556)：`shouldTailDuplicate`。
@@ -1050,4 +610,5 @@ LLVM 在后端提供了一个多架构共用的窥孔优化 Pass，里面有 10 
 - [llvm/lib/CodeGen/MachineSink.cpp:1043](/opt/llvm-project/llvm/lib/CodeGen/MachineSink.cpp:1043)：`isProfitableToSinkTo / SinkInstruction`。
 - [llvm/lib/CodeGen/PeepholeOptimizer.cpp:689](/opt/llvm-project/llvm/lib/CodeGen/PeepholeOptimizer.cpp:689)：`optimizeSelect / optimizeCondBranch`。
 
-待后续验证：使用该版本构建产物逐项解析/编译示例，检查目标、优化级别与 Pass 开关，比较 Pass 前后 IR/MIR、汇编和目标文件。此阶段仅完成文档与源码静态校对。
+
+- [llvm/lib/Target/X86/X86Subtarget.cpp:373](/opt/llvm-project/llvm/lib/Target/X86/X86Subtarget.cpp:373)：X86 EarlyIfConversion 的目标开关。

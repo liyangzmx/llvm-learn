@@ -1,0 +1,341 @@
+{
+  "chapter": 3,
+  "status": "passed",
+  "tools": {
+    "clang": [
+      "clang version 18.1.8 (https://github.com/llvm/llvm-project.git 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)",
+      "Target: arm64-apple-darwin24.6.0",
+      "Thread model: posix"
+    ],
+    "lli": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ],
+    "llvm-as": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ],
+    "opt": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ]
+  },
+  "checks": [
+    {
+      "name": "finite_lattice_fixed_points",
+      "status": "passed",
+      "monotone_maps": 36,
+      "all_maps": 256
+    },
+    {
+      "name": "arbitrary_seed_counterexample",
+      "status": "passed",
+      "cycle": [
+        "{a}",
+        "{b}",
+        "{a}"
+      ]
+    },
+    {
+      "name": "mop_vs_mfp",
+      "status": "passed",
+      "MOP": 5,
+      "MFP": "top"
+    },
+    {
+      "name": "liveness_table_3_3",
+      "status": "passed",
+      "rounds_including_final_check": 3,
+      "live_in": {
+        "A": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ],
+        "B": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ],
+        "C": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ],
+        "D": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ],
+        "E": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ],
+        "F": [
+          "a",
+          "b",
+          "c",
+          "d",
+          "u"
+        ],
+        "G": [
+          "a",
+          "b"
+        ]
+      },
+      "live_use": {
+        "A": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ],
+        "B": [
+          "c",
+          "d"
+        ],
+        "C": [
+          "c",
+          "d"
+        ],
+        "D": [
+          "a",
+          "b"
+        ],
+        "E": [
+          "a",
+          "c",
+          "d"
+        ],
+        "F": [
+          "a",
+          "u"
+        ],
+        "G": [
+          "a",
+          "b"
+        ]
+      }
+    },
+    {
+      "name": "reaching_definitions_table_3_4",
+      "status": "passed",
+      "rounds_including_final_check": 3,
+      "stable_in": {
+        "A": [],
+        "B": [
+          "s1",
+          "s2",
+          "s3",
+          "s5",
+          "s6",
+          "s7",
+          "s8"
+        ],
+        "C": [
+          "s3",
+          "s4",
+          "s5",
+          "s6",
+          "s7"
+        ],
+        "D": [
+          "s3",
+          "s4",
+          "s5",
+          "s6",
+          "s7"
+        ],
+        "E": [
+          "s4",
+          "s5",
+          "s6",
+          "s7"
+        ],
+        "F": [
+          "s5",
+          "s6",
+          "s7",
+          "s8"
+        ]
+      },
+      "stable_out": {
+        "A": [
+          "s1",
+          "s2",
+          "s3"
+        ],
+        "B": [
+          "s3",
+          "s4",
+          "s5",
+          "s6",
+          "s7"
+        ],
+        "C": [
+          "s4",
+          "s5",
+          "s6"
+        ],
+        "D": [
+          "s4",
+          "s5",
+          "s7"
+        ],
+        "E": [
+          "s5",
+          "s6",
+          "s7",
+          "s8"
+        ],
+        "F": [
+          "s5",
+          "s6",
+          "s7",
+          "s8"
+        ]
+      }
+    },
+    {
+      "name": "dense_constant_table_3_5",
+      "status": "passed",
+      "stable_out": {
+        "S1": [
+          1,
+          0
+        ],
+        "S2": [
+          "top",
+          "top"
+        ],
+        "S3": [
+          "top",
+          "top"
+        ],
+        "S4": [
+          "top",
+          "top"
+        ],
+        "S5": [
+          "top",
+          1
+        ],
+        "S6": [
+          "top",
+          "top"
+        ],
+        "S7": [
+          "top",
+          "top"
+        ]
+      },
+      "rounds_including_final_check": 3
+    },
+    {
+      "name": "sccp_executable_edges",
+      "status": "passed",
+      "branch_returns": 0,
+      "dead_increment_removed": true,
+      "loop_ir": "define dso_local i32 @loop() #0 {\nentry:\n  br label %while.cond\n\nwhile.cond:                                       ; preds = %while.cond, %entry\n  %flag.0 = phi i32 [ 0, %entry ], [ 1, %while.cond ]\n  %tobool = icmp ne i32 %flag.0, 0\n  %lnot = xor i1 %tobool, true\n  br i1 %lnot, label %while.cond, label %while.end, !llvm.loop !3\n\nwhile.end:                                        ; preds = %while.cond\n  %add = add nuw nsw i32 10, %flag.0\n  ret i32 %add\n}"
+    },
+    {
+      "name": "constant_examples_semantics",
+      "status": "passed",
+      "branch": 0,
+      "loop": 11,
+      "relational_both_paths": 5
+    }
+  ],
+  "commands": [
+    {
+      "tool": "clang",
+      "args": [
+        "--target=bpfel",
+        "-O0",
+        "-Xclang",
+        "-disable-O0-optnone",
+        "-fno-discard-value-names",
+        "-S",
+        "-emit-llvm",
+        "$INPUT/constant.c",
+        "-o",
+        "$OUT/constant.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-as",
+      "args": [
+        "$OUT/constant.ll",
+        "-o",
+        "$OUT/constant.bc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$OUT/constant.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=mem2reg,sccp,simplifycfg,verify",
+        "-S",
+        "$OUT/constant.ll",
+        "-o",
+        "$OUT/sccp.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "lli",
+      "args": [
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "$OUT/constant.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "lli",
+      "args": [
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "$OUT/sccp.ll"
+      ],
+      "returncode": 0
+    }
+  ],
+  "tool_files": {
+    "clang": {
+      "size": 474422136,
+      "mtime_ns": 1789310516990791139
+    },
+    "llvm-as": {
+      "size": 55732168,
+      "mtime_ns": 1789310523159266218
+    },
+    "opt": {
+      "size": 240030080,
+      "mtime_ns": 1789310524349395777
+    },
+    "lli": {
+      "size": 148776176,
+      "mtime_ns": 1789310522910676098
+    }
+  }
+}

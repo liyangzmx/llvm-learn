@@ -1,20 +1,16 @@
-# 第 1 章核查记录
+# 第 1 章核查与实验记录
 
-基线：LLVM 18.1.8，静态阅读；未构建或运行命令。保留全章正文与历史图示，修正下列内容。
+本章已从原书导读改写为 LLVM 18.1.8 环境和证据方法说明。初版静态校订保存在提交 `c5924c6`；本次正文以源码、构建配置及实际实验为准。
 
-| 原文位置 | 核查依据 | 结论与处理 |
-| --- | --- | --- |
-| 1.1 IR 内存、表示、ABI | `llvm/include/llvm/IR/Instruction.def`；`llvm/docs/LangRef.rst`；`ThinLTO.rst` | 修正 malloc/free 指令、仅 load/store 访存、内存形式是文件、所有 LTO 都只用摘要等说法 |
-| 1.2 项目术语 | `compiler-rt/README.txt`；`libunwind/docs/index.rst`；`libc/docs/index.rst` | sanitizers 不是杀毒程序；Objective-C、profiling 拼写；标准库支持和展开库关系避免过度概括 |
-| 清单 1-1 | `llvm/CMakeLists.txt:69,607` | C++17、Debug/Assertions、BPF/Clang 配置仍适用；改用 shell `#` 注释和 `\` 续行，保留为未执行命令 |
-| 清单 1-2 | 本地 CMake 版本 18.1.8；原书 15.0.1 | 原输出标历史，未伪造本机执行结果 |
-| 清单 1-3 | `llvm/lib/CodeGen/TailDuplication.cpp:83`；`TailDuplicator.cpp:61` | 断点与参数存在；tail duplication 是尾代码重复；去掉旧地址、旧路径等日志，补明确目标和优化级别 |
-| 1.4（PDF20/21） | 原页手工转写；`LegacyPassManager.cpp:52` | 恢复全部正文、4个图标题；线上界面按历史示例标记，未联网验证 |
+| 清单 / 主题 | 依据与检查 |
+| --- | --- |
+| 1-1 CMake | 沿用 `/opt/llvm-project/build`，实际重配置只传入新增目标列表及非空默认 triple；正文给出当前配置的完整展开。工具目标按需增量构建，未执行 install。完整缓存与工具 SHA-256 见 `environment.json` |
+| 1-2 版本与注册目标 | 实际调用 clang/llc/opt/llvm-config；检查 LLVM 18.1.8 及 BPF/AArch64/X86/RISCV/Hexagon/PowerPC/ARM。缓存与旧二进制不一致的问题已在正文解释 |
+| 1-3 分阶段编译 | 完整 sum.c；Clang O0 禁用 optnone，mem2reg 后检查 PHI 和局部 alloca 消除，bitcode 往返后 verifier，O2 使用 verify-each，BPF 使用 MachineVerifier |
+| 输出与执行 | readobj 检查 EM_BPF，objdump 检查函数及 exit；纯 IR 解释器检查给定输入优化前后返回 0；宿主 IR 另由普通 lli JIT 执行 |
+| IR 与程序表示 | LangRef.rst、Instruction.def；SSA 值与可写内存、目标数据布局、bitcode 与目标文件边界分别解释 |
+| 编译、链接、运行时 | Clang ThinLTO.rst 与工具源码；不把对象写出等同链接完成，不把解释器结果等同 BPF 内核执行 |
 
-后续：实际构建、IR 和 LLDB 调试验证均未执行。
+唯一必要的 LLVM 源码修复为 `BPFMIChecking.cpp` 中 `XOR5W32` → `XORW32`，已保存 [补丁](build-source-fix.patch)。这不是修改目标语义的实验，而是修复不存在的枚举名以允许当前工作树编译；其他用户源码改动保留。
 
-## 独立复核补充
-
-- 再次检查清单 1-1/1-3 的构建与调试路径，验证段改为 `build-codegen-18/bin`，与命令一致；仅核对文本，未构建。
-- `libcxxabi/include/cxxabi.h:55,93` 与 `libcxxabi/src/private_typeinfo.h:68`：libcxxabi 还涉及静态初始化、RTTI/动态类型转换，不仅是异常函数。
-- 图 1-1 多阶段优化是设计能力；修正成具体工具链按配置启用，不断言每个 LLVM 程序自动带运行时优化，也不把使用 IR 当成 LLVM 独有特征。
+运行记录由 [runner.py](../experiments/ch1/runner.py) 生成，见 [experiments-ch1.json](experiments-ch1.json)。本章没有测量性能、验证所有整数输入、运行 BPF 内核装载或复现交互式 LLDB 会话。

@@ -1,0 +1,870 @@
+{
+  "chapter": 8,
+  "scope": "full",
+  "llvm_version": "LLVM (http://llvm.org/):\n  LLVM version 18.1.8\n  DEBUG build with assertions.\n  Default target: arm64-apple-darwin24.6.0\n  Host CPU: apple-m1\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    bpf        - BPF (host endian)\n    bpfeb      - BPF (big endian)\n    bpfel      - BPF (little endian)\n    hexagon    - Hexagon\n    ppc32      - PowerPC 32\n    ppc32le    - PowerPC 32 LE\n    ppc64      - PowerPC 64\n    ppc64le    - PowerPC 64 LE\n    riscv32    - 32-bit RISC-V\n    riscv64    - 64-bit RISC-V\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64",
+  "llvm_commit": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff",
+  "llvm_modified_tracked_files": [
+    "llvm/lib/Target/BPF/BPF.td",
+    "llvm/lib/Target/BPF/BPFCallingConv.td",
+    "llvm/lib/Target/BPF/BPFInstrFormats.td",
+    "llvm/lib/Target/BPF/BPFInstrInfo.td",
+    "llvm/lib/Target/BPF/BPFRegisterInfo.td",
+    "llvm/lib/Target/BPF/GISel/BPFRegisterBanks.td"
+  ],
+  "input_sha256": {
+    "swp-bad-sched.ll": "a40f3dcdbf6e6f78704af14a9c65683e0930e4d9853fa1ae1f293e9859164b3b",
+    "runner.py": "2fd3fceeed2d21f0462cec935dbd5f3c6202f8e3f5c2906a47140ebd3d7416d5",
+    "models.py": "cca09b5a1968216fb4c4d3097883e5b3bb2b33d1847891726adbf162073ea232",
+    "pressure.c": "c5ae0860b9a11822c8cdeec0f458ae9d919ab9baf5b504f4dce11d451277f7e2",
+    "pressure-large.c": "44e8196302856733ba845ff0b85622d4a7666b5d1d50186104fbe706dbce2277",
+    "README.md": "3f3a5b6e6365bc160bd2c76aac5ebc46a966458a29ce21a284686c6725f0f532",
+    "postra.c": "29925df03ad8b7395bbdceafa5b85021ea5c20b41515498a9e29c6cddcaa1b35",
+    "dependencies.ll": "04d028374c1317890a2a4121d0da272b9a2a5ce23ccbc91e395e091631ae3efb",
+    "schedule-model.td": "2180a9bfe59d140ced50865877a296258cdb10896abcf15d15df80d6b71e8104"
+  },
+  "commands": [
+    {
+      "name": "version",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "--version"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "verify-dependencies",
+      "argv": [
+        "${LLVM_BUILD}/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "${BOOK_ROOT}/experiments/ch8/dependencies.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "verify-sms",
+      "argv": [
+        "${LLVM_BUILD}/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "${BOOK_ROOT}/experiments/ch8/swp-bad-sched.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "dag-linearize",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O2",
+        "-verify-machineinstrs",
+        "-fast-isel=false",
+        "-pre-RA-sched=linearize",
+        "-debug-only=pre-RA-sched",
+        "-stop-after=finalize-isel",
+        "${BOOK_ROOT}/experiments/ch8/dependencies.ll",
+        "-o",
+        "${OUTPUT}/dag-linearize.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "dag-fast",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O2",
+        "-verify-machineinstrs",
+        "-fast-isel=false",
+        "-pre-RA-sched=fast",
+        "-debug-only=pre-RA-sched",
+        "-stop-after=finalize-isel",
+        "${BOOK_ROOT}/experiments/ch8/dependencies.ll",
+        "-o",
+        "${OUTPUT}/dag-fast.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "dag-list-burr",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O2",
+        "-verify-machineinstrs",
+        "-fast-isel=false",
+        "-pre-RA-sched=list-burr",
+        "-debug-only=pre-RA-sched",
+        "-stop-after=finalize-isel",
+        "${BOOK_ROOT}/experiments/ch8/dependencies.ll",
+        "-o",
+        "${OUTPUT}/dag-list-burr.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "dag-source",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O2",
+        "-verify-machineinstrs",
+        "-fast-isel=false",
+        "-pre-RA-sched=source",
+        "-debug-only=pre-RA-sched",
+        "-stop-after=finalize-isel",
+        "${BOOK_ROOT}/experiments/ch8/dependencies.ll",
+        "-o",
+        "${OUTPUT}/dag-source.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "dag-list-hybrid",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O2",
+        "-verify-machineinstrs",
+        "-fast-isel=false",
+        "-pre-RA-sched=list-hybrid",
+        "-debug-only=pre-RA-sched",
+        "-stop-after=finalize-isel",
+        "${BOOK_ROOT}/experiments/ch8/dependencies.ll",
+        "-o",
+        "${OUTPUT}/dag-list-hybrid.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "dag-list-ilp",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O2",
+        "-verify-machineinstrs",
+        "-fast-isel=false",
+        "-pre-RA-sched=list-ilp",
+        "-debug-only=pre-RA-sched",
+        "-stop-after=finalize-isel",
+        "${BOOK_ROOT}/experiments/ch8/dependencies.ll",
+        "-o",
+        "${OUTPUT}/dag-list-ilp.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "bpf-misched",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O2",
+        "-verify-machineinstrs",
+        "-fast-isel=false",
+        "-enable-misched=true",
+        "-debug-only=machine-scheduler",
+        "-stop-after=machine-scheduler",
+        "${BOOK_ROOT}/experiments/ch8/dependencies.ll",
+        "-o",
+        "${OUTPUT}/bpf-misched.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "tablegen-model",
+      "argv": [
+        "${LLVM_BUILD}/bin/llvm-tblgen",
+        "-I",
+        "${LLVM_SRC}/llvm/include",
+        "-dump-json",
+        "${BOOK_ROOT}/experiments/ch8/schedule-model.td",
+        "-o",
+        "${OUTPUT}/schedule-model.json"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "clang-pressure",
+      "argv": [
+        "${LLVM_BUILD}/bin/clang",
+        "--target=riscv32-unknown-elf",
+        "-march=rv32im",
+        "-mabi=ilp32",
+        "-mcpu=sifive-e31",
+        "-O2",
+        "-fno-discard-value-names",
+        "-S",
+        "-emit-llvm",
+        "${BOOK_ROOT}/experiments/ch8/pressure.c",
+        "-o",
+        "${OUTPUT}/pressure.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "verify-pressure",
+      "argv": [
+        "${LLVM_BUILD}/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "${OUTPUT}/pressure.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "clang-pressure-large",
+      "argv": [
+        "${LLVM_BUILD}/bin/clang",
+        "--target=riscv32-unknown-elf",
+        "-march=rv32im",
+        "-mabi=ilp32",
+        "-mcpu=sifive-e31",
+        "-O2",
+        "-fno-discard-value-names",
+        "-S",
+        "-emit-llvm",
+        "${BOOK_ROOT}/experiments/ch8/pressure-large.c",
+        "-o",
+        "${OUTPUT}/pressure-large.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "verify-pressure-large",
+      "argv": [
+        "${LLVM_BUILD}/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "${OUTPUT}/pressure-large.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "clang-postra",
+      "argv": [
+        "${LLVM_BUILD}/bin/clang",
+        "--target=riscv32-unknown-elf",
+        "-march=rv32im",
+        "-mabi=ilp32",
+        "-mcpu=sifive-e31",
+        "-O2",
+        "-fno-discard-value-names",
+        "-S",
+        "-emit-llvm",
+        "${BOOK_ROOT}/experiments/ch8/postra.c",
+        "-o",
+        "${OUTPUT}/postra.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "verify-postra",
+      "argv": [
+        "${LLVM_BUILD}/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "${OUTPUT}/postra.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "rv32-pre-before",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=riscv32-unknown-elf",
+        "-mcpu=sifive-e31",
+        "-O2",
+        "-verify-machineinstrs",
+        "-mattr=+m",
+        "-enable-misched=true",
+        "-debug-only=machine-scheduler",
+        "-stop-before=machine-scheduler",
+        "${OUTPUT}/pressure.ll",
+        "-o",
+        "${OUTPUT}/rv32-pre-before.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "rv32-pre-after",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=riscv32-unknown-elf",
+        "-mcpu=sifive-e31",
+        "-O2",
+        "-verify-machineinstrs",
+        "-mattr=+m",
+        "-enable-misched=true",
+        "-debug-only=machine-scheduler",
+        "-stop-after=machine-scheduler",
+        "${OUTPUT}/pressure.ll",
+        "-o",
+        "${OUTPUT}/rv32-pre-after.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "rv32-pressure-large",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=riscv32-unknown-elf",
+        "-mcpu=sifive-e31",
+        "-O2",
+        "-verify-machineinstrs",
+        "-mattr=+m",
+        "-enable-misched=true",
+        "-debug-only=machine-scheduler",
+        "-stop-after=machine-scheduler",
+        "${OUTPUT}/pressure-large.ll",
+        "-o",
+        "${OUTPUT}/rv32-pressure-large.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "rv32-post-tdlist",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=riscv32-unknown-elf",
+        "-mcpu=sifive-e31",
+        "-O2",
+        "-verify-machineinstrs",
+        "-mattr=+m",
+        "-post-RA-scheduler=true",
+        "-enable-post-misched=false",
+        "-debug-only=post-RA-sched,machine-scheduler",
+        "-stop-after=post-RA-sched",
+        "${OUTPUT}/postra.ll",
+        "-o",
+        "${OUTPUT}/rv32-post-tdlist.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "rv32-post-misched",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=riscv32-unknown-elf",
+        "-mcpu=sifive-e31",
+        "-O2",
+        "-verify-machineinstrs",
+        "-mattr=+m",
+        "-post-RA-scheduler=false",
+        "-enable-post-misched=true",
+        "-debug-only=post-RA-sched,machine-scheduler",
+        "-stop-after=postmisched",
+        "${OUTPUT}/postra.ll",
+        "-o",
+        "${OUTPUT}/rv32-post-misched.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "hexagon-sms-before",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=hexagon",
+        "-mcpu=hexagonv60",
+        "-O2",
+        "-verify-machineinstrs",
+        "-enable-pipeliner",
+        "-enable-aa-sched-mi",
+        "-pipeliner-experimental-cg=true",
+        "-stop-before=pipeliner",
+        "-debug-only=pipeliner",
+        "${BOOK_ROOT}/experiments/ch8/swp-bad-sched.ll",
+        "-o",
+        "${OUTPUT}/hexagon-sms-before.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "hexagon-sms-after",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=hexagon",
+        "-mcpu=hexagonv60",
+        "-O2",
+        "-verify-machineinstrs",
+        "-enable-pipeliner",
+        "-enable-aa-sched-mi",
+        "-pipeliner-experimental-cg=true",
+        "-stop-after=pipeliner",
+        "-debug-only=pipeliner",
+        "${BOOK_ROOT}/experiments/ch8/swp-bad-sched.ll",
+        "-o",
+        "${OUTPUT}/hexagon-sms-after.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "hexagon-sms",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=hexagon",
+        "-mcpu=hexagonv60",
+        "-O2",
+        "-verify-machineinstrs",
+        "-enable-pipeliner",
+        "-enable-aa-sched-mi",
+        "-pipeliner-experimental-cg=true",
+        "-debug-only=pipeliner",
+        "${BOOK_ROOT}/experiments/ch8/swp-bad-sched.ll",
+        "-o",
+        "${OUTPUT}/hexagon-sms.s"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "hexagon-filecheck",
+      "argv": [
+        "${LLVM_BUILD}/bin/FileCheck",
+        "${BOOK_ROOT}/experiments/ch8/swp-bad-sched.ll",
+        "--input-file",
+        "${OUTPUT}/hexagon-sms.s"
+      ],
+      "returncode": 0
+    }
+  ],
+  "checks": [
+    {
+      "name": "dag-linearize",
+      "passed": true,
+      "observed": {
+        "mir": "bb.0.entry:\n    liveins: $r1, $r2, $r3\n  \n    %2:gpr = COPY $r3\n    %1:gpr = COPY $r2\n    %0:gpr = COPY $r1\n    %3:gpr = LDD %0, 0 :: (load (s64) from %ir.p)\n    %4:gpr = MUL_ri %3, 7\n    %5:gpr = LDD %1, 0 :: (load (s64) from %ir.q)\n    %6:gpr = ADD_ri %5, 11\n    %7:gpr = XOR_rr %4, killed %6\n    %8:gpr = LDD %2, 0 :: (load (s64) from %ir.r)\n    %9:gpr = ADD_rr %7, killed %8\n    STD %9, %0, 0 :: (store (s64) into %ir.p)\n    $r0 = COPY %9\n    RET implicit $r0",
+        "log_lines": 46
+      }
+    },
+    {
+      "name": "dag-fast",
+      "passed": true,
+      "observed": {
+        "mir": "bb.0.entry:\n    liveins: $r1, $r2, $r3\n  \n    %2:gpr = COPY $r3\n    %1:gpr = COPY $r2\n    %0:gpr = COPY $r1\n    %3:gpr = LDD %0, 0 :: (load (s64) from %ir.p)\n    %4:gpr = MUL_ri %3, 7\n    %5:gpr = LDD %1, 0 :: (load (s64) from %ir.q)\n    %6:gpr = ADD_ri %5, 11\n    %7:gpr = XOR_rr %4, killed %6\n    %8:gpr = LDD %2, 0 :: (load (s64) from %ir.r)\n    %9:gpr = ADD_rr %7, killed %8\n    STD %9, %0, 0 :: (store (s64) into %ir.p)\n    $r0 = COPY %9\n    RET implicit $r0",
+        "log_lines": 191
+      }
+    },
+    {
+      "name": "dag-list-burr",
+      "passed": true,
+      "observed": {
+        "mir": "bb.0.entry:\n    liveins: $r1, $r2, $r3\n  \n    %2:gpr = COPY $r3\n    %1:gpr = COPY $r2\n    %0:gpr = COPY $r1\n    %3:gpr = LDD %1, 0 :: (load (s64) from %ir.q)\n    %4:gpr = ADD_ri %3, 11\n    %5:gpr = LDD %0, 0 :: (load (s64) from %ir.p)\n    %6:gpr = MUL_ri %5, 7\n    %7:gpr = XOR_rr %6, killed %4\n    %8:gpr = LDD %2, 0 :: (load (s64) from %ir.r)\n    %9:gpr = ADD_rr %7, killed %8\n    STD %9, %0, 0 :: (store (s64) into %ir.p)\n    $r0 = COPY %9\n    RET implicit $r0",
+        "log_lines": 300
+      }
+    },
+    {
+      "name": "dag-source",
+      "passed": true,
+      "observed": {
+        "mir": "bb.0.entry:\n    liveins: $r1, $r2, $r3\n  \n    %2:gpr = COPY $r3\n    %1:gpr = COPY $r2\n    %0:gpr = COPY $r1\n    %3:gpr = LDD %0, 0 :: (load (s64) from %ir.p)\n    %4:gpr = LDD %1, 0 :: (load (s64) from %ir.q)\n    %5:gpr = LDD %2, 0 :: (load (s64) from %ir.r)\n    %6:gpr = MUL_ri %3, 7\n    %7:gpr = ADD_ri %4, 11\n    %8:gpr = XOR_rr %6, killed %7\n    %9:gpr = ADD_rr %8, killed %5\n    STD %9, %0, 0 :: (store (s64) into %ir.p)\n    $r0 = COPY %9\n    RET implicit $r0",
+        "log_lines": 318
+      }
+    },
+    {
+      "name": "dag-list-hybrid",
+      "passed": true,
+      "observed": {
+        "mir": "bb.0.entry:\n    liveins: $r1, $r2, $r3\n  \n    %2:gpr = COPY $r3\n    %1:gpr = COPY $r2\n    %0:gpr = COPY $r1\n    %3:gpr = LDD %1, 0 :: (load (s64) from %ir.q)\n    %4:gpr = ADD_ri %3, 11\n    %5:gpr = LDD %0, 0 :: (load (s64) from %ir.p)\n    %6:gpr = MUL_ri %5, 7\n    %7:gpr = XOR_rr %6, killed %4\n    %8:gpr = LDD %2, 0 :: (load (s64) from %ir.r)\n    %9:gpr = ADD_rr %7, killed %8\n    STD %9, %0, 0 :: (store (s64) into %ir.p)\n    $r0 = COPY %9\n    RET implicit $r0",
+        "log_lines": 318
+      }
+    },
+    {
+      "name": "dag-list-ilp",
+      "passed": true,
+      "observed": {
+        "mir": "bb.0.entry:\n    liveins: $r1, $r2, $r3\n  \n    %2:gpr = COPY $r3\n    %1:gpr = COPY $r2\n    %0:gpr = COPY $r1\n    %3:gpr = LDD %1, 0 :: (load (s64) from %ir.q)\n    %4:gpr = ADD_ri %3, 11\n    %5:gpr = LDD %0, 0 :: (load (s64) from %ir.p)\n    %6:gpr = MUL_ri %5, 7\n    %7:gpr = XOR_rr %6, killed %4\n    %8:gpr = LDD %2, 0 :: (load (s64) from %ir.r)\n    %9:gpr = ADD_rr %7, killed %8\n    STD %9, %0, 0 :: (store (s64) into %ir.p)\n    $r0 = COPY %9\n    RET implicit $r0",
+        "log_lines": 318
+      }
+    },
+    {
+      "name": "bpf-mir-dependencies",
+      "passed": true,
+      "observed": {
+        "pressure": [
+          "GenericScheduler RegionPolicy:  ShouldTrackPressure=1 OnlyTopDown=0 OnlyBottomUp=1",
+          "Max Pressure: GPR32=4"
+        ],
+        "data_edge_latencies": [
+          0,
+          1,
+          4
+        ]
+      }
+    },
+    {
+      "name": "sched-model-read-advance",
+      "passed": true,
+      "observed": {
+        "MUL_SchedRW": [
+          "MULOut",
+          "EXIn",
+          "OrdinaryRead"
+        ],
+        "ADD_to_MUL_src1_latency": 1,
+        "formula": "max(0,2-1)"
+      }
+    },
+    {
+      "name": "teaching-models",
+      "passed": true,
+      "observed": {
+        "topological_orders": 80,
+        "pressure_range": [
+          3,
+          4
+        ],
+        "recMII": 3,
+        "pipeline_test_lengths": 65
+      }
+    },
+    {
+      "name": "registered-riscv32",
+      "passed": true,
+      "observed": "riscv32"
+    },
+    {
+      "name": "registered-hexagon",
+      "passed": true,
+      "observed": "hexagon"
+    },
+    {
+      "name": "rv32-opcodes-before",
+      "passed": true,
+      "observed": "bb.0.entry:\n    liveins: $x10, $x11, $x12\n  \n    %2:gpr = COPY $x12\n    %1:gpr = COPY $x11\n    %0:gpr = COPY $x10\n    %3:gpr = LW %1, 0 :: (load (s32) from %ir.x, !tbaa !6)\n    %4:gpr = nsw MUL %3, %0\n    %5:gpr = LW %2, 0 :: (load (s32) from %ir.y, !tbaa !6)\n    %6:gpr = nsw ADD %4, %5\n    %7:gpr = LW %1, 4 :: (load (s32) from %ir.arrayidx2, !tbaa !6)\n    %8:gpr = nsw ADD %6, %7\n    %9:gpr = LW %2, 4 :: (load (s32) from %ir.arrayidx4, !tbaa !6)\n    %10:gpr = nsw MUL %8, %9\n    %11:gpr = nsw ADD %8, %6\n    %12:gpr = nsw ADD %11, %10\n    SW %12, %2, 8 :: (store (s32) into %ir.arrayidx8, !tbaa !6)\n    PseudoRET"
+    },
+    {
+      "name": "rv32-opcodes-after",
+      "passed": true,
+      "observed": "bb.0.entry:\n    liveins: $x10, $x11, $x12\n  \n    %1:gpr = COPY $x11\n    %3:gpr = LW %1, 0 :: (load (s32) from %ir.x, !tbaa !6)\n    %0:gpr = COPY $x10\n    %4:gpr = nsw MUL %3, %0\n    %2:gpr = COPY $x12\n    %5:gpr = LW %2, 0 :: (load (s32) from %ir.y, !tbaa !6)\n    %6:gpr = nsw ADD %4, %5\n    %7:gpr = LW %1, 4 :: (load (s32) from %ir.arrayidx2, !tbaa !6)\n    %9:gpr = LW %2, 4 :: (load (s32) from %ir.arrayidx4, !tbaa !6)\n    %8:gpr = nsw ADD %6, %7\n    %10:gpr = nsw MUL %8, %9\n    %11:gpr = nsw ADD %8, %6\n    %12:gpr = nsw ADD %11, %10\n    SW %12, %2, 8 :: (store (s32) into %ir.arrayidx8, !tbaa !6)\n    PseudoRET"
+    },
+    {
+      "name": "rv32-small-region-policy",
+      "passed": true,
+      "observed": [
+        "GenericScheduler RegionPolicy:  ShouldTrackPressure=0 OnlyTopDown=0 OnlyBottomUp=1"
+      ]
+    },
+    {
+      "name": "rv32-large-region-pressure",
+      "passed": true,
+      "observed": {
+        "region": [
+          " RegionInstrs: 18",
+          "GenericScheduler RegionPolicy:  ShouldTrackPressure=1 OnlyTopDown=0 OnlyBottomUp=1"
+        ],
+        "initial_max_pressure": "Max Pressure: GPRC=2\nGPRC_with_SR07=2\nGPRTC=2\nGPR=6"
+      }
+    },
+    {
+      "name": "rv32-post-tdlist",
+      "passed": true,
+      "observed": {
+        "mir": "bb.0.entry:\n    liveins: $x10, $x11\n  \n    renamable $x12 = LUI target-flags(riscv-hi) @g_val\n    renamable $x12 = LW killed renamable $x12, target-flags(riscv-lo) @g_val :: (dereferenceable load (s32) from @g_val, !tbaa !6)\n    renamable $x11 = ADDI killed renamable $x11, 1\n    renamable $x10 = MUL killed renamable $x10, renamable $x10\n    renamable $x11 = MUL killed renamable $x11, killed renamable $x12\n    renamable $x10 = MUL killed renamable $x10, killed renamable $x11\n    PseudoRET implicit $x10",
+        "log_lines": 339
+      }
+    },
+    {
+      "name": "rv32-post-misched",
+      "passed": true,
+      "observed": {
+        "mir": "bb.0.entry:\n    liveins: $x10, $x11\n  \n    renamable $x12 = LUI target-flags(riscv-hi) @g_val\n    renamable $x12 = LW killed renamable $x12, target-flags(riscv-lo) @g_val :: (dereferenceable load (s32) from @g_val, !tbaa !6)\n    renamable $x11 = ADDI killed renamable $x11, 1\n    renamable $x10 = MUL killed renamable $x10, renamable $x10\n    renamable $x11 = MUL killed renamable $x11, killed renamable $x12\n    renamable $x10 = MUL killed renamable $x10, killed renamable $x11\n    PseudoRET implicit killed $x10",
+        "log_lines": 557
+      }
+    },
+    {
+      "name": "hexagon-pipeliner-changes-mir",
+      "passed": true,
+      "observed": {
+        "before_lines": 125,
+        "after_lines": 161
+      }
+    },
+    {
+      "name": "hexagon-sms-regression",
+      "passed": true,
+      "observed": {
+        "mii_lines": [
+          "MII = 3 MAX_II = 13 (rec=2, res=3)",
+          "Schedule Found? 1 (II=3)",
+          "MII = 10 MAX_II = 20 (rec=2, res=10)",
+          "Schedule Found? 0 (II=20)",
+          "No schedule found, return"
+        ],
+        "hardware_loop_starts": 2,
+        "filecheck": "passed"
+      }
+    }
+  ],
+  "observations": {
+    "bpf_misched": "bb.0.entry:\n    liveins: $r1, $r2, $r3\n  \n    %1:gpr = COPY $r2\n    %0:gpr = COPY $r1\n    %4:gpr = LDD %1, 0 :: (load (s64) from %ir.q)\n    %7:gpr = LDD %0, 0 :: (load (s64) from %ir.p)\n    %2:gpr = COPY $r3\n    %8:gpr = LDD %2, 0 :: (load (s64) from %ir.r)\n    %4:gpr = ADD_ri %4, 11\n    %7:gpr = MUL_ri %7, 7\n    %7:gpr = XOR_rr %7, %4\n    %7:gpr = ADD_rr %7, %8\n    STD %7, %0, 0 :: (store (s64) into %ir.p)\n    $r0 = COPY %7\n    RET implicit killed $r0",
+    "models": {
+      "ssa_boundary_pressure": {
+        "all_topological_orders": 80,
+        "minimum": 3,
+        "maximum": 4,
+        "broad": [
+          {
+            "before": "a",
+            "live": []
+          },
+          {
+            "before": "b",
+            "live": [
+              "a"
+            ]
+          },
+          {
+            "before": "c",
+            "live": [
+              "a",
+              "b"
+            ]
+          },
+          {
+            "before": "d",
+            "live": [
+              "a",
+              "b",
+              "c"
+            ]
+          },
+          {
+            "before": "m",
+            "live": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "before": "n",
+            "live": [
+              "c",
+              "d",
+              "m"
+            ]
+          },
+          {
+            "before": "r",
+            "live": [
+              "m",
+              "n"
+            ]
+          },
+          {
+            "before": "store",
+            "live": [
+              "r"
+            ]
+          }
+        ],
+        "compact": [
+          {
+            "before": "a",
+            "live": []
+          },
+          {
+            "before": "b",
+            "live": [
+              "a"
+            ]
+          },
+          {
+            "before": "m",
+            "live": [
+              "a",
+              "b"
+            ]
+          },
+          {
+            "before": "c",
+            "live": [
+              "m"
+            ]
+          },
+          {
+            "before": "d",
+            "live": [
+              "c",
+              "m"
+            ]
+          },
+          {
+            "before": "n",
+            "live": [
+              "c",
+              "d",
+              "m"
+            ]
+          },
+          {
+            "before": "r",
+            "live": [
+              "m",
+              "n"
+            ]
+          },
+          {
+            "before": "store",
+            "live": [
+              "r"
+            ]
+          }
+        ]
+      },
+      "single_issue_edge_latency": {
+        "order": [
+          "L",
+          "M",
+          "A",
+          "S"
+        ],
+        "issue_cycles": {
+          "L": 0,
+          "M": 4,
+          "A": 5,
+          "S": 7
+        },
+        "assumptions": "one issue/cycle, no resource hazards beyond issue width; edge latencies explicit"
+      },
+      "recurrence": {
+        "edges": [
+          [
+            "u",
+            "v",
+            2,
+            0
+          ],
+          [
+            "v",
+            "u",
+            1,
+            1
+          ]
+        ],
+        "recMII": 3,
+        "feasible_II": {
+          "1": false,
+          "2": false,
+          "3": true,
+          "4": true
+        },
+        "inequality": "start(v)-start(u) >= latency(u,v)-distance(u,v)*II"
+      },
+      "software_pipeline": {
+        "tested_lengths": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64
+        ],
+        "semantics_equal": true,
+        "assumptions": "two independent pipelined units; issue width >= 2; A_i precedes B_i; no cross-iteration dependence"
+      }
+    },
+    "rv32_pre_before": "bb.0.entry:\n    liveins: $x10, $x11, $x12\n  \n    %2:gpr = COPY $x12\n    %1:gpr = COPY $x11\n    %0:gpr = COPY $x10\n    %3:gpr = LW %1, 0 :: (load (s32) from %ir.x, !tbaa !6)\n    %4:gpr = nsw MUL %3, %0\n    %5:gpr = LW %2, 0 :: (load (s32) from %ir.y, !tbaa !6)\n    %6:gpr = nsw ADD %4, %5\n    %7:gpr = LW %1, 4 :: (load (s32) from %ir.arrayidx2, !tbaa !6)\n    %8:gpr = nsw ADD %6, %7\n    %9:gpr = LW %2, 4 :: (load (s32) from %ir.arrayidx4, !tbaa !6)\n    %10:gpr = nsw MUL %8, %9\n    %11:gpr = nsw ADD %8, %6\n    %12:gpr = nsw ADD %11, %10\n    SW %12, %2, 8 :: (store (s32) into %ir.arrayidx8, !tbaa !6)\n    PseudoRET",
+    "rv32_pre_after": "bb.0.entry:\n    liveins: $x10, $x11, $x12\n  \n    %1:gpr = COPY $x11\n    %3:gpr = LW %1, 0 :: (load (s32) from %ir.x, !tbaa !6)\n    %0:gpr = COPY $x10\n    %4:gpr = nsw MUL %3, %0\n    %2:gpr = COPY $x12\n    %5:gpr = LW %2, 0 :: (load (s32) from %ir.y, !tbaa !6)\n    %6:gpr = nsw ADD %4, %5\n    %7:gpr = LW %1, 4 :: (load (s32) from %ir.arrayidx2, !tbaa !6)\n    %9:gpr = LW %2, 4 :: (load (s32) from %ir.arrayidx4, !tbaa !6)\n    %8:gpr = nsw ADD %6, %7\n    %10:gpr = nsw MUL %8, %9\n    %11:gpr = nsw ADD %8, %6\n    %12:gpr = nsw ADD %11, %10\n    SW %12, %2, 8 :: (store (s32) into %ir.arrayidx8, !tbaa !6)\n    PseudoRET",
+    "rv32_pressure_large": "bb.0.entry:\n    liveins: $x10, $x11\n  \n    %1:gpr = COPY $x11\n    %0:gpr = COPY $x10\n    %2:gpr = LW %0, 0 :: (load (s32) from %ir.x, !tbaa !6)\n    %3:gpr = LW %1, 0 :: (load (s32) from %ir.y, !tbaa !6)\n    %5:gpr = LW %0, 4 :: (load (s32) from %ir.arrayidx2, !tbaa !6)\n    %6:gpr = LW %1, 4 :: (load (s32) from %ir.arrayidx3, !tbaa !6)\n    %4:gpr = nsw MUL %3, %2\n    %7:gpr = nsw MUL %6, %5\n    %8:gpr = LW %0, 8 :: (load (s32) from %ir.arrayidx5, !tbaa !6)\n    %9:gpr = LW %1, 8 :: (load (s32) from %ir.arrayidx6, !tbaa !6)\n    %11:gpr = LW %0, 12 :: (load (s32) from %ir.arrayidx8, !tbaa !6)\n    %12:gpr = LW %1, 12 :: (load (s32) from %ir.arrayidx9, !tbaa !6)\n    %10:gpr = nsw MUL %9, %8\n    %13:gpr = nsw MUL %12, %11\n    %14:gpr = nsw ADD %7, %4\n    %19:gpr = ADD %10, %13\n    %16:gpr = ADD %14, %19\n    $x10 = COPY %16\n    PseudoRET implicit $x10",
+    "hexagon_sms_before": "bb.0.b0:\n    successors: %bb.1(0x50000000), %bb.8(0x30000000)\n    liveins: $r0, $r1, $r2\n  \n    %27:intregs = COPY $r2\n    %26:intregs = COPY $r1\n    %25:intregs = COPY $r0\n    %29:predregs = C2_cmpgti %26, 0\n    J2_jumpt %29, %bb.1, implicit-def $pc\n  \n  bb.8:\n    successors: %bb.7(0x80000000)\n  \n    %28:intregs = A2_tfrsi 0\n    J2_jump %bb.7, implicit-def $pc\n  \n  bb.1.b1:\n    successors: %bb.2(0x40000000), %bb.4(0x40000000)\n  \n    %32:predregs = C2_cmpgtui %26, 3\n    %31:intregs = A2_tfrsi 0\n    J2_jumpf %32, %bb.4, implicit-def dead $pc\n    J2_jump %bb.2, implicit-def dead $pc\n  \n  bb.2.b2:\n    successors: %bb.3(0x80000000)\n  \n    %1:intregs = A2_addi %25, 2316\n    %34:intregs = A2_tfrsi 0\n    %72:intregs = S2_lsr_i_r %26, 2\n    %73:intregs = COPY %72\n    J2_loop0r %bb.3, %73, implicit-def $lc0, implicit-def $sa0, implicit-def $usr\n  \n  bb.3.b3 (machine-block-address-taken):\n    successors: %bb.3(0x7c000000), %bb.4(0x04000000)\n  \n    %2:intregs = PHI %1, %bb.2, %9, %bb.3\n    %3:intregs = PHI %34, %bb.2, %7, %bb.3\n    %4:intregs = PHI %34, %bb.2, %6, %bb.3\n    %5:intregs = PHI %34, %bb.2, %8, %bb.3\n    %35:intregs = L2_loadri_io %2, -2316 :: (load (s32) from %ir.cgep14, !tbaa !0)\n    %36:intregs = L2_loadri_io %2, -12 :: (load (s32) from %ir.cgep15, !tbaa !0)\n    %37:intregs = nsw A2_add %36, %35\n    S2_storeri_io %2, -2316, %37 :: (store (s32) into %ir.cgep14, !tbaa !0)\n    %38:intregs = nsw A2_sub %35, %36\n    S2_storeri_io %2, -12, %38 :: (store (s32) into %ir.cgep15, !tbaa !0)\n    %39:intregs = A2_abs %37\n    %40:intregs = A2_abs %38\n    %41:intregs = L2_loadri_io %2, -2312 :: (load (s32) from %ir.cgep16, !tbaa !0)\n    %42:intregs = L2_loadri_io %2, -8 :: (load (s32) from %ir.cgep17, !tbaa !0)\n    %43:intregs = nsw A2_add %42, %41\n    S2_storeri_io %2, -2312, %43 :: (store (s32) into %ir.cgep16, !tbaa !0)\n    %44:intregs = nsw A2_sub %41, %42\n    S2_storeri_io %2, -8, %44 :: (store (s32) into %ir.cgep17, !tbaa !0)\n    %45:intregs = A2_abs %43\n    %46:intregs = M4_or_or %45, killed %39, %4\n    %47:intregs = A2_abs %44\n    %48:intregs = M4_or_or %47, killed %40, %3\n    %49:intregs = L2_loadri_io %2, -2308 :: (load (s32) from %ir.cgep18, !tbaa !0)\n    %50:intregs = L2_loadri_io %2, -4 :: (load (s32) from %ir.cgep19, !tbaa !0)\n    %51:intregs = nsw A2_add %50, %49\n    S2_storeri_io %2, -2308, %51 :: (store (s32) into %ir.cgep18, !tbaa !0)\n    %52:intregs = nsw A2_sub %49, %50\n    S2_storeri_io %2, -4, %52 :: (store (s32) into %ir.cgep19, !tbaa !0)\n    %53:intregs = A2_abs %51\n    %54:intregs = A2_abs %52\n    %55:intregs = L2_loadri_io %2, -2304 :: (load (s32) from %ir.cgep20, !tbaa !0)\n    %56:intregs = L2_loadri_io %2, 0 :: (load (s32) from %ir.lsr.iv5, !tbaa !0)\n    %57:intregs = nsw A2_add %56, %55\n    S2_storeri_io %2, -2304, %57 :: (store (s32) into %ir.cgep20, !tbaa !0)\n    %58:intregs = nsw A2_sub %55, %56\n    S2_storeri_io %2, 0, %58 :: (store (s32) into %ir.lsr.iv5, !tbaa !0)\n    %59:intregs = A2_abs %57\n    %6:intregs = M4_or_or %59, killed %53, killed %46\n    %60:intregs = A2_abs %58\n    %7:intregs = M4_or_or %60, killed %54, killed %48\n    %8:intregs = nsw A2_addi %5, 4\n    %9:intregs = A2_addi %2, 16\n    ENDLOOP0 %bb.3, implicit-def $pc, implicit-def $lc0, implicit $sa0, implicit $lc0\n    J2_jump %bb.4, implicit-def dead $pc\n  \n  bb.4.b5:\n    successors: %bb.7(0x40000000), %bb.5(0x40000000)\n  \n    %10:intregs = PHI %31, %bb.1, %8, %bb.3\n    %11:intregs = PHI %31, %bb.1, %7, %bb.3\n    %12:intregs = PHI %31, %bb.1, %6, %bb.3\n    %62:predregs = C2_cmpeq %26, %10\n    J2_jumpt killed %62, %bb.7, implicit-def dead $pc\n    J2_jump %bb.5, implicit-def dead $pc\n  \n  bb.5.b6:\n    successors: %bb.6(0x80000000)\n  \n    %13:intregs = A2_sub %26, %10\n    %14:intregs = S2_addasl_rrri %25, %10, 2\n    %71:intregs = COPY %13\n    J2_loop0r %bb.6, %71, implicit-def $lc0, implicit-def $sa0, implicit-def $usr\n  \n  bb.6.b7 (machine-block-address-taken):\n    successors: %bb.7(0x04000000), %bb.6(0x7c000000)\n  \n    %15:intregs = PHI %14, %bb.5, %22, %bb.6\n    %17:intregs = PHI %11, %bb.5, %20, %bb.6\n    %18:intregs = PHI %12, %bb.5, %19, %bb.6\n    %63:intregs = L2_loadri_io %15, 0 :: (load (s32) from %ir.lsr.iv1, !tbaa !0)\n    %64:intregs = L2_loadri_io %15, 2304 :: (load (s32) from %ir.cgep23, !tbaa !0)\n    %65:intregs = nsw A2_add %64, %63\n    S2_storeri_io %15, 0, %65 :: (store (s32) into %ir.lsr.iv1, !tbaa !0)\n    %66:intregs = nsw A2_sub %63, %64\n    S2_storeri_io %15, 2304, %66 :: (store (s32) into %ir.cgep23, !tbaa !0)\n    %67:intregs = A2_abs %65\n    %19:intregs = A2_or killed %67, %18\n    %68:intregs = A2_abs %66\n    %20:intregs = A2_or killed %68, %17\n    %22:intregs = A2_addi %15, 4\n    ENDLOOP0 %bb.6, implicit-def $pc, implicit-def $lc0, implicit $sa0, implicit $lc0\n    J2_jump %bb.7, implicit-def dead $pc\n  \n  bb.7.b9:\n    %23:intregs = PHI %28, %bb.8, %11, %bb.4, %20, %bb.6\n    %24:intregs = PHI %28, %bb.8, %12, %bb.4, %19, %bb.6\n    L4_or_memopw_io %27, 0, %24 :: (store (s32) into %ir.a2, !tbaa !0), (load (s32) from %ir.a2, !tbaa !0)\n    L4_or_memopw_io %27, 4, %23 :: (store (s32) into %ir.cgep25, !tbaa !0), (load (s32) from %ir.cgep25, !tbaa !0)\n    PS_jmpret $r31, implicit-def dead $pc",
+    "hexagon_sms_after": "bb.0.b0:\n    successors: %bb.1(0x50000000), %bb.8(0x30000000)\n    liveins: $r0, $r1, $r2\n  \n    %27:intregs = COPY $r2\n    %26:intregs = COPY $r1\n    %25:intregs = COPY $r0\n    %29:predregs = C2_cmpgti %26, 0\n    %75:intregs = IMPLICIT_DEF\n    J2_jumpt %29, %bb.1, implicit-def $pc\n  \n  bb.8:\n    successors: %bb.7(0x80000000)\n  \n    %28:intregs = A2_tfrsi 0\n    J2_jump %bb.7, implicit-def $pc\n  \n  bb.1.b1:\n    successors: %bb.2(0x40000000), %bb.4(0x40000000)\n  \n    %32:predregs = C2_cmpgtui %26, 3\n    %31:intregs = A2_tfrsi 0\n    J2_jumpf %32, %bb.4, implicit-def dead $pc\n    J2_jump %bb.2, implicit-def dead $pc\n  \n  bb.2.b2:\n    successors: %bb.3(0x80000000)\n  \n    %1:intregs = A2_addi %25, 2316\n    %34:intregs = A2_tfrsi 0\n    %72:intregs = S2_lsr_i_r %26, 2\n    %73:intregs = COPY %72\n    J2_loop0r %bb.3, %73, implicit-def $lc0, implicit-def $sa0, implicit-def $usr\n  \n  bb.3.b3 (machine-block-address-taken):\n    successors: %bb.3(0x7c000000), %bb.4(0x04000000)\n  \n    %2:intregs = PHI %1, %bb.2, %9, %bb.3\n    %3:intregs = PHI %34, %bb.2, %7, %bb.3\n    %4:intregs = PHI %34, %bb.2, %6, %bb.3\n    %5:intregs = PHI %34, %bb.2, %8, %bb.3\n    %35:intregs = L2_loadri_io %2, -2316 :: (load (s32) from %ir.cgep14, !tbaa !0)\n    %36:intregs = L2_loadri_io %2, -12 :: (load (s32) from %ir.cgep15, !tbaa !0)\n    %37:intregs = nsw A2_add %36, %35\n    S2_storeri_io %2, -2316, %37 :: (store (s32) into %ir.cgep14, !tbaa !0)\n    %38:intregs = nsw A2_sub %35, %36\n    S2_storeri_io %2, -12, %38 :: (store (s32) into %ir.cgep15, !tbaa !0)\n    %39:intregs = A2_abs %37\n    %40:intregs = A2_abs %38\n    %41:intregs = L2_loadri_io %2, -2312 :: (load (s32) from %ir.cgep16, !tbaa !0)\n    %42:intregs = L2_loadri_io %2, -8 :: (load (s32) from %ir.cgep17, !tbaa !0)\n    %43:intregs = nsw A2_add %42, %41\n    S2_storeri_io %2, -2312, %43 :: (store (s32) into %ir.cgep16, !tbaa !0)\n    %44:intregs = nsw A2_sub %41, %42\n    S2_storeri_io %2, -8, %44 :: (store (s32) into %ir.cgep17, !tbaa !0)\n    %45:intregs = A2_abs %43\n    %46:intregs = M4_or_or %45, %39, %4\n    %47:intregs = A2_abs %44\n    %48:intregs = M4_or_or %47, %40, %3\n    %49:intregs = L2_loadri_io %2, -2308 :: (load (s32) from %ir.cgep18, !tbaa !0)\n    %50:intregs = L2_loadri_io %2, -4 :: (load (s32) from %ir.cgep19, !tbaa !0)\n    %51:intregs = nsw A2_add %50, %49\n    S2_storeri_io %2, -2308, %51 :: (store (s32) into %ir.cgep18, !tbaa !0)\n    %52:intregs = nsw A2_sub %49, %50\n    S2_storeri_io %2, -4, %52 :: (store (s32) into %ir.cgep19, !tbaa !0)\n    %53:intregs = A2_abs %51\n    %54:intregs = A2_abs %52\n    %55:intregs = L2_loadri_io %2, -2304 :: (load (s32) from %ir.cgep20, !tbaa !0)\n    %56:intregs = L2_loadri_io %2, 0 :: (load (s32) from %ir.lsr.iv5, !tbaa !0)\n    %57:intregs = nsw A2_add %56, %55\n    S2_storeri_io %2, -2304, %57 :: (store (s32) into %ir.cgep20, !tbaa !0)\n    %58:intregs = nsw A2_sub %55, %56\n    S2_storeri_io %2, 0, %58 :: (store (s32) into %ir.lsr.iv5, !tbaa !0)\n    %59:intregs = A2_abs %57\n    %6:intregs = M4_or_or %59, %53, %46\n    %60:intregs = A2_abs %58\n    %7:intregs = M4_or_or %60, %54, %48\n    %8:intregs = nsw A2_addi %5, 4\n    %9:intregs = A2_addi %2, 16\n    ENDLOOP0 %bb.3, implicit-def $pc, implicit-def $lc0, implicit $sa0, implicit $lc0\n    J2_jump %bb.4, implicit-def dead $pc\n  \n  bb.4.b5:\n    successors: %bb.7(0x40000000), %bb.5(0x40000000)\n  \n    %10:intregs = PHI %31, %bb.1, %8, %bb.3\n    %11:intregs = PHI %31, %bb.1, %7, %bb.3\n    %12:intregs = PHI %31, %bb.1, %6, %bb.3\n    %62:predregs = C2_cmpeq %26, %10\n    J2_jumpt %62, %bb.7, implicit-def dead $pc\n    J2_jump %bb.5, implicit-def dead $pc\n  \n  bb.5.b6:\n    successors: %bb.9(0x80000000)\n  \n    %13:intregs = A2_sub %26, %10\n    %14:intregs = S2_addasl_rrri %25, %10, 2\n    %71:intregs = COPY %13\n    %114:intregs = A2_addi %71, -1\n  \n  bb.9.b7:\n    successors: %bb.6(0x40000000), %bb.11(0x40000000)\n  \n    %87:intregs = L2_loadri_io %14, 0 :: (load (s32) from %ir.lsr.iv1, !tbaa !0)\n    %88:intregs = L2_loadri_io %14, 2304 :: (load (s32) from %ir.cgep23, !tbaa !0)\n    %89:intregs = nsw A2_sub %87, %88\n    S2_storeri_io %14, 2304, %89 :: (store (s32) into %ir.cgep23, !tbaa !0)\n    %90:intregs = nsw A2_add %88, %87\n    %91:intregs = A2_addi %14, 4\n    %92:intregs = A2_abs %89\n    %93:intregs = A2_abs %90\n    S2_storeri_io %14, 0, %90 :: (store (s32) into %ir.lsr.iv1, !tbaa !0)\n    %113:predregs = C2_cmpgtui %71, 1\n    J2_loop0r %bb.6, %114, implicit-def $lc0, implicit-def $sa0, implicit-def $usr\n    J2_jumpf %113, %bb.11, implicit-def $pc\n    J2_jump %bb.6, implicit-def $pc\n  \n  bb.6.b7 (machine-block-address-taken):\n    successors: %bb.11(0x04000000), %bb.6(0x7c000000)\n  \n    %74:intregs = PHI %92, %bb.9, %68, %bb.6\n    %76:intregs = PHI %11, %bb.9, %20, %bb.6\n    %77:intregs = PHI %93, %bb.9, %67, %bb.6\n    %78:intregs = PHI %12, %bb.9, %19, %bb.6\n    %79:intregs = PHI %91, %bb.9, %22, %bb.6\n    %20:intregs = A2_or %74, %76\n    %19:intregs = A2_or %77, %78\n    %63:intregs = L2_loadri_io %79, 0 :: (load (s32) from %ir.lsr.iv1, !tbaa !0)\n    %64:intregs = L2_loadri_io %79, 2304 :: (load (s32) from %ir.cgep23, !tbaa !0)\n    %66:intregs = nsw A2_sub %63, %64\n    S2_storeri_io %79, 2304, %66 :: (store (s32) into %ir.cgep23, !tbaa !0)\n    %65:intregs = nsw A2_add %64, %63\n    %22:intregs = A2_addi %79, 4\n    %68:intregs = A2_abs %66\n    %67:intregs = A2_abs %65\n    S2_storeri_io %79, 0, %65 :: (store (s32) into %ir.lsr.iv1, !tbaa !0)\n    ENDLOOP0 %bb.6, implicit-def $pc, implicit-def $lc0, implicit $sa0, implicit $lc0\n    J2_jump %bb.11, implicit-def $pc\n  \n  bb.11.b7:\n    successors: %bb.10(0x80000000)\n  \n    %99:intregs = PHI %68, %bb.6, %92, %bb.9\n    %100:intregs = PHI %20, %bb.6, %11, %bb.9\n    %101:intregs = PHI %67, %bb.6, %93, %bb.9\n    %102:intregs = PHI %19, %bb.6, %12, %bb.9\n    %104:intregs = A2_or %99, %100\n    %105:intregs = A2_or %101, %102\n    J2_jump %bb.10, implicit-def $pc\n  \n  bb.10.b7:\n    successors: %bb.7(0x80000000)\n  \n    J2_jump %bb.7, implicit-def $pc\n  \n  bb.7.b9:\n    %23:intregs = PHI %28, %bb.8, %11, %bb.4, %104, %bb.10\n    %24:intregs = PHI %28, %bb.8, %12, %bb.4, %105, %bb.10\n    L4_or_memopw_io %27, 0, %24 :: (store (s32) into %ir.a2, !tbaa !0), (load (s32) from %ir.a2, !tbaa !0)\n    L4_or_memopw_io %27, 4, %23 :: (store (s32) into %ir.cgep25, !tbaa !0), (load (s32) from %ir.cgep25, !tbaa !0)\n    PS_jmpret $r31, implicit-def dead $pc",
+    "hexagon_sms_log_tail": [
+      "",
+      "\tes: 80000000 ls: fffffffc me: 7fffffff ms: fffffff1",
+      "Trying to insert node between -4 and -15 II: 20",
+      "\tinsert at cycle -4   %55:intregs = L2_loadri_io %2:intregs, -2304 :: (load (s32) from %ir.cgep20, !tbaa !0)",
+      "",
+      "Inst (32)   %57:intregs = nsw A2_add %56:intregs, %55:intregs",
+      "",
+      "\tes: fffffffd ls:        3 me: 7fffffff ms: 80000000",
+      "Trying to insert node between -3 and 3 II: 20",
+      "\tinsert at cycle -3   %57:intregs = nsw A2_add %56:intregs, %55:intregs",
+      "",
+      "Inst (36)   %59:intregs = A2_abs %57:intregs",
+      "",
+      "\tes: fffffffe ls:        3 me: 7fffffff ms: 80000000",
+      "Trying to insert node between -2 and 3 II: 20",
+      "\tfailed to insert at cycle -2   %59:intregs = A2_abs %57:intregs",
+      "\tfailed to insert at cycle -1   %59:intregs = A2_abs %57:intregs",
+      "\tfailed to insert at cycle 0   %59:intregs = A2_abs %57:intregs",
+      "\tfailed to insert at cycle 1   %59:intregs = A2_abs %57:intregs",
+      "\tfailed to insert at cycle 2   %59:intregs = A2_abs %57:intregs",
+      "\tfailed to insert at cycle 3   %59:intregs = A2_abs %57:intregs",
+      "\tCan't schedule",
+      "Schedule Found? 0 (II=20)",
+      "No schedule found, return"
+    ]
+  },
+  "limitations": [
+    "Cross-target instructions were generated and machine-verified, not executed on BPF/RISC-V/Hexagon hardware.",
+    "Scheduler latency/resource values are LLVM model values, not measured cycles.",
+    "Mathematical models state simplifying assumptions and are not a reimplementation of LLVM."
+  ]
+}

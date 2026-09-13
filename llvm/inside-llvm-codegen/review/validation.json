@@ -1,92 +1,92 @@
 {
   "pdf_pages": 435,
-  "documents_checked": 55,
-  "local_links_checked": 850,
+  "documents_checked": 62,
+  "local_links_checked": 758,
   "linked_images_checked": 211,
   "chapters": {
     "ch1": {
       "section_headings": 5,
       "listing_identifiers": 3,
       "source_chars": 7769,
-      "corrected_chars": 8834
+      "corrected_chars": 6932
     },
     "ch2": {
       "section_headings": 14,
       "listing_identifiers": 17,
       "source_chars": 20150,
-      "corrected_chars": 21816
+      "corrected_chars": 17090
     },
     "ch3": {
       "section_headings": 13,
       "listing_identifiers": 8,
       "source_chars": 21170,
-      "corrected_chars": 17631
+      "corrected_chars": 18468
     },
     "ch4": {
       "section_headings": 11,
       "listing_identifiers": 1,
       "source_chars": 13091,
-      "corrected_chars": 13661
+      "corrected_chars": 14186
     },
     "ch5": {
       "section_headings": 5,
       "listing_identifiers": 3,
       "source_chars": 6958,
-      "corrected_chars": 8704
+      "corrected_chars": 11748
     },
     "ch6": {
       "section_headings": 11,
       "listing_identifiers": 21,
       "source_chars": 19128,
-      "corrected_chars": 22443
+      "corrected_chars": 26245
     },
     "ch7": {
       "section_headings": 16,
       "listing_identifiers": 35,
       "source_chars": 66155,
-      "corrected_chars": 68833
+      "corrected_chars": 26412
     },
     "ch8": {
       "section_headings": 32,
       "listing_identifiers": 14,
       "source_chars": 71445,
-      "corrected_chars": 74374
+      "corrected_chars": 36498
     },
     "ch9": {
       "section_headings": 14,
       "listing_identifiers": 18,
       "source_chars": 30266,
-      "corrected_chars": 32889
+      "corrected_chars": 21562
     },
     "ch10": {
       "section_headings": 40,
       "listing_identifiers": 33,
       "source_chars": 104272,
-      "corrected_chars": 106005
+      "corrected_chars": 70519
     },
     "ch11": {
       "section_headings": 18,
       "listing_identifiers": 11,
       "source_chars": 44443,
-      "corrected_chars": 47665
+      "corrected_chars": 21155
     },
     "ch12": {
       "section_headings": 5,
       "listing_identifiers": 8,
       "source_chars": 8756,
-      "corrected_chars": 12776
+      "corrected_chars": 13152
     },
     "ch13": {
       "section_headings": 12,
       "listing_identifiers": 1,
       "source_chars": 7858,
-      "corrected_chars": 11624
+      "corrected_chars": 9060
     },
     "appendix-a": {
       "section_headings": 10,
       "listing_identifiers": 12,
       "source_chars": 15808,
-      "corrected_chars": 18231
+      "corrected_chars": 18592
     },
     "appendix-b": {
       "section_headings": 12,

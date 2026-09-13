@@ -1,218 +1,173 @@
-# 第 1 章绪论（LLVM 18.1.8 校订）
+# 第 1 章 绪论与可复现的 LLVM 18 实验环境
 
-> 以原书全文为基础，按 `/opt/llvm-project` 的 `llvmorg-18.1.8`（提交 `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`）静态核对。原书基于 LLVM 15，示例为 15.0.1。
-> [未修订原文](origin/inside-llvm-codegen-ch1.md) · [逐项核查记录](review/ch1.md)。本轮未构建 LLVM、未执行编译命令或 LLVM IR 示例；历史输出与原图保留作对照，修正文意以本稿为准。
-
-Chapter 1 第 1 章
-
-绪论
-
-在现代计算机系统中，编译器是必不可少的基础软件。程序员使用高级语言进行编程完成业务需求，编译器则负责将高级语言转换为底层硬件可以执行的机器指令。
-
-编译器是计算机科学发展史中最为悠久的学科之一。现代公认的第一款编译器是 IBM于 1957 年发布的 Fortran 编译器；读者所熟知的 GCC 早在 1987 年就发布了第一个版本，距今快 40 年了；而本书讨论的 LLVM 于 2003 年正式开源，也有 20 多年的历史了。
-
-早期编译器研究聚焦于从高级语言到机器码的转换以及优化程序满足对时间和空间的需求。随着时代的发展，应用程序执行性能和多硬件支持逐步成为编译器的主要需求，在编译器领域产生了大量的有关程序分析与转换、代码自动生成以及运行时等新知识。与早期的编译器实现相比，今天的编译算法明显更为复杂。例如，早期的编译器采用简单直观的技术对程序进行词法分析，而现代的编译器词法分析技术都是基于形式语言和自动机理论实现的，这使得编译器前端的开发更为系统化；再例如，早期编译器优化技术更多采用简单直观的技术进行依赖分析和循环变换，而现代编译器可以采用更为复杂的算法，例如多面体理论、线性规划等。
-
-本书讨论的 LLVM 是过去 20 多年最成功的编译项目之一，它不仅被广泛用于 C/C++等传统语言的编译，更被很多新型语言作为开发基础。为什么 LLVM 能取得这么大的成就？根本原因在于 LLVM 良好的设计与实现。LLVM 为编译项目开发提供基础，程序被前端编译到 LLVM IR，再由 LLVM 后端编译至任意平台（指 LLVM 所支持的大多数主流平台），不同目标架构可以重用内置的编译优化，这极大地简化了针对某一编程语言开发编译器的过程。此外，LLVM 还提供了完备的编译相关的工具链。
-
-本章主要探讨 LLVM 的设计思路、 发展现状， 以及 LLVM 构建和在线学习工具Compiler Explorer，方便读者在学习后续章节。
+本教材使用本地 LLVM **18.1.8**，源码提交为 `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`。原书 LLVM 15 的转写保存在 [origin](origin/inside-llvm-codegen-ch1.md)。本章建立后续各章共用的环境、观察方法和验证边界；实验输入见 [experiments/ch1](experiments/ch1/sum.c)，机器可读结果见 [实验记录](review/experiments-ch1.json)。
 
 ## 1.1 LLVM 设计思路分析
 
-LLVM 项目起源于伊利诺伊大学香槟分校的研究型项目，在 2000 年由 Chris Lattner 和其导师 Vikram Adve 发起，并于 2003 年正式开源并发布 1.0 版本。2002 年，Lattner 在其硕士论文“ LLVM: AN INFRASTRUCTURE FOR MULTI-STAGE OPTIMIZATION”中详细介绍了 LLVM 的设计思路，本节将简单总结这一思路。
+LLVM 提供程序表示、分析、变换、目标代码生成和工具链组件。学习它的关键是明确一个阶段读什么、改变什么、保证什么，以及这些保证由谁检查。
 
-LLVM 的愿景是实现一个编译器的基础设施，能适配现代编程语言、硬件架构发展，它有 3 个目标。
+```mermaid
+flowchart LR
+  C["C / C++ 源程序"] --> CL["Clang：解析、语义分析、IR 生成"]
+  CL --> IR["LLVM IR：内存对象 / 文本 .ll / bitcode .bc"]
+  IR --> OPT["IR 分析与优化"]
+  OPT --> IS["指令选择与合法化"]
+  IS --> MI["Machine IR：调度、寄存器分配、栈帧"]
+  MI --> MC["MC 层：指令编码、符号、修正"]
+  MC --> ASM["汇编文本 .s"]
+  MC --> OBJ["可重定位目标文件 .o"]
+  OBJ --> LOAD["链接器或目标装载环境"]
+```
 
-1）具备多阶段优化能力（如过程内优化、过程间优化、剖析信息驱动的优化（profile-guided optimization）），保证程序执行性能足够高。
+这个图描述普通提前编译路径。LLVM 还可用于 JIT、LTO 等场景，但使用 LLVM 不意味着程序自动获得运行时优化。LTO 在链接阶段处理 IR；ThinLTO 用模块摘要索引组织跨模块分析、导入和并行后端任务。JIT 则还要处理内存分配、符号解析和可执行代码的生命周期。
 
-2）提供基础机制，方便进行编译器研发。
+LLVM IR 的几个约束贯穿全书：
 
-3）兼容标准系统编译器的行为。
+- **SSA 约束针对 IR 值。** 一个局部 SSA 名字只定义一次，内存中的对象仍可以被多次写入。`alloca`、`load`、`store` 不是 SSA 的例外，而是在 SSA 指令中显式描述内存操作。
+- **类型与目标信息共同决定语义。** `i32` 是 32 位整数；指针宽度、地址空间、ABI 和数据布局还依赖 `target triple`、`data layout` 及目标规则。任意 IR 文件不能只改 triple 就保证跨平台等价。
+- **IR 值不是已经分配好的物理寄存器。** 后端可能把它折叠、复制、拆分、合并或溢出到栈。
+- **三种 IR 形式表达同一层次。** `.ll` 是文本，`.bc` 是 bitcode，内存形式是 `Module`、`Function`、`BasicBlock`、`Instruction` 等 C++ 对象。`.bc` 不是目标处理器机器码。
+- **外部库不是 IR 自带的执行环境。** 堆分配、I/O 等通常通过外部函数调用表达；异常控制流、原子操作和部分内存操作另有 IR 指令或 intrinsic。
 
-为了达到这些目标，LLVM 设计了一套虚拟指令集，称为 LLVM IR。虽然 LLVM IR是低级的中间表示，但是它携带了程序的类型信息，这样的 IR 设计既方便了静态编译优化，又允许在链接时进行优化。Lattner 设想在链接优化完成后生成的二进制文件中，既可以包含可执行代码，又可以包含 IR，其中 IR 可以用于后续的 JIT 优化○一。Lattner 还设想在LLVM 中提供运行时优化，通过监控程序的执行过程来收集反馈信息（profile information）并用于指导程序优化○二。
+LLVM 的 verifier 检查表示的结构和类型约束，例如 PHI 前驱、操作数类型及支配关系。它不证明优化前后程序等价，也不保证目标对象能通过操作系统或 BPF 装载器的检查。后续实验因此分开记录：解析/验证、变换结构、目标代码生成，以及能够实际执行的语义用例。
 
-LLVM 编译器整体架构图如图 1-1 所示。
-
-![图 1-1 LLVM 编译器整体架构图](origin/assets/figures/p016-1-1.png)
-
-**图 1-1 LLVM 编译器整体架构图**
-
-图 1-1 描述了围绕“编译 – 链接 – 执行”的多阶段优化设计。具体工具链只执行其配置启用的阶段，并非每个使用 LLVM 的程序都会自动进行运行时优化。LLVM IR 使多种语言与目标能够共用分析和变换；其他编译器也使用 IR，不能把使用 IR 本身作为 LLVM 独有的特征。
-
-○一通常静态编译器仅包含可执行代码，和操作系统的可执行文件格式兼容，但是一些特殊应用使用胖二进
-
-制（fat binary）文件，可同时包含多种输出。
-
-○二程序优化可以在线执行也可以离线执行，在线执行需要消耗额外的运行时资源，在一些动态语言（如
-
-JavaScript、Java 等）虚拟机中会使用在线编译优化，而静态语言则更多使用离线优化。
-
-1）编译时优化：各个语言的编译器前端将代码翻译成 LLVM IR，LLVM 优化器针对LLVM IR 做尽可能多的优化。编译期优化大多数属于局部优化（少量优化是过程间优化），通常包含架构无关优化和架构相关优化。
-
-2）链接时优化：通过 LTO 在链接阶段对 LLVM IR 继续优化。ThinLTO 使用模块摘要索引支持跨模块分析和导入；不能把所有 LTO 都概括成仅对摘要进行优化。
-
-3）运行时和离线优化：基于收集的程序执行信息，再次对应用进行优化。
-
-在这些优化工作中，LLVM IR 是整个编译系统设计的关键，具有如下特点。
-
-1）LLVM IR 抽象掉大部分具体机器指令、物理寄存器和流水线细节，但仍可携带目标 triple、data layout、地址空间和调用约定，不能理解为完全没有目标或 ABI 约束。
-
-2）LLVM IR 提供无限数量的类型化虚拟寄存器，并用这些寄存器来存储基础类型（如整型、浮点型、指针类型）的值。LLVM IR 采用 SSA 形式，从而更便于进行编译优化。
-
-3）在 LLVM IR 中提供了特有的指令，显式描述异常控制流信息。
-
-4）LLVM IR 用 `alloca` 分配当前函数的栈对象，用 `load`、`store` 读写内存；原子读改写指令 `atomicrmw`、`cmpxchg` 以及内存 intrinsic 和函数调用也能访问内存，所以内存交换并不限于 `load`/`store`。LLVM 18 没有 `malloc`/`free` 指令，堆分配和释放通常通过运行时库函数调用实现。`alloca` 对象通常在函数返回时释放，`llvm.stacksave`/`llvm.stackrestore` 等机制还可以提前恢复栈。
-
-5）LLVM IR 可以声明和调用 I/O、内存管理等外部运行时函数，但这些函数不是 IR 自带的一套完整系统库。LLVM IR 有文本形式、bitcode 二进制形式和内存中的 C++ 对象形式；其中内存形式是数据结构，不是第三种文件格式。
-
-> 源码依据：[指令类别](/opt/llvm-project/llvm/include/llvm/IR/Instruction.def:123)、[语言参考](/opt/llvm-project/llvm/docs/LangRef.rst:874)、[ThinLTO 设计](/opt/llvm-project/clang/docs/ThinLTO.rst:20)。下方历史脚注保留版本沿革，不把旧指令当作 LLVM 18 的接口。
-
-LLVM IR 提供了各种分析和变换的 Pass（Pass 是指对编译对象进行一次处理，详细内容可以参考附录 C），以及配套的工具集，如汇编、反汇编、解释器、优化器、编译器、测试套等相关工具，能帮助开发者快速入门和使用 LLVM。
+源码入口：[LLVM IR 指令类别](/opt/llvm-project/llvm/include/llvm/IR/Instruction.def)、[LangRef](/opt/llvm-project/llvm/docs/LangRef.rst)、[ThinLTO](/opt/llvm-project/clang/docs/ThinLTO.rst)。
 
 ## 1.2 LLVM 主要子项目
 
-经过多年的发展，LLVM 被许多语言和工具采用，但不能据此推断现代语言与工具大多都基于 LLVM。LLVM 不仅是一款编译器，还是编译器和工具链的集合，其主要子项目如下。
+| 组件 | 在本教材中的作用 |
+| --- | --- |
+| LLVM 核心库 | IR、分析、优化、代码生成和 MC 层；`opt`、`llc` 等工具由此构建 |
+| Clang | 把 C/C++/Objective-C 转为 LLVM IR，也可通过驱动程序调用后续编译与链接步骤 |
+| MLIR | 定义方言、类型和操作，组织多层表示及转换；块参数与 LLVM PHI 的关系见第 2 章 |
+| clang-tools-extra | 包含 clang-tidy 等工具；本地构建保留此项目，但它不参与本书的普通 llc 流水线 |
+| LLDB | 调试工具本身；不属于 LLVM IR 优化 Pass |
+| LLD | 链接器；`llc -filetype=obj` 不等于完成链接 |
+| compiler-rt、libc、libc++、libc++abi、libunwind | 不同层次的运行时和库支持，具体组合依目标与工具链而定 |
+| Flang、OpenMP、libclc、Polly、BOLT | 分别涉及 Fortran 前端、并行运行时、OpenCL 库、多面体优化和链接后优化等方向 |
 
-1）LLVM 核心库（即平常大家提到的 LLVM）：提供了编译优化器、各种后端的代码生成，其输入为 LLVM IR，输出为编译器处理后的目标架构代码。
-
-2）Clang ：LLVM 原生支持的 C/C++/Objective-C 编译器，其中编译优化器和代码生成模块直接使用 LLVM 核心库。Clang 主要负责从 C/C++/Objective-C 到 LLVM IR 的转换、LLVM核心库的调用，同时提供多样化的前端处理工具，例如针对代码分析的静态分析器、针对
-
-○一 LLVM 2.7 中将 malloc、free 指令移除，堆内存管理会调用库函数 malloc、free。
-
-代码静态检查的工具（clang-tidy）、针对代码风格的自动格式化工具（clang-format）等。
-
-3）LLDB：基于 LLVM 核心库及 Clang 构建的调试器。
-
-4）libc：LLVM 的 C 标准库项目；具体平台和函数的实现覆盖范围应查询该版本源码，不能据项目目标声称已完整支持所有 C/POSIX 接口。
-
-5）libcxx：一种 C++ 标准库的实现，包括 iostreams 和 STL 等库的实现，支持 C++11、C++14 等更高版本。
-
-6）libunwind ：提供基于 DWARF 标准的堆栈展开的辅助函数，通常用于实现 C++ 等语言的异常处理。具体链接组合由目标平台和工具链决定；GNU 工具链中常见的展开运行库是 libgcc_s，不应把它归为 glibc 的实现，也不是所有 Linux 配置都必须使用 llvm-libgcc。
-
-7）libcxxabi：提供 C++ ABI 支持，包括异常处理、运行时类型信息与动态类型转换、局部静态对象初始化等；异常展开与平台的 unwinder 配合，不能把全部功能仅概括为 libunwind 之上的异常函数。
-
-8）libclc：OpenCL 标准库的实现。
-
-9）OpenMP ：一种 OpenMP 运行时的实现，OpenMP 有助于多线程编程，提供并行化处理。
-
-10）compiler-rt ：提供独立于编程语言的支持库。compiler-rt 包含通用函数（如 32 位i386 后端的 64 位除法）、各种程序错误检测工具（sanitizers）、fuzzing 库、profiling 库、插桩库XRay 等。
-
-11）LLD：一种链接器的实现。
-
-12）Flang：LLVM 原生支持的 Fortran 编译器前端。
-
-13）pstl：并行 STL 的实现。
-
-14）POLLY：多面体编译器的实现，主要实现了自动并行、矢量化等优化。
-
-15）MLIR ：通过定义多级 IR 框架，允许用户自定义 IR 并重用基础编译器框架。目前有许多编译器项目通过 MLIR 实现，例如 AI 编译器、Circt（EDA 编译器）等。
-
-16）BOLT ：链接后的优化器，对链接后的二进制代码进行优化，例如通过收集运行时信息，对代码进行重新布局，从而提高执行效率。
+只选择 `LLVM_TARGETS_TO_BUILD` 不会自动构建上述全部项目。反过来，启用 Clang、MLIR 也不能代替目标后端的构建。`llvm-tblgen`、`clang-tblgen`、`mlir-tblgen` 共享 TableGen 基础设施，但各自装入不同的生成器。
 
 ## 1.3 LLVM 构建与调试
 
-原书涉及的后端架构、Pass 和算法以 LLVM 15 为基础，作者提供了源码镜像。本校订固定使用已有本地 `/opt/llvm-project` 的 LLVM 18.1.8，避免依赖远端仓库默认分支。官方项目仓库为 `https://github.com/llvm/llvm-project`。
-
-LLVM 构建比较简单，读者可以参考官方项目中的构建说明进行操作，构建完成后就可以使用 GDB 或者 LLDB 进行调试，这里仅做一个简单的介绍。下面以笔者使用的macOS 环境为例介绍构建和调试工作。
-
-1）环境准备：在 macOS 上构建 LLVM 需要安装开发套件 CMake、git 等。
-
-2）源码版本：本轮直接读取本地源码，已确认标签为 `llvmorg-18.1.8`。如果以后另建环境，应显式固定所需 tag；本轮不切换现有工作树，不下载、不构建。
-
-3）构建代码：按照构建说明进行构建。本书主要以 BPF 后端为例进行说明，为了加快构建速度，可以通过命令行参数 LLVM_TARGETS_TO_BUILD 仅构建 BPF 后端。构建LLVM 工程使用的命令如代码清单 1-1 所示。
-
-**代码清单 1-1 构建 LLVM 工程使用的命令**
+所有命令在本地仓库根目录运行。先设置三个显式路径：
 
 ```sh
-# 以下命令供后续构建时使用，本轮未执行。
-cmake -S /opt/llvm-project/llvm -B /opt/llvm-project/build-codegen-18 \
-  -G "Unix Makefiles" \
+export LLVM_SRC=/opt/llvm-project
+export LLVM_BUILD=/opt/llvm-project/build
+export BOOK_ROOT=/opt/coding/mlir-toy/llvm/inside-llvm-codegen
+```
+
+本次配置沿用已有 Ninja 构建、Debug、断言以及 Clang/MLIR 项目。为了支持书中的跨目标实验，在 BPF 和 Native 之外启用了 X86、RISCV、Hexagon、PowerPC、ARM；Native 在当前 Apple Silicon 主机上对应 AArch64。这些后端用于交叉生成代码，不要求本机能够运行其机器指令。
+
+**代码清单 1-1：配置和按需增量构建。** 对已有构建目录执行 CMake 会更新配置；下面只列出本教材使用的工具目标，不执行安装，也不要求构建全部示例程序。
+
+```sh
+CODEGEN_HOST_TRIPLE=$(/usr/bin/cc -dumpmachine)
+cmake -G Ninja \
+  -S "$LLVM_SRC/llvm" \
+  -B "$LLVM_BUILD" \
+  -DLLVM_ENABLE_PROJECTS="clang;mlir;clang-tools-extra" \
+  -DLLVM_INCLUDE_EXAMPLES=ON \
+  -DLLVM_BUILD_EXAMPLES=ON \
+  -DLLVM_TARGETS_TO_BUILD="BPF;Native;X86;RISCV;Hexagon;PowerPC;ARM" \
+  -DLLVM_DEFAULT_TARGET_TRIPLE="$CODEGEN_HOST_TRIPLE" \
   -DCMAKE_BUILD_TYPE=Debug \
   -DLLVM_ENABLE_ASSERTIONS=ON \
-  -DLLVM_TARGETS_TO_BUILD=BPF \
-  -DLLVM_ENABLE_PROJECTS=clang
-cmake --build /opt/llvm-project/build-codegen-18 --parallel 8
+  -DLLVM_PARALLEL_COMPILE_JOBS=12 \
+  -DLLVM_PARALLEL_LINK_JOBS=1 \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+  -DCMAKE_C_COMPILER=/usr/bin/cc \
+  -DCMAKE_CXX_COMPILER=/usr/bin/c++ \
+  -DCMAKE_INSTALL_PREFIX=/opt/llvm-project/install
+
+cmake --build "$LLVM_BUILD" --parallel 12 --target \
+  clang opt llc lli llvm-as llvm-dis llvm-tblgen FileCheck \
+  llvm-mc llvm-objdump llvm-readobj llvm-config mlir-opt mlir-translate
 ```
 
-4）验证：按清单 1-1 的构建目录，可执行文件位于 `/opt/llvm-project/build-codegen-18/bin/`。以 llc 命令为例，执行 llc --version 可以得到如代码清单 1-2 所示的结果。
+以上编译器路径与主机 triple 获取方式用于本次 macOS 环境；迁移平台时应选择当地可用的 C/C++ 编译器。Debug 与断言便于检查内部不变量和使用 `-debug-only`。编译资源上限属于本机设置，不是 LLVM 正确性的要求。
 
-**代码清单 1-2 原书的 LLVM 15.0.1 验证输出（历史记录，非本轮执行结果）**
+**代码清单 1-2：检查实际执行的工具。** CMakeCache 中的目标列表不证明现有可执行文件已经按该配置重建；要同时检查二进制。
 
-```text
-LLVM (http://llvm.org/):
-    LLVM version 15.0.1
-    DEBUG build with assertions.
-    Default target: arm64-apple-darwin22.5.0
-    Host CPU: cyclone
-
-    Registered Targets:
-        bpf   - BPF (host endian)
-        bpfeb - BPF (big endian)
-        bpfel - BPF (little endian)
+```sh
+"$LLVM_BUILD/bin/clang" --version
+"$LLVM_BUILD/bin/llc" --version
+"$LLVM_BUILD/bin/opt" --version
+"$LLVM_BUILD/bin/llvm-config" --targets-built
 ```
 
-5）调试：开发者可以使用 LLDB 调试 llc，设置断点并运行测试。例如，为了观察尾代码重复（tail duplication）的功能，通过 b TailDuplicateBase::runOnMachineFunction 命令为函数设置断点，同时设置 LLDB 运行参数 settings set -- target.run-args -mtriple=bpfel -O2 -debug -tail-dup-size=10 test.ll○一，然后执行 run 命令即可。关于 LLDB 更多使用方法可以参考 LLDB 使用文档。LLDB 调试命令示例如代码清单 1-3 所示：
+本次开始时就遇到了这一情况：缓存写着 `BPF;Native`，现有 `llc` 却只注册了 BPF，默认 triple 还是空串。修复配置并重建后，再由第 1 章 runner 检查实际目标列表。后续各章仍显式给出 triple、CPU 和影响结论的 features，避免把主机默认值混入实验。
 
-**代码清单 1-3 LLDB 调试命令示例**
+另一个构建阻碍是本地 `BPFMIChecking.cpp` 中引用了不存在的 `BPF::XOR5W32`。本次仅将这一处恢复为该分支对应的 `BPF::XORW32`，变更见 [构建修复补丁](review/build-source-fix.patch)。其余本地注释等改动予以保留；实验环境的准确源码及工具信息见 [环境记录](review/environment.json)。
 
-```text
-(lldb) target create /opt/llvm-project/build-codegen-18/bin/llc
-(lldb) breakpoint set --func-regex 'TailDuplicateBase::runOnMachineFunction'
-(lldb) settings set -- target.run-args -mtriple=bpfel -O2 -debug -tail-dup-size=10 test.ll
-(lldb) run
+观察 Pass 时，优先使用可保存的文本输出：
+
+```sh
+# 优化器注册的 Pass 名称及流水线观察。
+"$LLVM_BUILD/bin/opt" --print-passes
+# Debug 构建可结合具体用例使用 -debug-only=isel,isel-dump。
+# 后端的打印停止点必须使用 llc 注册的 Pass 名称，见第 7、10 章。
 ```
 
-○一这里的 test.ll 可以参考代码清单 9-3。
+LLDB 可用于断点、单步和查看对象，但断点名称不是稳定 API。应先在该提交源码中确认函数存在，再选择参数齐备的最小输入；不宜用大段交互调试截图代替实验输入和复现命令。本教材的自动检查不包含交互式调试器会话。
 
-## 1.4 LLVM 在线工具
+## 1.4 从源程序到目标文件的实验
 
-> 本节界面和图示是原书使用 LLVM 15 时的历史演示。本轮没有访问或验证在线站点；后续复现实验应选择 LLVM 18.1.8 对应工具版本，界面布局、可选版本及 Pass 输出可能不同。
+本章使用完整的 [sum.c](experiments/ch1/sum.c)：`sum(10)` 计算 `0+1+…+9`，`main` 在结果为 45 时返回 0。它没有库调用；当前测试输入的有符号加法不溢出。这些前提使纯 IR 解释执行可以作为本例的语义检查。
 
-如果读者不想构建 LLVM，也可以使用在线工具 Compiler Explorer（https://godbolt.org）学习 LLVM 各种功能和代码变化。该在线工具可以直观地比较优化前后的代码变化情况，支持多种语言作为输入，也支持 LLVM IR、LLVM MIR（Machine IR）作为输入，该工具可以选择不同的编译器进行编译。
+**代码清单 1-3：显式控制各编译阶段。** 输出使用独立临时目录，不写进 LLVM 源码树。
 
-1）Compiler Explorer 初始界面如图 1-2 所示，可以选择不同的编程语言。
+```sh
+CODEGEN_LAB=$(mktemp -d)
+"$LLVM_BUILD/bin/clang" --target=bpfel -O0 \
+  -Xclang -disable-O0-optnone -fno-discard-value-names \
+  -S -emit-llvm "$BOOK_ROOT/experiments/ch1/sum.c" \
+  -o "$CODEGEN_LAB/sum.ll"
 
-![图 1-2 输入代码并选择编程语言](origin/assets/figures/p020-1-2.png)
+"$LLVM_BUILD/bin/opt" -passes=mem2reg -verify-each -S \
+  "$CODEGEN_LAB/sum.ll" -o "$CODEGEN_LAB/sum-ssa.ll"
+"$LLVM_BUILD/bin/llvm-as" "$CODEGEN_LAB/sum-ssa.ll" \
+  -o "$CODEGEN_LAB/sum.bc"
+"$LLVM_BUILD/bin/llvm-dis" "$CODEGEN_LAB/sum.bc" \
+  -o "$CODEGEN_LAB/roundtrip.ll"
+"$LLVM_BUILD/bin/opt" '-passes=default<O2>' -verify-each -S \
+  "$CODEGEN_LAB/sum-ssa.ll" -o "$CODEGEN_LAB/sum-opt.ll"
 
-**图 1-2 输入代码并选择编程语言**
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 \
+  -verify-machineinstrs -filetype=obj "$CODEGEN_LAB/sum-opt.ll" \
+  -o "$CODEGEN_LAB/sum.o"
+"$LLVM_BUILD/bin/llvm-readobj" --file-headers "$CODEGEN_LAB/sum.o"
+"$LLVM_BUILD/bin/llvm-objdump" -d "$CODEGEN_LAB/sum.o"
+"$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel \
+  "$CODEGEN_LAB/sum.ll"
+"$LLVM_BUILD/bin/lli" --force-interpreter -mtriple=bpfel \
+  "$CODEGEN_LAB/sum-opt.ll"
+```
 
-2）选择不同的编译器，并为编译器添加不同的编译选项，例如选择 Clang 版本，添加命令行参数 -emit-llvm -S 用于生成 LLVM IR，如图 1-3 所示。
+`-disable-O0-optnone` 允许本实验随后用 `opt` 变换函数；否则 Clang 在 O0 添加的 `optnone` 会使许多优化跳过函数。`mem2reg` 只提升满足条件的局部对象，不是“删除一切内存操作”。
 
-![图 1-3 选择编译器并添加编译选项](origin/assets/figures/p020-1-3.png)
+本例检查的观察点如下：
 
-**图 1-3 选择编译器并添加编译选项**
+| 阶段 | 实际检查的性质 | 不据此推断的结论 |
+| --- | --- | --- |
+| Clang IR | 存在局部 `alloca i32` | 这些对象必定在最终机器栈中占空间 |
+| mem2reg | 可提升的 alloca 消失，循环中出现 PHI | 所有 C 变量都能被提升 |
+| bitcode 往返 | 重新解析并通过 IR verifier | 文本名字、排版必定逐字不变 |
+| O2 与 llc | IR 验证、机器指令验证及对象写出成功 | BPF 内核 verifier 已经接受程序 |
+| readobj / objdump | 对象机器类型为 `EM_BPF`，包含函数与 BPF 指令 | `.o` 已完成链接或可以作为宿主程序直接运行 |
+| lli 解释执行 | 给定输入优化前后均返回 0 | 实际 BPF 指令已在内核中运行，或所有输入均等价 |
 
-3）本书主要关注代码生成，对应的命令行入口是 llc。llc 使用 LLVM IR 作为输入，如果要生成 BPF 后端代码，可以在编译选项中填入 -march=bpf，如图 1-4 所示。
+runner 还让 Clang 按修复后的本机默认 triple 重新生成 `host.ll`，再用普通 `lli` JIT 执行并检查返回 0。这一用例验证本机后端和 JIT 的衔接；它使用重新生成的宿主 IR，并没有把 BPF 目标对象当作宿主代码运行。
 
-![图 1-4 配置编译选项](origin/assets/figures/p021-1-4.png)
+完整自动执行包含上述命令和断言：
 
-**图 1-4 配置编译选项**
+```sh
+python3 "$BOOK_ROOT/experiments/ch1/runner.py"
+```
 
-选择 Add new 视图下的 LLVM Opt Pipeline 选项（见图 1-5），可以展示 Clang 编译过程中使用的 Pass（参见附录 C）。
-
-![图 1-5 选择 LLVM Opt Pipeline](origin/assets/figures/p021-1-5.png)
-
-**图 1-5 选择 LLVM Opt Pipeline**
-
-得到的结果如图 1-6 所示，在 LLVM Opt Pipeline 视图中，第一列是所有 Pass，右侧两列是某一 Pass 的输入和输出。如果 IR 经过某个 Pass 处理后发生变化，在 LLVM Opt Pipeline 中使用高亮的绿色表示变化，右侧两列会提示变化的情况。（因印刷缘故，绿色、粉色都变成浅灰色，请读者注意。而在实际网页中，粉底色表示删除、绿色表示添加。）
-
-![图 1-6 输出所有涉及的 Pass](origin/assets/figures/p022-1-6.png)
-
-**图 1-6 输出所有涉及的 Pass**
+返回码、检查条件和日志摘要记录在 [experiments-ch1.json](review/experiments-ch1.json)。这一证据格式贯穿各章：展示可重跑的输入和结论所需的观察点，而不是依赖某次运行的虚拟寄存器编号。
 
 ## 1.5 本章小结
 
-本章简单介绍了 LLVM 的设计思路、发展现状，以及在 macOS 平台如何构建、调试LLVM，最后演示了如何通过在线工具 Compiler Explorer 学习 LLVM。
-
-## 本章源码核对与后续验证
-
-- 构建选项和 C++17 要求对应 [llvm/CMakeLists.txt](/opt/llvm-project/llvm/CMakeLists.txt:69)，命令已修正 shell 注释和跨行续接；并行度只是示例，应按机器资源调整。
-- 断点函数仍在 [TailDuplication.cpp](/opt/llvm-project/llvm/lib/CodeGen/TailDuplication.cpp:83)，阈值选项仍在 [TailDuplicator.cpp](/opt/llvm-project/llvm/lib/CodeGen/TailDuplicator.cpp:61)。是否实际执行该 Pass 取决于优化等级和目标配置，断点地址不应照抄书中的日志。
-- LLVM 18 的 legacy 后端可以通过 `llc -debug-pass=Structure` 观察 Pass 结构；选项定义见 [LegacyPassManager.cpp](/opt/llvm-project/llvm/lib/IR/LegacyPassManager.cpp:52)。本轮未执行。
-- 待后续确认：构建环境、`llc --version` 实际输出、断点是否命中及指定 IR 的输出。历史性能与在线工具界面不属于本轮源码可验证的结果。
-
-- libcxxabi 的异常、静态初始化及类型信息接口见 [cxxabi.h](/opt/llvm-project/libcxxabi/include/cxxabi.h:55) 与 [private_typeinfo.h](/opt/llvm-project/libcxxabi/src/private_typeinfo.h:68)。
-
-## 原书逐页版面
-
-本节保留原书页面，用于追溯图表、公式和历史输出；技术结论以校订正文及核查记录为准。
+阅读 LLVM 后端时，先确定输入表示、目标配置和 Pass 所在阶段，再沿着源码检查其前提与行为。文本解析、IR verifier、MachineVerifier、结构断言、IR 执行和真实目标运行是不同层次的证据。后续章节会按各自问题选择相应检查，并明确哪些只是模型推导、哪些已经在本地工具上观察到。

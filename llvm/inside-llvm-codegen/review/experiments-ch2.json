@@ -1,0 +1,420 @@
+{
+  "chapter": 2,
+  "status": "passed",
+  "tools": {
+    "clang": [
+      "clang version 18.1.8 (https://github.com/llvm/llvm-project.git 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)",
+      "Target: arm64-apple-darwin24.6.0",
+      "Thread model: posix"
+    ],
+    "llc": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ],
+    "lli": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ],
+    "llvm-as": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ],
+    "mlir-opt": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ],
+    "mlir-translate": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ],
+    "opt": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ]
+  },
+  "checks": [
+    {
+      "name": "explicit_edge_values",
+      "status": "passed",
+      "selected_values": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "bad-dominance.ll",
+      "status": "passed",
+      "diagnostic": "does not dominate"
+    },
+    {
+      "name": "bad-phi.ll",
+      "status": "passed",
+      "diagnostic": "PHINode should have one entry"
+    },
+    {
+      "name": "bad-duplicate-edge.ll",
+      "status": "passed",
+      "diagnostic": "multiple entries for the same basic block"
+    },
+    {
+      "name": "mlir_llvm_dialect_preserves_edge_arguments",
+      "status": "passed"
+    },
+    {
+      "name": "mlir_export_splits_duplicate_successor",
+      "status": "passed",
+      "phi_count": 2
+    },
+    {
+      "name": "mlir_edge_argument_semantics",
+      "status": "passed",
+      "selected_values": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "clang_ast",
+      "status": "passed"
+    },
+    {
+      "name": "mem2reg_promotes",
+      "status": "passed",
+      "phi_count": 10
+    },
+    {
+      "name": "dead_phi_pruning",
+      "status": "passed"
+    },
+    {
+      "name": "c_examples_before_after",
+      "status": "passed",
+      "scalar_expectations": {
+        "add": 12,
+        "factor_5": 120,
+        "choose_42": 44,
+        "choose_43": 1,
+        "sum10": 45,
+        "lost_copy": 10,
+        "swap_0_1_2_9": [
+          0,
+          2,
+          0,
+          2
+        ]
+      },
+      "assertions": 15
+    },
+    {
+      "name": "cfg_dot",
+      "status": "passed"
+    },
+    {
+      "name": "machine_phi_elimination",
+      "status": "passed",
+      "before_phi_count": 2,
+      "after_phi_count": 0
+    },
+    {
+      "name": "parallel_copy_exhaustive",
+      "status": "passed",
+      "assignment_maps": 288,
+      "registers": "1 through 4"
+    },
+    {
+      "name": "lost_copy_edge_placement",
+      "status": "passed",
+      "correct": 10,
+      "incorrect_pre_branch_copy": 11
+    }
+  ],
+  "commands": [
+    {
+      "tool": "llvm-as",
+      "args": [
+        "$INPUT/add.ll",
+        "-o",
+        "$OUT/add.bc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$INPUT/add.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-as",
+      "args": [
+        "$INPUT/edge-selection.ll",
+        "-o",
+        "$OUT/edge-selection.bc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$INPUT/edge-selection.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "lli",
+      "args": [
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "$INPUT/edge-selection.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$INPUT/bad-dominance.ll"
+      ],
+      "returncode": 1
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$INPUT/bad-phi.ll"
+      ],
+      "returncode": 1
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$INPUT/bad-duplicate-edge.ll"
+      ],
+      "returncode": 1
+    },
+    {
+      "tool": "mlir-opt",
+      "args": [
+        "$INPUT/edge-values.mlir",
+        "--convert-arith-to-llvm",
+        "--convert-func-to-llvm",
+        "--convert-cf-to-llvm",
+        "--reconcile-unrealized-casts",
+        "-o",
+        "$OUT/edge-values-llvm.mlir"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "mlir-translate",
+      "args": [
+        "$OUT/edge-values-llvm.mlir",
+        "--mlir-to-llvmir",
+        "-o",
+        "$OUT/edge-values.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-as",
+      "args": [
+        "$OUT/edge-values.ll",
+        "-o",
+        "$OUT/edge-values.bc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$OUT/edge-values.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "lli",
+      "args": [
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "$OUT/edge-values.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "clang",
+      "args": [
+        "--target=bpfel",
+        "-Xclang",
+        "-ast-dump",
+        "-fsyntax-only",
+        "$INPUT/examples.c"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "clang",
+      "args": [
+        "--target=bpfel",
+        "-O0",
+        "-Xclang",
+        "-disable-O0-optnone",
+        "-fno-discard-value-names",
+        "-S",
+        "-emit-llvm",
+        "$INPUT/examples.c",
+        "-o",
+        "$OUT/before.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-as",
+      "args": [
+        "$OUT/before.ll",
+        "-o",
+        "$OUT/before.bc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$OUT/before.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=mem2reg,verify",
+        "-S",
+        "$OUT/before.ll",
+        "-o",
+        "$OUT/ssa.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "lli",
+      "args": [
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "$OUT/before.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "lli",
+      "args": [
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "$OUT/ssa.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=dot-cfg",
+        "-disable-output",
+        "$OUT/ssa.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-as",
+      "args": [
+        "$INPUT/machine-phi.ll",
+        "-o",
+        "$OUT/machine-phi.bc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$INPUT/machine-phi.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llc",
+      "args": [
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O0",
+        "-verify-machineinstrs",
+        "-stop-before=phi-node-elimination",
+        "$INPUT/machine-phi.ll",
+        "-o",
+        "$OUT/before.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llc",
+      "args": [
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O0",
+        "-verify-machineinstrs",
+        "-stop-after=phi-node-elimination",
+        "$INPUT/machine-phi.ll",
+        "-o",
+        "$OUT/after.mir"
+      ],
+      "returncode": 0
+    }
+  ],
+  "tool_files": {
+    "llvm-as": {
+      "size": 55732168,
+      "mtime_ns": 1789310523159266218
+    },
+    "opt": {
+      "size": 240030080,
+      "mtime_ns": 1789310524349395777
+    },
+    "lli": {
+      "size": 148776176,
+      "mtime_ns": 1789310522910676098
+    },
+    "mlir-opt": {
+      "size": 510713112,
+      "mtime_ns": 1789310819921132863
+    },
+    "mlir-translate": {
+      "size": 272253264,
+      "mtime_ns": 1789310521391131182
+    },
+    "clang": {
+      "size": 474422136,
+      "mtime_ns": 1789310516990791139
+    },
+    "llc": {
+      "size": 240035248,
+      "mtime_ns": 1789310522293092194
+    }
+  }
+}

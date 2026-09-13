@@ -1,62 +1,54 @@
-# 第 7 章静态核查记录
+# 第 7 章源码与实验核查记录
 
-本章逐页阅读并覆盖所有编号清单。原书 LLVM 15.0.1；基准为本地 LLVM 18.1.8，HEAD `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`。只读源码与文档，未编译 LLVM，未执行示例、TableGen、lit 或 FileCheck。
+原始教材基于 LLVM 15.0.1。本轮以 LLVM 18.1.8（提交 `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`）重新组织全部正文，保留 7.1～7.5、7.2/7.4 的所有子节以及清单 7-1～7-35。原始材料保存在 origin，本章不再依赖无法重现的历史节点编号或错误图片；流程改为 Mermaid。
 
-BPF 工作区有用户改动：BPF.td、BPFCallingConv.td、BPFInstrFormats.td、BPFInstrInfo.td、BPFMIChecking.cpp、BPFRegisterInfo.td、GISel/BPFRegisterBanks.td。本章凡涉及这些定义均通过 `git show HEAD:路径` 检查上游基线；没有覆盖或修改工作区文件。相关本地文件链接可能展示用户版本，应按该提交追溯。
+已使用统一新构建运行 [runner](../experiments/ch7/runner.py)，完整范围 20 项检查通过；命令和具体结果见 [experiments-ch7.json](experiments-ch7.json)。LLVM 工作区存在用户和构建修复相关修改，JSON 记录其 tracked 文件列表；我们没有据当前工作区实验宣称运行了完全干净的上游源码，也未修改 LLVM 文件。
 
-| 清单 | 涉及实现 | LLVM 18 源码证据 | 结论 / 修订 |
-|---|---|---|---|
-| 7-1 | C：callee / caller | [`llvm/lib/Target/BPF/BPFISelLowering.cpp:404`](/opt/llvm-project/llvm/lib/Target/BPF/BPFISelLowering.cpp:404)（`SDValue BPFTargetLowering::LowerCall(`） | 保留源码；函数中 long 以指定 BPF target 为 64 位，补明确 triple / CPU 的 IR 命令。 |
-| 7-2 | LLVM IR 与 nsw / 调用约定 | [`llvm/lib/CodeGen/SelectionDAG/LegalizeIntegerTypes.cpp:854`](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/LegalizeIntegerTypes.cpp:854)（`SDValue DAGTypeLegalizer::PromoteIntRes_LOAD`） | 完整保留 IR；修正 nsw=poison 语义、首参 r1、caller IR 仍返回 i32、i32 访存宽度不随 Promote 扩大。 |
-| 7-3 | PHI IR 片段 | [`llvm/lib/CodeGen/SelectionDAG/FunctionLoweringInfo.cpp:272`](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/FunctionLoweringInfo.cpp:272)（`for (const PHINode &PN : BB.phis())`） | 补 [66, %if.then] 中遗漏的逗号，明确只是片段。 |
-| 7-4 | 机器 PHI | [`llvm/lib/CodeGen/SelectionDAG/FunctionLoweringInfo.cpp:272`](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/FunctionLoweringInfo.cpp:272)（`for (const PHINode &PN : BB.phis())`） | 模式一致；修正为预创建 PHI、逐块补齐操作数。 |
-| 7-5 | int16_t 加法 / sign_extend_inreg | [`llvm/lib/CodeGen/SelectionDAG/LegalizeIntegerTypes.cpp:854`](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/LegalizeIntegerTypes.cpp:854)（`SDValue DAGTypeLegalizer::PromoteIntRes_LOAD`） | 补 stdint.h；左移48再算术右移48的解释正确，是否出现符号扩展取决于ABI。 |
-| 7-6 | double 除法 / libcall | [`llvm/include/llvm/IR/RuntimeLibcalls.def:106`](/opt/llvm-project/llvm/include/llvm/IR/RuntimeLibcalls.def:106)（`HANDLE_LIBCALL(DIV_F64`） | 修正 __divdf3；说明函数体片段及常量折叠可能。BPF builtin ExternalSymbol 被 LowerCall 拒绝，不能声称软浮点已成功生成。 |
-| 7-7 | MatcherTable 历史字节码 | [`llvm/lib/CodeGen/SelectionDAG/SelectionDAGISel.cpp:3051`](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/SelectionDAGISel.cpp:3051)（`void SelectionDAGISel::SelectCodeCommon`） | 逐段核对opcode、scope、check、emit语义；纠正case数量、子表长度、子节点索引、成功提交条件、状态机定位；旧偏移未重生成。 |
-| 7-8 | ADD DAG 输入 | [`llvm/lib/CodeGen/SelectionDAG/SelectionDAGISel.cpp:3051`](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/SelectionDAGISel.cpp:3051)（`void SelectionDAGISel::SelectCodeCommon`） | 保留 t35/t36/t37；改为两输入一结果，不能把结果算第0输入。 |
-| 7-9 | 匹配日志 | [`llvm/lib/CodeGen/SelectionDAG/SelectionDAGISel.cpp:3051`](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/SelectionDAGISel.cpp:3051)（`void SelectionDAGISel::SelectCodeCommon`） | 保存LLVM15历史路径；说明与当前生成表偏移无稳定对应。 |
-| 7-10 | callee 已选择 DAG | [`llvm/lib/CodeGen/SelectionDAG/InstrEmitter.cpp:971`](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/InstrEmitter.cpp:971)（`EmitMachineNode(SDNode *Node`） | 一致的STD/LDD/ADD_rr示意，修复标题func/callee；明确TokenFactor不发射为真实机器指令。 |
-| 7-11 | callee MIR 调试转储 | [`llvm/lib/CodeGen/SelectionDAG/InstrEmitter.cpp:971`](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/InstrEmitter.cpp:971)（`EmitMachineNode(SDNode *Node`） | 保留完整机器指令，明确 tied-def 标注不是可独立解析的MIR YAML。 |
-| 7-12 | ADDXrr TD片段 | [`llvm/lib/Target/AArch64/AArch64InstrInfo.td:2008`](/opt/llvm-project/llvm/lib/Target/AArch64/AArch64InstrInfo.td:2008)（`defm ADD : AddSub<`） | 类与defm仍存在；省略号保持为节选标记，不称完整可编译TD。 |
-| 7-13 | ADDXrr 展开记录 | [`llvm/lib/Target/AArch64/AArch64InstrInfo.td:2008`](/opt/llvm-project/llvm/lib/Target/AArch64/AArch64InstrInfo.td:2008)（`defm ADD : AddSub<`） | 修正 Namespace=AArch64；是记录节选。 |
-| 7-14 | 生成的fastEmit匹配形态 | [`llvm/utils/TableGen/FastISelEmitter.cpp:711`](/opt/llvm-project/llvm/utils/TableGen/FastISelEmitter.cpp:711)（`OS << "unsigned fastEmit_"`） | 修正命名空间，解释上层输入分派，未重新生成inc。 |
-| 7-15 | FastISel::fastEmitInst_rr | [`llvm/lib/CodeGen/SelectionDAG/FastISel.cpp:2026`](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/FastISel.cpp:2026)（`Register FastISel::fastEmitInst_rr(`） | 替换为本地LLVM18完整函数体，澄清公共实现而不是AArch64单独实现。 |
-| 7-16 | test加法C函数 | [`llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634`](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634)（`bool IRTranslator::runOnMachineFunction`） | 保留；补 emit-llvm 命令与独立GMIR观察入口。 |
-| 7-17 | test LLVM IR | [`llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634`](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634)（`bool IRTranslator::runOnMachineFunction`） | 修正不可解析的 @test(int,int)(...) 为 @test(...)。 |
-| 7-18 | 空EntryBB | [`llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634`](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634)（`bool IRTranslator::runOnMachineFunction`） | 静态调用链存在；中间状态示意。 |
-| 7-19 | EntryBB及函数块 | [`llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634`](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634)（`bool IRTranslator::runOnMachineFunction`） | 保留控制流构建示意；编号不稳定。 |
-| 7-20 | 形参COPY | [`llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634`](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634)（`bool IRTranslator::runOnMachineFunction`） | 符合AArch64形参w0/w1 lowering形态；不声明实际dump一致。 |
-| 7-21 | G_ADD | [`llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634`](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634)（`bool IRTranslator::runOnMachineFunction`） | 符合GMIR形成方式，nsw语义与IR一致。 |
-| 7-22 | 返回COPY / RET_ReallyLR | [`llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634`](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634)（`bool IRTranslator::runOnMachineFunction`） | 按调用约定发射；中间状态不独立解析。 |
-| 7-23 | 入口块合并 | [`llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634`](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634)（`bool IRTranslator::runOnMachineFunction`） | 对应NewEntryBB.splice，临时入口最终被删除。 |
-| 7-24 | s16 G_ADD合法化输入 | [`llvm/lib/Target/AArch64/GISel/AArch64LegalizerInfo.cpp:125`](/opt/llvm-project/llvm/lib/Target/AArch64/GISel/AArch64LegalizerInfo.cpp:125)（`getActionDefinitionsBuilder({G_ADD, G_SUB`） | AArch64整数G_ADD legalFor s32/s64，s16 widen成立；ABI扩展形态需后续固定target验证。 |
-| 7-25 | WidenScalar 过程 | [`llvm/lib/Target/AArch64/GISel/AArch64LegalizerInfo.cpp:125`](/opt/llvm-project/llvm/lib/Target/AArch64/GISel/AArch64LegalizerInfo.cpp:125)（`getActionDefinitionsBuilder({G_ADD, G_SUB`） | 保留扩展、加法、截断序列；新生成指令也进工作表。 |
-| 7-26 | TRUNC / ANYEXT | [`llvm/lib/CodeGen/GlobalISel/Legalizer.cpp:99`](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/Legalizer.cpp:99)（`static bool isArtifact(`） | 可折叠是因ANYEXT高位无约束；改为ZEXT/SEXT一般不可同样删除。 |
-| 7-27 | artifact消除结果 | [`llvm/lib/CodeGen/GlobalISel/Legalizer.cpp:99`](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/Legalizer.cpp:99)（`static bool isArtifact(`） | 保留低16位语义的示意结果，澄清artifact不能一概无条件删除。 |
-| 7-28 | 按位或C函数 | [`llvm/lib/Target/AArch64/GISel/AArch64RegisterBankInfo.cpp:300`](/opt/llvm-project/llvm/lib/Target/AArch64/GISel/AArch64RegisterBankInfo.cpp:300)（`case TargetOpcode::G_OR:`） | 保留，G_OR两个bank候选实现仍存在。 |
-| 7-29 | RegBankSelect前GMIR | [`llvm/lib/Target/AArch64/GISel/AArch64RegisterBankInfo.cpp:300`](/opt/llvm-project/llvm/lib/Target/AArch64/GISel/AArch64RegisterBankInfo.cpp:300)（`case TargetOpcode::G_OR:`） | 保留LLT s32与未分配bank形态。 |
-| 7-30 | AArch64 RegisterBank TD | [`llvm/lib/Target/AArch64/AArch64RegisterBanks.td:13`](/opt/llvm-project/llvm/lib/Target/AArch64/AArch64RegisterBanks.td:13)（`def GPRRegBank`） | 三条定义与LLVM18文件一致；不固定寄存器类总数量。 |
-| 7-31 | GPR / FPR候选映射 | [`llvm/lib/Target/AArch64/GISel/AArch64RegisterBankInfo.cpp:300`](/opt/llvm-project/llvm/lib/Target/AArch64/GISel/AArch64RegisterBankInfo.cpp:300)（`case TargetOpcode::G_OR:`） | 两个替代候选仍存在，FPR是按位或而非浮点算术。 |
-| 7-32 | 成本8/8/72 | [`llvm/lib/Target/AArch64/GISel/AArch64RegisterBankInfo.cpp:218`](/opt/llvm-project/llvm/lib/Target/AArch64/GISel/AArch64RegisterBankInfo.cpp:218)（`unsigned AArch64RegisterBankInfo::copyCost`） | 在给定频率下局部演算成立；修正copy方向：GPR→FPR=4，反向=5。 |
-| 7-33 | RegBankSelect后GMIR | [`llvm/lib/Target/AArch64/AArch64RegisterBanks.td:13`](/opt/llvm-project/llvm/lib/Target/AArch64/AArch64RegisterBanks.td:13)（`def GPRRegBank`） | 改 gpr32 为 gpr(s32)/gpr，明确RegisterBank和RegisterClass分阶段。 |
-| 7-34 | GINodeEquiv类 | [`llvm/include/llvm/Target/GlobalISel/SelectionDAGCompat.td:22`](/opt/llvm-project/llvm/include/llvm/Target/GlobalISel/SelectionDAGCompat.td:22)（`class GINodeEquiv`） | 两个核心字段仍有，补说明LLVM18其余条件字段未展示。 |
-| 7-35 | GINodeEquiv<G_ADD,add> | [`llvm/include/llvm/Target/GlobalISel/SelectionDAGCompat.td:22`](/opt/llvm-project/llvm/include/llvm/Target/GlobalISel/SelectionDAGCompat.td:22)（`class GINodeEquiv`） | 定义仍存在，静态复用关系一致。 |
-
-## 正文算法、图示与版本差异
-
-| 范围 | LLVM 18 证据 | 修订结论 |
+| 清单 | 当前内容与判断 | 本地源码依据 / 实验证据 |
 |---|---|---|
-| 7.1 / 7.2.3 合法化调用顺序 | [SelectionDAGISel.cpp:844](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/SelectionDAGISel.cpp:844)、[902](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/SelectionDAGISel.cpp:902)、[942](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/SelectionDAGISel.cpp:942) | 第二次类型合法化位于向量操作合法化后、普通操作合法化前，且有条件执行。 |
-| nsw 与内存宽度 | [LangRef.rst:9272](/opt/llvm-project/llvm/docs/LangRef.rst:9272)、[LegalizeIntegerTypes.cpp:2185](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/LegalizeIntegerTypes.cpp:2185) | nsw 不插运行时检查；Promote 使用 extload / truncstore，不能把 i32 对象扩大读写为 i64。 |
-| BPF ABI / 浮点 | [BPFISelLowering.cpp:432](/opt/llvm-project/llvm/lib/Target/BPF/BPFISelLowering.cpp:432)、[491](/opt/llvm-project/llvm/lib/Target/BPF/BPFISelLowering.cpp:491) | i32 是否合法依 ALU32；五个寄存器参数、首参 r1、r0 返回；栈参数、动态栈及自动 builtin 外部符号调用受限制。 |
-| BPF SELECT_CC | [BPFISelLowering.cpp:612](/opt/llvm-project/llvm/lib/Target/BPF/BPFISelLowering.cpp:612)、[656](/opt/llvm-project/llvm/lib/Target/BPF/BPFISelLowering.cpp:656) | 无 JmpExt 时交换 SETULT 操作数并改条件为 SETUGT；常量 10 来自通用 ISD CondCode，不是 BPF 私有 ult 编号。 |
-| 图 7-15 / 7-26 | [SelectionDAG.h](/opt/llvm-project/llvm/include/llvm/CodeGen/SelectionDAG.h)、[BPFISelLowering.h:26](/opt/llvm-project/llvm/lib/Target/BPF/BPFISelLowering.h:26) | 已补全图中文字并修正 EntryToken 只输出 chain、RET_GLUE 名称、%ir.c 变量；保留原 PDF 和原图裁剪以追溯。 |
-| 图 7-25 | [SelectionDAGISel.cpp:3051](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/SelectionDAGISel.cpp:3051) | 加 Mermaid 表示纠正后的 ADD 匹配路径；原图 ADD_ri 成功终点误标 ADD_rr，RecordChild 并不做匹配失败判断。 |
-| GI 遍历 / 失败 | [InstructionSelect.cpp:140](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/InstructionSelect.cpp:140) | 按 CFG 后序遍历块、逆序处理块内指令；失败可由配置控制回退，不能简化成所有情况直接报错。 |
-| AArch64 GI Pass | [AArch64TargetMachine.cpp:698](/opt/llvm-project/llvm/lib/Target/AArch64/AArch64TargetMachine.cpp:698) | 用 Mermaid 更新具体顺序；O0 仍有 combiner / Localizer / lowering，优化 Pass 数量与位置依配置。 |
+| 7-1 | 完整 C，指定 BPF v1；long64/int32 | `clang-callee`、`verify-callee`；[BPF LowerCall](/opt/llvm-project/llvm/lib/Target/BPF/BPFISelLowering.cpp:404) |
+| 7-2 | 改为本轮 Clang 函数输出；保留 i32 返回、trunc、nsw 和四字节对象 | `callee-finalize`、`caller-i32-object`；[PromoteIntRes_LOAD](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/LegalizeIntegerTypes.cpp:854) |
+| 7-3 | 改为输入齐备的 choose IR，volatile 读保留分支 | `verify-selection`；[FunctionLoweringInfo](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/FunctionLoweringInfo.cpp:272) |
+| 7-4 | 本轮 MIR 的真实 PHI，明确尚未 PHI 消除 | `machine-phi-survives-isel`；同上 |
+| 7-5 | 完整 signext i16 IR + 真实 v1 两次移位 | `signed-i16-expansion`；[BPF 类型和操作动作](/opt/llvm-project/llvm/lib/Target/BPF/BPFISelLowering.cpp:77) |
+| 7-6 | 变量双精度除法确实触发 __divdf3 不支持，预期返回 1 | `softfloat-libcall-diagnostic`；[BPF LowerCall](/opt/llvm-project/llvm/lib/Target/BPF/BPFISelLowering.cpp:404) |
+| 7-7 | 本地重新生成 ADD matcher；FI_ri 优先候选及 i64/i32 分支 | `tablegen-bpf`；[SelectCodeCommon](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/SelectionDAGISel.cpp:3051) |
+| 7-8 | 改用实际 add_reg DAG，两个输入/一个值结果 | `bpf-v1.stderr`；同上 |
+| 7-9 | 改用本轮匹配日志；偏移仅本次观察 | `pattern-register`、`pattern-immediate`；同上 |
+| 7-10 | 真实 callee Selected DAG，保留 ch/glue | `callee-finalize.stderr`；[InstrEmitter](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/InstrEmitter.cpp:971) |
+| 7-11 | 真实 callee MIR body；不是完整 YAML | `callee-finalize.mir`；[EmitSpecialNode](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/InstrEmitter.cpp:1202) |
+| 7-12 | AddSub 定义入口节选，指出 ADDXrr 是 codegen pseudo | [AArch64InstrInfo.td](/opt/llvm-project/llvm/lib/Target/AArch64/AArch64InstrInfo.td:2008)、[BaseAddSubRegPseudo](/opt/llvm-project/llvm/lib/Target/AArch64/AArch64InstrFormats.td:2814) |
+| 7-13 | 记录关键字段的阅读投影，不冒充完整生成记录 | 同上；Xrr 实例在 [2923](/opt/llvm-project/llvm/lib/Target/AArch64/AArch64InstrFormats.td:2923) |
+| 7-14 | 实际重新生成的 i64 fast emitter | `tablegen-fast`、`generated-fast-emitter` |
+| 7-15 | 精确引用公共 C++ 函数，源码片段依赖内部上下文 | [FastISel.cpp](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/FastISel.cpp:2026)；`fastisel-without-fallback` |
+| 7-16 | C add32 函数有独立文件并经前端检查 | `globalisel.c`、`clang-globalisel`、`verify-globalisel-from-c` |
+| 7-17 | 完整固定 add32 IR，使用 nsw | `verify-globalisel`、四个 `gi-*` 命令 |
+| 7-18 | 临时 EntryBB 的构造过程示意，不是 Pass dump | [IRTranslator::runOnMachineFunction](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/IRTranslator.cpp:3634) |
+| 7-19 | 预建块和临时入口关系，使用符号名避免伪造编号 | 同上 |
+| 7-20 | AArch64 w0/w1 形参 COPY 的内部过程示意 | 同上；最终观察在清单 7-23 |
+| 7-21 | G_ADD 构造，明确 nsw 沿用 IR 语义 | 同上 |
+| 7-22 | 返回 lowering 与目标 RET 伪指令的混合形态 | 同上 |
+| 7-23 | 用真实 irtranslator MIR 替换旧推测日志 | `gi-irtranslator.mir` |
+| 7-24 | 真实 s16 G_ADD 输入及 ABI G_TRUNC/ANYEXT | `irtranslator-llt-s16` |
+| 7-25 | 真实合法化结果：s16 加法消失，保留 s32 G_ADD | `legalizer-widens-s16`；[AArch64LegalizerInfo](/opt/llvm-project/llvm/lib/Target/AArch64/GISel/AArch64LegalizerInfo.cpp:125) |
+| 7-26 | TRUNC/ANYEXT 低位关系示意；明确不是任意扩展都能消除 | [Legalizer artifact](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/Legalizer.cpp:99) |
+| 7-27 | 六个有代表性的位向量检查及 ZEXT/SEXT 反例 | `models.py`、`teaching-bit-vectors-and-costs`；不是完整 poison/undef 模型 |
+| 7-28 | C or32 函数编译并验证 | `globalisel.c`、`clang-globalisel` |
+| 7-29 | 本轮 legalizer 后、bank 前的 or32 | `gi-legalizer.mir` |
+| 7-30 | 完整三条 bank 定义，bank 与 class 分开 | [AArch64RegisterBanks.td](/opt/llvm-project/llvm/lib/Target/AArch64/AArch64RegisterBanks.td:13) |
+| 7-31 | 两候选映射的源码投影，说明 32/64 和操作数个数条件 | [getInstrAlternativeMappings](/opt/llvm-project/llvm/lib/Target/AArch64/GISel/AArch64RegisterBankInfo.cpp:300) |
+| 7-32 | 替换不可复现的 8/8/72；明确假设下 GPR=1、FPR=14 | `models.py`；[copyCost](/opt/llvm-project/llvm/lib/Target/AArch64/GISel/AArch64RegisterBankInfo.cpp:218)，参数为目的/来源 |
+| 7-33 | 真实 gpr(s32) 输出，不误写为寄存器类 gpr32 | `bank-not-register-class` |
+| 7-34 | LLVM 18 GINodeEquiv 完整类，包含原子性/扩展/浮点/convergent 条件 | [SelectionDAGCompat.td](/opt/llvm-project/llvm/include/llvm/Target/GlobalISel/SelectionDAGCompat.td:22) |
+| 7-35 | opcode 对应声明及本轮 ADDWrr 结果 | `selected-target-opcode`；同上 |
 
-## 未验证范围
+正文重点修正：
 
-未运行任何代码；C/IR/MIR 的解析、具体 CPU 下的 ABI 与调试输出、生成表字节偏移以及性能结论留待后续。代码清单的静态语义和源码定义核对，不能替代编译运行或宣称输出逐字复现。
+- **EntryToken 有两个结果**：上一轮静态校订把它改成只有 chain，这是校订引入的错误。本轮用 [SelectionDAG 构造器](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/SelectionDAG.cpp:1319) 和真实 `ch,glue` 日志纠正；`getEntryNode()` 只是取结果 0。
+- 合法化区分类型动作与操作动作；BPF v1/v3 实测表明寄存器变宽不扩大 i32 访存。额外输入检查 i128 两半和向量标量化，未删除进位或混淆 lane。
+- [CodeGenAndEmitDAG](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/SelectionDAGISel.cpp:778) 的向量/类型再次合法化关系与条件，替换为准确图示；不把 CodeGenPrepare 简化为元数据处理。
+- FastISel 以 abort=3 明确禁止回退；GlobalISel 以 abort=1 明确禁止失败后改走 SelectionDAG。分别证明本例路径，不能推广到所有输入。
+- GMIR/MIR 共用 MachineFunction 对象，LLT/bank/class/物理分配分阶段；GI 块遍历、指令逆序选择和回退边界依据 [InstructionSelect](/opt/llvm-project/llvm/lib/CodeGen/GlobalISel/InstructionSelect.cpp:140)。
+- AArch64 O0 仍有 combiner/Localizer/lowering；完整阶段图按 [AArch64PassConfig](/opt/llvm-project/llvm/lib/Target/AArch64/AArch64TargetMachine.cpp:698) 重画。
 
-- 补充复核：通用 DAG 指令选择的 NP 困难性不证明每个实例必须花指数时间，已修正该推论。InstrEmitter.cpp:84、1202 的 `EmitCopyFromReg` / `EmitSpecialNode` 表明 EntryToken、TokenFactor 不发射 MI，CopyToReg / CopyFromReg 仅在需要时产生 COPY；正文已区分 DAG 依赖与 MIR 伪指令。
+剩余边界：没有目标硬件执行或性能基准；中间构造清单、cost 示例和位向量模型仅验证明确说明的性质。对完整 LLVM poison/undef、所有 ABI 输入或任意 matcher 最优性没有作额外保证。没有需要靠保留旧输出才能理解的技术结论。

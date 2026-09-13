@@ -1,0 +1,264 @@
+{
+  "chapter": 4,
+  "status": "passed",
+  "tools": {
+    "llvm-as": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ],
+    "opt": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ]
+  },
+  "checks": [
+    {
+      "name": "four_node_graphs",
+      "status": "passed",
+      "reachable_graphs": 2432,
+      "enumerated_graphs": 4096,
+      "compared_algorithms": [
+        "delete-node reachability",
+        "dominance fixed point",
+        "definition semidominators + NCA",
+        "definition DF vs DJ subtree scan"
+      ]
+    },
+    {
+      "name": "semidominator_need_not_dominate",
+      "status": "passed",
+      "dfs_order": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "semi_4": 1,
+      "idom_4": 0,
+      "bypass": [
+        0,
+        5,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "table_4_1",
+      "status": "passed",
+      "dominators": {
+        "1": [
+          1
+        ],
+        "2": [
+          1,
+          2
+        ],
+        "3": [
+          1,
+          2,
+          3
+        ],
+        "4": [
+          1,
+          2,
+          4
+        ],
+        "5": [
+          1,
+          5
+        ],
+        "6": [
+          1,
+          2,
+          6
+        ],
+        "7": [
+          1,
+          7
+        ]
+      },
+      "idom": {
+        "1": null,
+        "2": 1,
+        "3": 2,
+        "4": 2,
+        "5": 1,
+        "6": 2,
+        "7": 1
+      },
+      "frontier": {
+        "1": [],
+        "2": [
+          7
+        ],
+        "3": [
+          6
+        ],
+        "4": [
+          6
+        ],
+        "5": [
+          7
+        ],
+        "6": [
+          7
+        ],
+        "7": []
+      }
+    },
+    {
+      "name": "insert_edge_changes_dominance",
+      "status": "passed",
+      "edge": [
+        5,
+        6
+      ],
+      "old_idom_6": 2,
+      "new_idom_6": 1
+    },
+    {
+      "name": "llvm_domtree_graph7",
+      "status": "passed",
+      "idom": {
+        "1": null,
+        "2": 1,
+        "3": 2,
+        "6": 2,
+        "4": 2,
+        "7": 1,
+        "5": 1
+      },
+      "frontier": {
+        "1": [],
+        "5": [
+          7
+        ],
+        "3": [
+          6
+        ],
+        "2": [
+          7
+        ],
+        "7": [],
+        "4": [
+          6
+        ],
+        "6": [
+          7
+        ]
+      }
+    },
+    {
+      "name": "iterated_df_mem2reg",
+      "status": "passed",
+      "phi_blocks": [
+        "header",
+        "join"
+      ]
+    },
+    {
+      "name": "multiple_exit_and_infinite_root",
+      "status": "passed",
+      "report": "PostDominatorTree for function: roots\n=============================--------------------------------\nInorder PostDominator Tree: DFSNumbers invalid: 0 slow queries.\n  [1]  <<exit node>> {4294967295,4294967295} [0]\n    [2] %exit1 {4294967295,4294967295} [1]\n    [2] %dispatch {4294967295,4294967295} [1]\n    [2] %entry {4294967295,4294967295} [1]\n    [2] %exit2 {4294967295,4294967295} [1]\n    [2] %spin {4294967295,4294967295} [1]\nRoots: %exit1 %exit2 %spin \n"
+    }
+  ],
+  "commands": [
+    {
+      "tool": "llvm-as",
+      "args": [
+        "$INPUT/graph7.ll",
+        "-o",
+        "$OUT/graph7.bc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$INPUT/graph7.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-as",
+      "args": [
+        "$INPUT/join-loop.ll",
+        "-o",
+        "$OUT/join-loop.bc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$INPUT/join-loop.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-as",
+      "args": [
+        "$INPUT/postdom-roots.ll",
+        "-o",
+        "$OUT/postdom-roots.bc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=verify",
+        "-disable-output",
+        "$INPUT/postdom-roots.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=print<domtree>,print<domfrontier>,print<postdomtree>,verify<domtree>",
+        "-disable-output",
+        "$INPUT/graph7.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=mem2reg,verify,print<domfrontier>",
+        "-S",
+        "$INPUT/join-loop.ll",
+        "-o",
+        "$OUT/idf.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "opt",
+      "args": [
+        "-passes=print<postdomtree>",
+        "-disable-output",
+        "$INPUT/postdom-roots.ll"
+      ],
+      "returncode": 0
+    }
+  ],
+  "tool_files": {
+    "llvm-as": {
+      "size": 55732168,
+      "mtime_ns": 1789310523159266218
+    },
+    "opt": {
+      "size": 240030080,
+      "mtime_ns": 1789310524349395777
+    }
+  }
+}

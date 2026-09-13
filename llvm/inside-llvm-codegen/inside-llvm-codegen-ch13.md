@@ -1,251 +1,222 @@
-# 第 13 章添加一个新后端
+# 第 13 章 添加一个新后端：接口、最小闭环与验证
 
-> 校订基线：本书 LLVM 15（示例 15.0.1）；本章依据 `/opt/llvm-project` 的 LLVM 18.1.8，HEAD `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff` 作静态源码核查。未编译 LLVM，未执行本章 C/C++、LLVM IR、MIR 或汇编命令；具体输出与性能仍待运行确认。
-> 保留原章全部章节、示例与图版。正文及文字代码按核查结果修订；原书图片和折叠页版面仅作对照，图片中的旧编号、版本结果和排印错误不代表 LLVM 18 输出。逐项记录见 [第 13 章校核记录](review/ch13.md)。
+新后端的工作是把一种目标的指令、寄存器、ABI、数据布局和对象格式接入 LLVM。TableGen 描述、C++ 钩子和通用 Pass 共同完成转换；只生成几份 `.inc` 文件，或让名字出现在目标列表中，都不足以证明后端可用。
 
-<!-- PDF page 395; printed page 382 -->
-
-Chapter 13 第 13 章
-
-添加一个新后端
-
-由于 LLVM 的结构化设计和实现，当为它添加新的后端时，一般来说只需要对后端指令集、ABI○一（Application Binary Interface，程序二进制接口）进行处理即可。新后端只需要实现相关接口就可以把自己注册到 LLVM 代码生成的框架中。但现实情况是，一些后端会定义独有的数据类型、指令等，LLVM 框架通常不能处理，此时需要添加特殊处理功能，否则就会出错。此外，为了生成高质量的后端代码，LLVM 还会针对后端进行一些特有的优化。为了让读者能够更直观地理解，本章将首先介绍在 LLVM 代码生成的全过程中哪些阶段是添加新后端时必须进行适配的。随后，我们将以 BPF 后端为例介绍如何添加一个新的后端。
+本章以 LLVM 18.1.8 的 BPF 实现说明接口边界，并提供两组实际实验：独立的 `Book.td` 描述生成，以及 BPF 从 IR 到对象文件的闭环。完整输入和 runner 位于 [experiments/ch13](experiments/ch13/runner.py)，检查结果见 [实验记录](review/experiments-ch13.json)。原书转写另存于 [origin](origin/inside-llvm-codegen-ch13.md)。
 
 ## 13.1 适配新后端的各个阶段
 
-下面将根据代码生成的过程介绍哪些阶段必须进行新后端的适配，示意图如图 13-1所示。
+先确定一个可交付的最小目标：支持哪些整数宽度、算术操作、控制流、函数参数和返回值；输出汇编还是可重定位对象；运行环境如何装载和调用代码。对于尚不支持的输入，后端需要正确降级或给出诊断，不能静默生成错误代码。
 
-![图 13-1 必须适配新后端的阶段](origin/assets/figures/p395-13-1.png)
+```mermaid
+flowchart TD
+  IR["有明确 triple / data layout 的 LLVM IR"] --> TL["TargetLowering：类型、操作、参数、调用、返回"]
+  TL --> SEL["指令选择：模式与自定义选择"]
+  SEL --> MIR["Machine IR"]
+  MIR --> RA["通用寄存器分配 + 目标寄存器约束"]
+  RA --> PEI["栈帧布局与 FrameIndex 消除"]
+  PEI --> AP["AsmPrinter / MCInstLower"]
+  AP --> MC["MC 指令、符号和节"]
+  MC --> S["InstPrinter：汇编"]
+  MC --> O["CodeEmitter + AsmBackend + ObjectWriter：对象"]
+```
 
-**图 13-1 必须适配新后端的阶段**
-
-○一 ABI 主要是指程序运行在后端需要遵守的运行约定，例如调用时参数传递、返回值处理等。
-
-<!-- PDF page 396; printed page 383 -->
-
-图 13-1 展示新后端的重要适配点；寄存器分配使用通用算法，但除了 TD 描述，还需要 TargetRegisterInfo/TargetInstrInfo/TargetFrameLowering 的保留寄存器、溢出存取、复制及栈访问钩子。目标特有 Pass 中有些检查/修补承担正确性职责，不能将所有白色框一概视为只影响代码质量的可选优化。
+图中相邻阶段之间有明确的不变量。例如，寄存器分配需要合法的寄存器类和指令约束；发射阶段需要所有应当展开的伪指令被处理；写出对象还需要合法的符号引用和目标重定位类型。性能优化可以逐步补充，这些正确性前提不能省略。
 
 ### 13.1.1 指令选择阶段的适配
 
-指令选择阶段的工作是将 LLVM IR 转换成目标相关的后端 IR 表达 MachineInstr。具体步骤如图 13-2 所示。
+采用 SelectionDAG 路线时，主要工作分为三层：
 
-![图 13-2 从 LLVM IR 到目标相关的后端 IR 的转换示意图](origin/assets/figures/p396-13-2.png)
+1. `TargetLowering` 声明寄存器类、类型合法性、操作动作和调用约定，并实现 `LowerFormalArguments`、`LowerCall`、`LowerReturn` 等目标钩子。
+2. 公共类型/操作合法化器结合目标配置，将输入转换成可选择的 DAG；`Custom` 动作必须有相应实现。把 i32 算术提升到 i64 不允许顺带把原本的 4 字节访存扩大为 8 字节。
+3. 生成的匹配表和目标 `DAGToDAGISel::Select` 把适用的节点选成机器指令。DAG 调度及 `InstrEmitter` 再产生 MIR；chain/glue 等依赖不会逐个变成机器操作数。
 
-**图 13-2 从 LLVM IR 到目标相关的后端 IR 的转换示意图**
+BPF 的入口分别是 [BPFISelLowering.cpp](/opt/llvm-project/llvm/lib/Target/BPF/BPFISelLowering.cpp)、[BPFISelDAGToDAG.cpp](/opt/llvm-project/llvm/lib/Target/BPF/BPFISelDAGToDAG.cpp) 和 [BPFInstrInfo.td](/opt/llvm-project/llvm/lib/Target/BPF/BPFInstrInfo.td)。
 
-从 IR 结构上来区分，指令选择包含 3 个阶段：SelectionDAG 构建、Machine SelectionDAG匹配目标相关的指令操作和 MachineInstr 生成，它们适配后端的情况分别如下。
-
-1）SelectionDAGBuilder 框架把 LLVM IR 转为 DAG，但其中调用目标 LowerFormalArguments、LowerCall、LowerReturn 等钩子，初始构建阶段也包含目标适配；不能说全部后端无关。
-
-2）SelectionDAG 匹配目标相关的操作指令过程是指令选择的核心部分，该过程将目标无关的 SelectionDAG 转换成具体目标支持的类型与操作。主要涉及两个类，如图 13-2 中的蓝色框所示。SelectionDAGISel 类作为一个 Pass，组织管理整个指令选择过程，其中有一些方法，需要具体后端继承该类并实现其中的方法。TargetLowering 类用来处理目标机器不支持的操作和类型、当前函数的入参和返回值，以及函数调用语句的入参准备等。其中，入参准备及函数返回值处理过程涉及调用约定（calling convention）。因此，该过程都是目标相关的，所涉及的类需要具体后端继承并实现相关方法。该步骤生成的 IR 仍然是SelectionDAG 的格式。
-
-3）调度和 InstrEmitter 主要由公共框架把 DAG 转为 MachineInstr，但目标调度模型、伪指令的自定义展开等仍可参与。这里说“框架通用”不等于新后端完全不必提供相关信息。
+采用 GlobalISel 时，还要提供相应的合法化规则、寄存器银行信息、调用 lowering 和指令选择器。目标目录存在 `GISel/` 不代表它支持该目标的全部类型、操作及优化等级；必须用失败即报错的 GlobalISel 实验检验所支持的输入，第 7 章展示了这一方法。
 
 ### 13.1.2 寄存器分配相关的适配
 
-寄存器分配阶段的输入与输出 IR 都是 MachineInstr。其中，输入的 IR 寄存器类型通常为虚拟寄存器。经过寄存器分配后，虚拟寄存器被分配到具体后端支持的物理寄存器或者栈上。寄存器分配算法的具体实现可以参考第 10 章。LLVM 高度抽象了寄存器分配算法，让算法和具体后端无关。但是在寄存器分配的过程中，需要知道后端寄存器的种类、数量、别名关系以及操作约束。
+通用分配器解决的是带目标约束的分配问题。目标至少需要提供：
 
-<!-- PDF page 397; printed page 384 -->
+| 信息或接口 | 作用 |
+| --- | --- |
+| 物理寄存器、寄存器类、别名、子寄存器、register units | 表达值能放在哪里以及哪些位置互相重叠 |
+| 指令 def/use、隐式操作数、tied/early-clobber 约束 | 防止分配产生违反指令语义的重叠 |
+| `getReservedRegs`、callee-saved 信息及 call-preserved mask | 表达保留寄存器和跨调用的保存规则 |
+| `copyPhysReg` | 将必要的物理寄存器复制落实为合法目标指令 |
+| `storeRegToStackSlot` / `loadRegFromStackSlot` | 将溢出和重载落实为合法访存 |
+| 帧索引消除与必要的寄存器 scavenging | 在最终地址形成时满足目标寻址和临时寄存器限制 |
 
-TD 提供物理寄存器、寄存器类、子寄存器等静态信息；完整适配还需要 C++ 钩子，例如 `getReservedRegs`、CSR 列表、copyPhysReg、storeRegToStackSlot/loadRegFromStackSlot 及帧索引消除。图 13-3 若理解成“只写 TD 即完成寄存器分配适配”则不完整。
+“有寄存器 TD 文件”只覆盖其中一部分。特别是 call-preserved mask、别名和部分寄存器写入规则出错时，简单加法可能正常，而跨函数调用或高寄存器压力的程序会被错误编译。
 
-![图 13-3 寄存器分配阶段的适配后端示意图](origin/assets/figures/p397-13-3.png)
-
-**图 13-3 寄存器分配阶段的适配后端示意图**
+BPF 将 R10 作为帧指针，R11 是 LLVM 后端使用的伪栈指针；二者不应作为普通可分配寄存器。W 寄存器与相应 R 寄存器重叠，不是额外增加了一组独立的物理存储。依据见 [BPFRegisterInfo.cpp](/opt/llvm-project/llvm/lib/Target/BPF/BPFRegisterInfo.cpp) 和 [BPFInstrInfo.cpp](/opt/llvm-project/llvm/lib/Target/BPF/BPFInstrInfo.cpp)。
 
 ### 13.1.3 插入前言 / 后序
 
-在函数的开始和结束位置插入前言 / 后序，以方便调整栈的位置，具体操作由TargetFrameLowering 类实现。TargetFrameLowering 类描述了基本的栈帧布局信息，包括栈的增长方向、栈帧对齐规则、栈帧布局状态等信息。TargetFrameLowering 类声明了一些接口，需要具体后端继承该类并实现相应的接口。
+`MachineFrameInfo` 在较早阶段记录抽象对象，最终栈布局还要考虑局部对象、溢出槽、保存寄存器、调用栈空间、对齐等。PEI 组织最终布局和目标钩子调用；`eliminateFrameIndex` 将抽象对象引用转换为实际基址及偏移。
+
+一般 CPU 可能生成 SP 调整以及保存/恢复指令，但这不是所有目标都必须出现的指令序列。LLVM 18 的 BPF `emitPrologue`、`emitEpilogue` 为空，局部栈访问通过 R10 的负偏移表达；eBPF 调用环境承担对应的调用约定。不能从通用 CPU 栈帧图推断 BPF 也会用 SP 调整或栈参数传递。
+
+本章使用一个 `volatile` 的 8 字节栈对象，确保观察的对象不会被普通局部优化删除。生成汇编中出现基于 `r10 - 8` 的存取，是这个具体输入的实测结果。更多对象、对齐和保存规则可能改变偏移，不能把 `-8` 当作所有函数的固定槽位。
 
 ### 13.1.4 机器码生成相关的适配
 
-机器码生成阶段会将 MachineInstr 输出到汇编文件或二进制文件中。文件输出涉及的相关类如图 13-4 所示。
+| 层次 | 目标通常需要提供的内容 |
+| --- | --- |
+| `AsmPrinter` / 目标 MC lowering | 把 MIR 操作数、符号和适用伪指令转换为 MC 层表示 |
+| `MCInstPrinter` | 指令与操作数的汇编文本 |
+| `MCCodeEmitter` | 指令编码；对暂不能确定的表达式产生 fixup |
+| `MCAsmBackend` | fixup 应用、目标相关布局/松弛和编码限制 |
+| 目标 `MCObjectTargetWriter` | ELF/COFF/Mach-O 目标机器类型、重定位映射等 |
+| `MCTargetAsmParser` / `MCDisassembler` | 从汇编读入 MC 指令、从字节解码；二者是另外的能力 |
 
-![图 13-4 机器码生成阶段的适配示意图](origin/assets/figures/p397-13-4.png)
-
-**图 13-4 机器码生成阶段的适配示意图**
-
-其中，每个类的主要工作如下。
-
-1）AsmPrinter ：AsmPrinter 是一个组织、管理文件输出过程的 Pass，不同的后端通常
-
-<!-- PDF page 398; printed page 385 -->
-
-需要定义该文件，一般需要适配。
-
-2）xxxMCInstLower ：输入的 MachineInstr 经处理后先转换为 MCInst，然后依据编译选项决定输出到汇编文件还是二进制文件。该过程和后端密切相关，一般需要适配。
-
-3）MCAsmStreamer/MCObjectStreamer：这两个类是 MCStreamer 的子类，实现了文件输出的相关方法，分别用于输出 MCInst 到汇编文件和二进制文件，这是机器码生成的框架部分，一般不需要适配。
-
-4）MCInstPrinter ：MCStreamer 借助该类实现指令的文本格式输出，MCInstPrinter 和具体后端相关，一般需要适配。
-
-5）MCAsmBackend：声明指令修正相关的接口，和具体后端相关，一般需要适配。
-
-6）MCCodeEmitter：声明指令编码接口，和具体后端相关，一般需要适配。
-
-7）MCObjectWriter 复用 ELF/COFF/Mach-O 等格式框架，但还需要目标相关的 ObjectTargetWriter 提供机器类型、重定位映射等。例如 BPFELFObjectWriter 在 `MCTargetDesc/BPFELFObjectWriter.cpp` 实现，不能说对象写出完全无须目标适配。
-
-注意，图 13-4 中的蓝色方框的内容一般都是需要适配的。
+目标代码生成器可以直接写对象，不一定先输出汇编再调用外部汇编器。反过来，CodeEmitter 也不会自动替你实现汇编解析器。对象文件包含节、符号和重定位；机器指令字节只是其中一部分。
 
 ## 13.2 添加新后端所需要的适配
 
-添加新后端需要的步骤可以总结如下。
-
-1）创建 TD 文件：通过 TD 文件定义指令格式、具体指令、寄存器等基础信息。
-
-2）在目标 TargetLowering 中声明类型/操作合法性并实现必要的 custom lowering，在 xxxISelDAGToDAG 中结合生成的匹配器完成 DAG 指令选择。类型合法化、操作合法化和模式匹配是不同职责。
-
-3）添加目标调用约定的目标特例化处理（TargetLowering）：每个后端都有自己的 ABI 约定，需要根据 ABI 约定实现调用、参数传递、返回值、寄存器保存等功能。
-
-4）添加栈帧的目标特例化处理（TargetFrameLowering）：栈空间是基于栈帧基址的中间代码，需要根据 ABI 约定转化为基于寄存器的中间代码。
-
-5）添加后端的汇编输出（AsmPrinter）：处理后端相关的指令，将机器指令转化为 MC。
-
-6）机器码编码由 MCCodeEmitter 处理，修正由 MCAsmBackend 处理，对象格式与目标重定位由 streamer/ObjectWriter 协作处理。汇编解析和反汇编分别需要 MCTargetAsmParser、MCDisassembler，并非 CodeEmitter 自动提供。
-
-7）添加后端特殊处理：如果后端对生成的机器码有特殊的要求，则需要进行实现。
-
-8）添加后端特有优化：对机器码还可以进一步优化，例如窥孔优化，进一步提高生成的机器码指令质量。
-
-9）添加新的目标后端结构，并将目标后端注册到 LLVM 后端框架中，添加成功后可以通过 -target 参数使用新后端；为目标后端添加 TargetMachine 类，通过 TargetMachine 类添加 SubTarget、后端自定义优化 Pass、后端指令选择处理功能等。
-
-LLVM 18 的 BPF 同样体现第 7、8 步：如 `BPFMIPreEmitChecking` 的正确性检查以及 `BPFMIPeephole`、`BPFMIPreEmitPeephole` 的目标优化。下文按 TD、指令选择、栈帧、机器码和注册五个方面归纳。
-
-<!-- PDF page 399; printed page 386 -->
-
-五个方面都需要结合目标能力完成，而不是简单机械填入同名文件。
-
 ### 13.2.1 定义 TD 文件
 
-以 BPF 后端为例，需要实现的 TD 文件如下。
+一个目标通常具有描述入口、寄存器、指令格式、指令、调用约定和可选调度模型等文件。文件划分可以不同，决定正确性的是记录之间的关系。
 
-1）BPF.td 是目标描述入口，包含指令/寄存器等描述，并定义 feature、处理器模型、AsmWriter、AsmParser 与目标记录；并非仅用于 include 其他 TD。
+本章的 [Book.td](experiments/ch13/Book.td) 是可独立交给 LLVM 18 TableGen 的完整输入，描述四个 32 位寄存器和一条三地址加法。它使用 16 位指令编码：
 
-2）`BPFInstrFormats.td` 描述编码格式，`BPFInstrInfo.td` 描述指令、操作数、汇编文本和匹配模式。TableGen 的 `InstrInfo` 记录与 C++ `TargetInstrInfo` 子类不是同一概念；手写 C++ `BPFInstrInfo` 位于 BPFInstrInfo.h/.cpp，并继承生成的 BPFGenInstrInfo。
+| 位域 | 内容 |
+| --- | --- |
+| 15–12 | 操作码 `0001` |
+| 11–10 | 目的寄存器 |
+| 9–8 | 左输入寄存器 |
+| 7–6 | 右输入寄存器 |
+| 5–0 | 固定为 0 |
 
-3）`BPFRegisterInfo.td` 定义寄存器、编码、寄存器类和子寄存器关系；CSR 集在 `BPFCallingConv.td` 中定义，保留寄存器由 `BPFRegisterInfo::getReservedRegs` 决定，其中 R/W10 为帧指针，R/W11 为伪栈指针。
+例如 `add r1, r2, r3` 按此定义得到指令字 `0x16c0`。runner 从 TableGen 输出的 JSON 记录读取每个编码位，代入寄存器编码后检查这一结果。它验证的是记录中的位域定义；将指令字写成什么字节顺序还要由实际 CodeEmitter/目标约定决定。
 
-4）BPFCallingConv.td ：为了充分利用有限的寄存器，函数调用过程需要协调好 caller和 callee 所使用的寄存器资源。使两者之间形成一种规则，即调用约定。即 BPF 调用约定，通常包含如下几个方面。
+```sh
+CODEGEN_LAB=$(mktemp -d)
+for generator in register-info instr-info asm-writer emitter dag-isel; do
+  "$LLVM_BUILD/bin/llvm-tblgen" \
+    -I "$LLVM_SRC/llvm/include" "-gen-$generator" \
+    "$BOOK_ROOT/experiments/ch13/Book.td" \
+    -o "$CODEGEN_LAB/BookGen-$generator.inc"
+done
+```
 
-> 下列条目是 ABI 设计关注项，不代表 BPF 都通过同一种方式实现。LLVM 18 HEAD 的普通 BPF C 调用使用 R1～R5，返回值用 R0；启用 ALU32 时还使用与 R 寄存器重叠的 W 寄存器规则。TD 中虽有 `CCAssignToStack<8,8>` 后备规则，LowerFormalArguments/LowerCall 遇到栈参数仍报不支持。
+这些生成步骤已经纳入实验。`InstructionSet`、寄存器类、操作数、模式和编码字段是相互衔接的；但生成文件还引用目标 C++ 类及钩子。因此，`Book.td` 是完整的 **TableGen 输入**，不是已经注册、可由 `llc` 选择的完整后端。将生成器通过误写成“后端已完成”会遗漏本章其余所有适配工作。
 
-① 传参寄存器：明确哪些寄存器是用于在函数调用过程中传递参数的，比如整型寄存器和浮点型寄存器。
-
-② 返回值寄存器：用来存放函数返回值的寄存器，如指定返回放置浮点类型和整数类型的寄存器。
-
-③ callee-saved 约定保证调用前后寄存器的值保持。一般目标可能由生成的函数前言/后序保存恢复，但 BPF 的 FrameLowering 会从待保存集合移除 R6～R9，且 emitPrologue/emitEpilogue 为空；eBPF 调用环境负责其 ABI 保持，不能照搬普通 CPU 的 CSR 入栈/出栈描述。
-
-④ 参数类型晋升规则：硬件寄存器是有位数的，通常支持 32 位或 64 位的操作，这意味着小于寄存器位数的参数，需要明确其晋升规则，比如 8 位或 16 的参数需要晋升到32 位。
-
-⑤ 栈和参数对齐属于 ABI，但通常由 FrameLowering、DataLayout 和调用 lowering 共同决定。LLVM 18 BPF 尚不支持通过栈传递超出寄存器容量的参数，TD 中后备分配记录不等于完整实现。
+在真实 BPF 后端中，`BPFInstrInfo.td` 的 `ALU` 和 `LOAD` 参数、编码布局及 feature 条件应以当前源码为准，第 6 章已经给出相应记录实验。TableGen 名称和最终指令文字也不必相同：例如当前 BPF 中 `XORW32` 这个历史命名表示非 fetch 的原子 OR，`XXORW32` 才对应 XOR，不能只凭名字猜 opcode 语义。
 
 ### 13.2.2 指令选择处理
 
-LLVM 在指令选择阶段用 SelectionDAG 表达 LLVM IR 指令。 指令选择的实现在BPFISelDAGToDAG.cpp 中，主要完成模式匹配和指令选择，具体步骤如图 13-5 所示。
+建议先实现一个范围明确的闭环：整数参数、整数加法和返回；再逐步加入条件分支、访存、调用及非法类型的 lowering。每增加一种能力，都要同时考虑直接支持、合法化和拒绝路径。
 
-<!-- PDF page 400; printed page 387 -->
+本章的 [backend.ll](experiments/ch13/backend.ll) 包含三个完整函数：
 
-![图 13-5 指令选择适配](origin/assets/figures/p400-13-5.png)
+- `add64`：两个 i64 参数相加并返回，检查参数/返回寄存器以及加法选择。
+- `call_external`：调用一个只有声明的外部函数，检查调用 lowering 与符号重定位。
+- `stack_roundtrip`：通过 volatile 栈对象存取，检查寻址选择和最终帧索引消除。
 
-**图 13-5 指令选择适配**
+```sh
+"$LLVM_BUILD/bin/opt" -passes=verify -disable-output \
+  "$BOOK_ROOT/experiments/ch13/backend.ll"
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 \
+  -verify-machineinstrs -stop-after=finalize-isel \
+  "$BOOK_ROOT/experiments/ch13/backend.ll" \
+  -o "$CODEGEN_LAB/selected.mir"
+```
 
-不同目标支持的类型和操作不同，`BPFTargetLowering` 构造函数在 `BPFISelLowering.cpp` 通过 `addRegisterClass`、`setOperationAction` 等配置；针对标为 Custom 的操作实现 `LowerOperation` 等相应 lowering 钩子。ISD 节点 opcode 用 `ISD::NodeType` 枚举表示。ARM32 的某些 i64 操作需要拆分/展开，不应绝对说完全不能做 64 位整数操作。配置后由公共类型/操作合法化与目标选择器共同完成过程。
+选择后检查 `ADD_rr` 等目标指令，不要求某个虚拟寄存器始终叫 `%3`。这一阶段的 MIR 仍可能包含虚拟寄存器、COPY、PHI 和 FrameIndex；其存在本身不说明选择失败。应根据停止点判断哪些不变量已经建立，哪些要由后续阶段完成。
 
-合法化后，对 SelectionDAG 进行模式匹配。模式匹配的核心逻辑体现在指令描述文件中。比如 BPF 后端，需要编写 BPFInstrInfo.td 文件。
+对于新目标，不能仅靠 `add` 模式覆盖所有输入。例如 `i128` 加法可能需要拆分并传递进位，软浮点可能需要运行时调用，而目标可能不支持这种调用。在任何一条路径上，都必须保持程序语义或明确拒绝。
 
 ### 13.2.3 栈帧处理
 
-栈通常用两个指针来描述：一个帧指针用于指向栈底，另一个栈指针指向栈顶。LLVM使用 MachineFrameInfo 描述一个抽象的栈帧。TargetFrameLowering 用于处理栈帧布局，包括描述栈增长方向、栈帧对齐方式、局部变量在栈帧中的偏移等。
+使用上述 `stack_roundtrip` 生成完整汇编：
 
-一般目标的抽象栈帧可含 CSR、局部对象、溢出槽、调用参数等区域，但图 13-6 若按普通 CPU 分区套到 BPF 并不准确。LLVM 18 的 BPF 使用只读帧指针 R10 访问局部对象/溢出槽，不生成普通 CPU 式的 SP 调整前言/后序，也不通过栈传递超出 R1～R5 的参数。这里不能据书中描述断言 BPF 规范已经承诺栈传参。
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 -O2 \
+  -verify-machineinstrs "$BOOK_ROOT/experiments/ch13/backend.ll" \
+  -o "$CODEGEN_LAB/backend.s"
+```
 
-寄存器分配完成后，PEI 才具有最终溢出槽和保存寄存器等信息并计算帧对象偏移，再调用目标 `eliminateFrameIndex` 把抽象索引改为基址与偏移。并非寄存器分配结束的一刻所有偏移就已经确定。BPF 的具体保存规则参见前文，不采用原图示意中的通用 CSR 保存序列。
+应分别确认对象大小、对齐、基址与偏移、访存宽度以及是否残留未消除的帧索引。只看到一条 store 并不能证明溢出正确；还需验证对应的重载、寄存器别名和使用位置。高压力与跨调用的例子见第 10、11 章。
 
-新后端通常实现继承 `TargetFrameLowering` 的类；BPF 中正确名称是 `BPFFrameLowering`，并和 `BPFRegisterInfo` 中的帧索引消除协作。
+ABI 的拒绝路径同样需要实验。[six-arguments.ll](experiments/ch13/six-arguments.ll) 是合法 LLVM IR，但其第六个 i64 参数会触及 LLVM 18 BPF 不支持的栈传参路径：
 
-**图 13-6 eBPF 栈帧布局示意图（原图见下页版面；BPF 的实际限制以上述校订为准）**
+```sh
+"$LLVM_BUILD/bin/llc" -mtriple=bpfel -mcpu=v1 \
+  "$BOOK_ROOT/experiments/ch13/six-arguments.ll" \
+  -o "$CODEGEN_LAB/unsupported.s"
+# 此命令预期失败：stack arguments are not supported
+```
 
-<!-- PDF page 401; printed page 388 -->
+runner 检查非零退出码及该诊断。TD 中出现 `CCAssignToStack` 后备规则，不表示后端已经实现栈参数的完整读写和 ABI；要继续看 `LowerFormalArguments` 和 `LowerCall` 的实际处理。这一实验不涉及 BPF 内核装载，说明的是当前 LLVM 后端的能力边界。
 
 ### 13.2.4 机器码生成处理
 
-文件输出所涉及的类在图 13-4 中已经做了一些说明。其中，有些类是需要目标后端继承并实现的，对应到 BPF 后端分别如下。
+用同一个输入分别生成小端、大端 BPF 对象，检查目标头、重定位和反汇编：
 
-1）BPFAsmPrinter：实现指令输出函数 emitInstruction 和获取 Pass 名称函数 getPassName。
+```sh
+for triple in bpfel bpfeb; do
+  "$LLVM_BUILD/bin/llc" "-mtriple=$triple" -mcpu=v1 -O2 \
+    -verify-machineinstrs -filetype=obj \
+    "$BOOK_ROOT/experiments/ch13/backend.ll" \
+    -o "$CODEGEN_LAB/$triple.o"
+  "$LLVM_BUILD/bin/llvm-readobj" --file-headers --relocations \
+    "$CODEGEN_LAB/$triple.o"
+  "$LLVM_BUILD/bin/llvm-objdump" -d "$CODEGEN_LAB/$triple.o"
+done
+```
 
-2）BPFMCInstLower：实现从 MachineInstr 到 MCInst 转换的相关接口。
+本次检查两份对象的机器类型均为 `EM_BPF`，端序分别为 `LittleEndian` 和 `BigEndian`；外部调用保留引用 `external` 的 `R_BPF_64_32` 重定位。反汇编中可以找到 `add64` 和 `exit`。这验证了当前输入从 IR、指令选择、寄存器分配到 MC 对象输出的衔接。
 
-3）BPFInstPrinter：实现输出 MCInst 到汇编文件的接口。
-
-4）BPFAsmBackend：实现 BPF 指令修正的接口。在输出 MCInst 到二进制文件的过程中，用于对存在符号引用的指令进行修复。相关说明请参考第 12 章 12.2.2 节。
-
-5）BPFMCCodeEmitter：实现指令编码接口，用于在输出 MCInst 到二进制文件的过程中获取指令编码。
+`external` 尚未由运行环境解析，因此这里没有声称程序已链接或实际运行。对于新架构，还需要检查重定位加数、符号绑定、分支范围、端序和适用的松弛处理，不能仅用“对象文件存在”作为验收标准。独立汇编器与编码实验见第 12 章。
 
 ### 13.2.5 添加新后端到 LLVM 框架中
 
-LLVM 18 的 BPF 注册与构建映射如下；这里只读源码，不执行配置或编译。
+目标注册不是单一函数，而是多个可独立使用的层次：
 
-| 项目 | 文件 / 接口 |
-|---|---|
-| 构建目标清单 | `llvm/CMakeLists.txt` 中 LLVM_ALL_TARGETS；实验目标也可经 LLVM_EXPERIMENTAL_TARGETS_TO_BUILD 选择 |
-| TableGen 与子目录 | `llvm/lib/Target/BPF/CMakeLists.txt`，生成 BPFGen*.inc，加入 AsmParser、Disassembler、MCTargetDesc、TargetInfo |
-| 目标身份 | `TargetInfo/BPFTargetInfo.cpp`：LLVMInitializeBPFTargetInfo 注册 bpf/bpfel/bpfeb |
-| TargetMachine / Pass | `BPFTargetMachine.cpp`：LLVMInitializeBPFTarget、createPassConfig |
-| MC 工厂 | `MCTargetDesc/BPFMCTargetDesc.cpp`：LLVMInitializeBPFTargetMC，含自定义 ELF streamer、encoder、backend 等 |
-| MIR 输出 | `BPFAsmPrinter.cpp`：LLVMInitializeBPFAsmPrinter |
-| 汇编解析 | `AsmParser/BPFAsmParser.cpp`：LLVMInitializeBPFAsmParser |
-| 反汇编 | `Disassembler/BPFDisassembler.cpp`：LLVMInitializeBPFDisassembler |
+| 层次 | BPF 的对应入口 | 注册内容 |
+| --- | --- | --- |
+| TargetInfo | `TargetInfo/BPFTargetInfo.cpp` | 目标身份与 Triple 匹配 |
+| Target | `BPFTargetMachine.cpp` | TargetMachine 工厂、代码生成配置等 |
+| TargetMC | `MCTargetDesc/BPFMCTargetDesc.cpp` | 指令/寄存器/Subtarget 等 MC 工厂 |
+| AsmPrinter | `BPFAsmPrinter.cpp` | 从机器函数发射汇编/MC 事件的 Pass |
+| AsmParser | `AsmParser/BPFAsmParser.cpp` | 汇编解析能力 |
+| Disassembler | `Disassembler/BPFDisassembler.cpp` | 字节解码能力 |
 
-`Targets.def` 等文件由构建配置生成，不应作为手工扩展目标的唯一入口。clang 使用 `--target=<triple>`，llc 使用 `-mtriple=<triple>` 或适当的 `-march`；完整新架构还需 Triple/前端 TargetInfo 等识别支持。BPF 在 LLVM 18 也包含 GISel 目录与 GlobalISel 钩子，书中 SelectionDAG 路线不能覆盖它们。
+**代码清单 13-1：目标初始化接口的形状。** 下列为声明示意，实际目标函数及生成清单由其构建和实现提供。
 
-在 llvm/lib/Target 目录下，每个后端有一个对应的文件夹。添加一个新的后端需要新建一个文件夹，并将上述实现的目标相关类所在的文件添加到该文件夹中。接下来需要修改一些配置文件，以实现目标后端的注册。
-
-此外，llvm/include/llvm-c/Target.h 定义了目标后端中一些与初始化相关的必要接口，如代码清单 13-1 所示。可参考已经实现的后端，将这些函数实现在相应的文件中。
-
-**代码清单 13-1 在 Target.h 中定义的目标后端初始化接口**
-
-```text
-// 声明所有有效的后端初始化函数
-#define LLVM_TARGET(TargetName) \
-    void LLVMInitialize##TargetName##TargetInfo(void); // 注册新后端，指定新后端的名称
-#include "llvm/Config/Targets.def"
-#undef LLVM_TARGET
-
-#define LLVM_TARGET(TargetName) void LLVMInitialize##TargetName##Target(void);
-    //注册后端优化Pass
-#include "llvm/Config/Targets.def"
-#undef LLVM_TARGET
-
-#define LLVM_TARGET(TargetName) \
-    void LLVMInitialize##TargetName##TargetMC(void);
-    // 注册MC层依赖信息，如指令打印入口、输出流等信息
-#include "llvm/Config/Targets.def"
-#undef LLVM_TARGET
-……
+```cpp
+extern "C" void LLVMInitializeBPFTargetInfo();
+extern "C" void LLVMInitializeBPFTarget();
+extern "C" void LLVMInitializeBPFTargetMC();
+extern "C" void LLVMInitializeBPFAsmPrinter();
+extern "C" void LLVMInitializeBPFAsmParser();
+extern "C" void LLVMInitializeBPFDisassembler();
 ```
 
-<!-- PDF page 402; printed page 389 -->
+通用调用封装见 [TargetSelect.h](/opt/llvm-project/llvm/include/llvm/Support/TargetSelect.h)，C 接口声明见 [llvm-c/Target.h](/opt/llvm-project/llvm/include/llvm-c/Target.h)。`InitializeAllTargets` 不会替代所有其他初始化函数；小型 MC 工具和完整代码生成器可以依用途初始化不同组件。
+
+一个真正的新架构还需要按实现范围完成：
+
+1. 添加目标目录、CMake 目标库及 TableGen 生成任务；实验目标可通过 `LLVM_EXPERIMENTAL_TARGETS_TO_BUILD` 接入。生成的 `Targets.def`、`AsmPrinters.def` 等文件不应手工修改。
+2. 提供 TargetMachine、Subtarget 及上述各层注册函数，使目标库实际被工具链接和初始化。
+3. 若引入新的 triple 架构名称，补充 [Triple](/opt/llvm-project/llvm/include/llvm/TargetParser/Triple.h) 的识别及相关映射。仅新增一个字符串参数不会创建架构支持。
+4. 若需要从 C/C++ 开始编译，再补 Clang 的 TargetInfo、ABI、宏和驱动行为；`llc` 能处理手写 IR 不证明 Clang 已支持该架构。
+5. 添加正向和负向测试，并检查 `llc --version` 的注册列表、IR 到 MIR 的转换、寄存器/栈处理、对象格式以及适用的运行环境。
+
+在本机启用其他已有后端，只是配置并重建相应库；这是后端集成的使用过程，不是新后端实现过程。独立 `Book.td` 也没有完成第 2–4 项。本章把这条边界保留为明确的工程工作，而不提供一个实际上无法通过 llc 使用的“完整后端”假象。
 
 ## 13.3 本章小结
 
-本章主要介绍如何为 LLVM 添加一个新后端。本章以 BPF 为例介绍在添加新后端时有哪些工作是必需的。此过程通常需要定义一些基本信息，例如指令信息、寄存器信息、调用约定信息，还需要实现指令选择的适配工作，如根据调用约定生成对应的 SelectionDAG、完成 SelectionDAG 的合法化工作。另外，需要根据后端约定处理栈帧，生成相应的 MC 和机器码，并将新后端注册到 LLVM 框架中。
+新后端可按“描述生成 → 最小整数函数 → 控制流/访存 → 调用/栈 → 对象及重定位 → 更广类型与优化”的顺序扩展。每一步都需要输入、停止点和可检验的不变量；拒绝不支持输入也是正确行为的一部分。
 
-## LLVM 18 静态校核依据
+运行本章完整实验：
 
-以下定位以本章所列 HEAD 为准；未运行验证的样例和历史性能比较不作为 LLVM 18 的复现实验结论。
+```sh
+python3 "$BOOK_ROOT/experiments/ch13/runner.py"
+```
 
-- [llvm/lib/Target/BPF/CMakeLists.txt:1](/opt/llvm-project/llvm/lib/Target/BPF/CMakeLists.txt:1)：`TableGen generators / subdirectories`。
-- [llvm/CMakeLists.txt:450](/opt/llvm-project/llvm/CMakeLists.txt:450)：`LLVM_ALL_TARGETS`。
-- [llvm/lib/Target/BPF/TargetInfo/BPFTargetInfo.cpp:27](/opt/llvm-project/llvm/lib/Target/BPF/TargetInfo/BPFTargetInfo.cpp:27)：`LLVMInitializeBPFTargetInfo`。
-- [llvm/lib/Target/BPF/BPFTargetMachine.cpp:41](/opt/llvm-project/llvm/lib/Target/BPF/BPFTargetMachine.cpp:41)：`LLVMInitializeBPFTarget / BPFPassConfig`。
-- [llvm/lib/Target/BPF/BPFISelLowering.cpp:52](/opt/llvm-project/llvm/lib/Target/BPF/BPFISelLowering.cpp:52)：`BPFTargetLowering / LowerOperation / LowerFormalArguments / LowerCall`。
-- [llvm/lib/Target/BPF/BPFISelDAGToDAG.cpp:40](/opt/llvm-project/llvm/lib/Target/BPF/BPFISelDAGToDAG.cpp:40)：`BPFDAGToDAGISel`。
-- [llvm/lib/Target/BPF/BPFRegisterInfo.cpp:39](/opt/llvm-project/llvm/lib/Target/BPF/BPFRegisterInfo.cpp:39)：`getCalleeSavedRegs / getReservedRegs / eliminateFrameIndex`。
-- [llvm/lib/Target/BPF/BPFFrameLowering.cpp:23](/opt/llvm-project/llvm/lib/Target/BPF/BPFFrameLowering.cpp:23)：`emitPrologue / emitEpilogue / determineCalleeSaves`。
-- [llvm/lib/Target/BPF/MCTargetDesc/BPFMCTargetDesc.cpp:104](/opt/llvm-project/llvm/lib/Target/BPF/MCTargetDesc/BPFMCTargetDesc.cpp:104)：`LLVMInitializeBPFTargetMC`。
-- [llvm/lib/Target/BPF/MCTargetDesc/BPFELFObjectWriter.cpp:38](/opt/llvm-project/llvm/lib/Target/BPF/MCTargetDesc/BPFELFObjectWriter.cpp:38)：`getRelocType`。
-- [llvm/include/llvm-c/Target.h:41](/opt/llvm-project/llvm/include/llvm-c/Target.h:41)：`target initialization declarations`。
-- [llvm/lib/Target/BPF/AsmParser/BPFAsmParser.cpp:532](/opt/llvm-project/llvm/lib/Target/BPF/AsmParser/BPFAsmParser.cpp:532)：`LLVMInitializeBPFAsmParser`。
-- [llvm/lib/Target/BPF/Disassembler/BPFDisassembler.cpp:86](/opt/llvm-project/llvm/lib/Target/BPF/Disassembler/BPFDisassembler.cpp:86)：`LLVMInitializeBPFDisassembler`。
+它覆盖五类 TableGen 生成器、编码字段检查、IR verifier、选择后 MIR、完整 BPF 汇编、两种端序对象及外部调用重定位，以及栈参数拒绝。它没有修改 LLVM 来注册 Book 架构，也没有执行 BPF 内核装载。源码接口、工具生成和真实目标执行分别需要自己的证据。
 
-待后续验证：使用该版本构建产物逐项解析/编译示例，检查目标、优化级别与 Pass 开关，比较 Pass 前后 IR/MIR、汇编和目标文件。此阶段仅完成文档与源码静态校对。
+进一步的接口背景可阅读本地 [WritingAnLLVMBackend.rst](/opt/llvm-project/llvm/docs/WritingAnLLVMBackend.rst)；落实到 LLVM 18 时，以具体后端源码和相应测试为准。

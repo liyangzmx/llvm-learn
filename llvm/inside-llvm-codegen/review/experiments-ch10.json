@@ -1,0 +1,669 @@
+{
+  "llvm_version": "18.1.8",
+  "llvm_build": "/opt/llvm-project/build",
+  "source_root": "/opt/llvm-project",
+  "book_root": "/opt/coding/mlir-toy/llvm/inside-llvm-codegen",
+  "source_commit": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff",
+  "input_sha256": {
+    "add-x86.s": "2fe4634e6481668e7784633222287189ad761e82ce62a33b94db92df8c6b8bf1",
+    "bubble-inline.c": "74ee32eae0a2e9772da35ed0c1e569b5cc08f9c8d4f6f68eeada5a2a8a1e1f42",
+    "bubble.c": "5cc831694f17921c4369bd17bccc8016a52b65afa441a076822b55cf81231ed8",
+    "bubble.ll": "5d83dfeadd6e011d853881285611920f2042cd4581706453d09e1f54f8b51816",
+    "check-c.c": "f814fb6c44c39e58981075d7517316a6c9769479ac92dccff8805b94b09fdcf1",
+    "check.ll": "f19a26f9dfa196b78e0f4dab29fa398f77c5e28f9bc9b9e9389160a539601ef2",
+    "lea-x86.s": "1339c3f052b987d1958c554d10745e864f6d523aab29c8235adf3c85f0deaaae",
+    "models.py": "68c0c6182a3f7d3149ff18635f047e4c71c229ac4eed5fd808354f1e5b208ad6",
+    "runner.py": "b0283bf0469eea8ac85596f7efdbe116cc221117652f2087656f807b2b614e13",
+    "sum.c": "7be8bbb6ce0418e82a34a5e057cb1d387e799e11b7ca78a41655ade008d35722",
+    "sum.ll": "486026d2967b36a02676d1c7ebafa68c056b99ad9de67c2b80e255ae3ae32ed1"
+  },
+  "results": {
+    "target": "bpfel",
+    "cpu": "generic",
+    "optimization": "O2",
+    "fast_optimized_regalloc": false,
+    "allocators": {
+      "fast": {
+        "machine_instruction_count": 67,
+        "spill_slots": 10,
+        "stack_loads": 18,
+        "stack_stores": 10
+      },
+      "basic": {
+        "machine_instruction_count": 53,
+        "spill_slots": 1,
+        "stack_loads": 2,
+        "stack_stores": 1
+      },
+      "greedy": {
+        "machine_instruction_count": 56,
+        "spill_slots": 1,
+        "stack_loads": 1,
+        "stack_stores": 1
+      },
+      "pbqp": {
+        "machine_instruction_count": 53,
+        "spill_slots": 1,
+        "stack_loads": 2,
+        "stack_stores": 1
+      }
+    },
+    "edge_bundles": [
+      [
+        "BB.0.in"
+      ],
+      [
+        "BB.0.out",
+        "BB.1.in",
+        "BB.7.out"
+      ],
+      [
+        "BB.1.out",
+        "BB.2.in",
+        "BB.8.in"
+      ],
+      [
+        "BB.2.out",
+        "BB.3.in",
+        "BB.6.out"
+      ],
+      [
+        "BB.3.out",
+        "BB.4.in",
+        "BB.7.in"
+      ],
+      [
+        "BB.4.out",
+        "BB.5.in",
+        "BB.5.out",
+        "BB.6.in"
+      ],
+      [
+        "BB.8.out"
+      ]
+    ],
+    "models": {
+      "hopfield": {
+        "networks": 729,
+        "initial_state_traces": 5832,
+        "strictly_decreasing_flips": 5128,
+        "stable_but_not_global_minimum_traces": 1280,
+        "synchronous_cycle": [
+          [
+            1,
+            -1
+          ],
+          [
+            -1,
+            1
+          ],
+          [
+            1,
+            -1
+          ]
+        ],
+        "scope": "Three-node, symmetric, zero-diagonal binary model; cyclic asynchronous updates with ties unchanged. Not LLVM SpillPlacement's three-state implementation or a general proof."
+      },
+      "pbqp": {
+        "book_r1": [
+          3,
+          7
+        ],
+        "book_r2": [
+          [
+            5,
+            4
+          ],
+          [
+            4,
+            3
+          ]
+        ],
+        "seed": 1818,
+        "sampled_three_node_instances": 512,
+        "distinct_option_count_triples": 64,
+        "feasible_triangles": 383,
+        "all_infinite_triangles": 129,
+        "scope": "One R1 or R2 reduction per sampled instance, checked against all assignments, with conditional traceback, rectangular matrices, negative costs, infinity, and existing 0--2 edges. An all-infinite optimum preserves infeasibility, not a finite feasible assignment. No multistep reduction stack, high-degree heuristic, arbitrary stored-edge transpose adapter, or claim of LLVM-wide optimality."
+      }
+    },
+    "C_listings": "sum and both sorting variants compiled; interpreter returned 0",
+    "x86_snippets": "add/mov and lea assembled and disassembled",
+    "phi_elimination": "PHI removed; COPY inserted",
+    "machine_verifier": "passed",
+    "ir_semantics": "sum=45; bubbleSort matches [-9,-2,0,1,1,3,7,7]; n=0,1 leave array unchanged",
+    "execution_scope": "LLVM IR interpreter plus BPF code generation; no BPF kernel/JIT execution or timings."
+  },
+  "commands": [
+    {
+      "name": "version",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "--version"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "sum-as",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-as",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/sum.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/sum.bc"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "sum-verify",
+      "argv": [
+        "/opt/llvm-project/build/bin/opt",
+        "-passes=verify",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/sum.bc",
+        "-disable-output"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "bubble-as",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-as",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/bubble.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.bc"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "bubble-verify",
+      "argv": [
+        "/opt/llvm-project/build/bin/opt",
+        "-passes=verify",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.bc",
+        "-disable-output"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "sum-finalize-isel",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=finalize-isel",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/sum.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/sum-finalize-isel.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "sum-livevars",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=livevars",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/sum.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/sum-livevars.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "sum-phi-node-elimination",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=phi-node-elimination",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/sum.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/sum-phi-node-elimination.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "sum-twoaddressinstruction",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=twoaddressinstruction",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/sum.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/sum-twoaddressinstruction.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "sum-register-coalescer",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=register-coalescer",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/sum.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/sum-register-coalescer.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "sum-virtregrewriter",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=virtregrewriter",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/sum.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/sum-virtregrewriter.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "sum-prologepilog",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=prologepilog",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/sum.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/sum-prologepilog.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "sum-fast-regallocfast",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=fast",
+        "-optimize-regalloc=0",
+        "-stop-before=regallocfast",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/sum.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/sum-fast-regallocfast.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "sum-fast-prologepilog",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=fast",
+        "-optimize-regalloc=0",
+        "-stop-after=prologepilog",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/sum.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/sum-fast-prologepilog.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "sum-trace",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-debug-only=regalloc,machine-block-freq",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/sum.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/sum.s"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "fast-object",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=fast",
+        "-optimize-regalloc=0",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.ll",
+        "-filetype=obj",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/fast.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "fast-trace",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=fast",
+        "-optimize-regalloc=0",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/fast.s",
+        "-debug-only=regalloc,regalloc-pbqp,spill-code-placement,edge-bundles"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "fast-mir",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=fast",
+        "-optimize-regalloc=0",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.ll",
+        "-stop-after=prologepilog",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/fast.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "fast-disassembly",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-objdump",
+        "-d",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/fast.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "basic-object",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=basic",
+        "-optimize-regalloc=1",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.ll",
+        "-filetype=obj",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/basic.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "basic-trace",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=basic",
+        "-optimize-regalloc=1",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/basic.s",
+        "-debug-only=regalloc,regalloc-pbqp,spill-code-placement,edge-bundles"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "basic-mir",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=basic",
+        "-optimize-regalloc=1",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.ll",
+        "-stop-after=prologepilog",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/basic.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "basic-disassembly",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-objdump",
+        "-d",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/basic.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "greedy-object",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=greedy",
+        "-optimize-regalloc=1",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.ll",
+        "-filetype=obj",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/greedy.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "greedy-trace",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=greedy",
+        "-optimize-regalloc=1",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/greedy.s",
+        "-debug-only=regalloc,regalloc-pbqp,spill-code-placement,edge-bundles"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "greedy-mir",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=greedy",
+        "-optimize-regalloc=1",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.ll",
+        "-stop-after=prologepilog",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/greedy.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "greedy-disassembly",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-objdump",
+        "-d",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/greedy.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "pbqp-object",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=pbqp",
+        "-optimize-regalloc=1",
+        "-pbqp-coalescing=false",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.ll",
+        "-filetype=obj",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/pbqp.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "pbqp-trace",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=pbqp",
+        "-optimize-regalloc=1",
+        "-pbqp-coalescing=false",
+        "-pbqp-dump-graphs",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/pbqp.s",
+        "-debug-only=regalloc,regalloc-pbqp,spill-code-placement,edge-bundles"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "pbqp-mir",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-regalloc=pbqp",
+        "-optimize-regalloc=1",
+        "-pbqp-coalescing=false",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/bubble.ll",
+        "-stop-after=prologepilog",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/pbqp.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "pbqp-disassembly",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-objdump",
+        "-d",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/pbqp.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "check-as",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-as",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/check.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/check.bc"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "ir-semantics",
+      "argv": [
+        "/opt/llvm-project/build/bin/lli",
+        "-force-interpreter",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/check.bc"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "c-listings-compile",
+      "argv": [
+        "/opt/llvm-project/build/bin/clang",
+        "-O1",
+        "-fno-inline-functions",
+        "-S",
+        "-emit-llvm",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/check-c.c",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/check-c.ll"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "c-listings-semantics",
+      "argv": [
+        "/opt/llvm-project/build/bin/lli",
+        "-force-interpreter",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/check-c.ll"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "add-x86",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-mc",
+        "--triple=x86_64-unknown-linux-gnu",
+        "--filetype=obj",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/add-x86.s",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/add-x86.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "add-x86-disassembly",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-objdump",
+        "-d",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/add-x86.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "lea-x86",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-mc",
+        "--triple=x86_64-unknown-linux-gnu",
+        "--filetype=obj",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch10/lea-x86.s",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/lea-x86.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "lea-x86-disassembly",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-objdump",
+        "-d",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch10/lea-x86.o"
+      ],
+      "exit_code": 0
+    }
+  ]
+}

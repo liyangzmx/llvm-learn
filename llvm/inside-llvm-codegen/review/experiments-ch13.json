@@ -1,0 +1,371 @@
+{
+  "chapter": "ch13",
+  "llvm_build": "/opt/llvm-project/build",
+  "time_utc": "2026-09-13T15:13:51.828756+00:00",
+  "output_directory": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13",
+  "cases": [
+    {
+      "name": "tablegen-records",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-tblgen",
+        "-I",
+        "/opt/llvm-project/llvm/include",
+        "--dump-json",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch13/Book.td",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/Book-records.json"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "encoding-layout",
+      "passed": true,
+      "detail": "TableGen bit assignment for add r1,r2,r3 is 0x16c0; this checks the record, not an installed CPU backend."
+    },
+    {
+      "name": "tablegen-register-info",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-tblgen",
+        "-I",
+        "/opt/llvm-project/llvm/include",
+        "-gen-register-info",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch13/Book.td",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/BookGen-register-info.inc"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "generated-register-info",
+      "passed": true,
+      "detail": "Generated file contains Book."
+    },
+    {
+      "name": "tablegen-instr-info",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-tblgen",
+        "-I",
+        "/opt/llvm-project/llvm/include",
+        "-gen-instr-info",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch13/Book.td",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/BookGen-instr-info.inc"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "generated-instr-info",
+      "passed": true,
+      "detail": "Generated file contains ADDrr."
+    },
+    {
+      "name": "tablegen-asm-writer",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-tblgen",
+        "-I",
+        "/opt/llvm-project/llvm/include",
+        "-gen-asm-writer",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch13/Book.td",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/BookGen-asm-writer.inc"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "generated-asm-writer",
+      "passed": true,
+      "detail": "Generated file contains printInstruction."
+    },
+    {
+      "name": "tablegen-emitter",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-tblgen",
+        "-I",
+        "/opt/llvm-project/llvm/include",
+        "-gen-emitter",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch13/Book.td",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/BookGen-emitter.inc"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "generated-emitter",
+      "passed": true,
+      "detail": "Generated file contains getBinaryCodeForInstr."
+    },
+    {
+      "name": "tablegen-dag-isel",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-tblgen",
+        "-I",
+        "/opt/llvm-project/llvm/include",
+        "-gen-dag-isel",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch13/Book.td",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/BookGen-dag-isel.inc"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "generated-dag-isel",
+      "passed": true,
+      "detail": "Generated file contains SelectCode."
+    },
+    {
+      "name": "verify-input",
+      "command": [
+        "/opt/llvm-project/build/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch13/backend.ll"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "select",
+      "command": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=finalize-isel",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch13/backend.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/selected.mir"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "selected-opcodes",
+      "passed": true,
+      "detail": "Target instruction selection produces ADD_rr."
+    },
+    {
+      "name": "emit-assembly",
+      "command": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O2",
+        "-verify-machineinstrs",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch13/backend.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/backend.s"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "argument-and-return-registers",
+      "passed": true,
+      "detail": "add64 consumes the two i64 arguments in r1/r2 and returns their sum in r0."
+    },
+    {
+      "name": "frame-index-eliminated",
+      "passed": true,
+      "detail": "The volatile object is stored and reloaded at the same r10-8 address using 8-byte accesses."
+    },
+    {
+      "name": "external-call-symbol",
+      "passed": true,
+      "detail": "The external call remains symbolic before object relocation and linking."
+    },
+    {
+      "name": "emit-bpfel",
+      "command": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O2",
+        "-verify-machineinstrs",
+        "-filetype=obj",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch13/backend.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/bpfel.o"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "inspect-bpfel",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-readobj",
+        "--file-headers",
+        "--relocations",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/bpfel.o"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [
+        "EM_BPF",
+        "LittleEndian",
+        "R_BPF_64_32",
+        "external"
+      ],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "\nFile: /private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/bpfel.o\nFormat: elf64-bpf\nArch: bpfel\nAddressSize: 64bit\nLoadName: <Not found>\nElfHeader {\n  Ident {\n    Magic: (7F 45 4C 46)\n    Class: 64-bit (0x2)\n    DataEncoding: LittleEndian (0x1)\n    FileVersion: 1\n    OS/ABI: SystemV (0x0)\n    ABIVersion: 0\n    Unused: (00 00 00 00 00 00 00)\n  }\n  Type: Relocatable (0x1)\n  Machine: EM_BPF (0xF7)\n  Version: 1\n  Entry: 0x0\n  ProgramHeaderOffset: 0x0\n  SectionHeaderOffset: 0x230\n  Flags [ (0x0)\n  ]\n  HeaderSize: 64\n  ProgramHeaderEntrySize: 0\n  ProgramHeaderCount: 0\n  SectionHeaderEntrySize: 64\n  SectionHeaderCount: 7\n  StringTableSectionIndex: 1\n}\nRelocations [\n  Section (3) .rel.text {\n    0x18 R_BPF_64_32 external\n  }\n  Section (5) .rel.eh_frame {\n    0x1C R_BPF_64_ABS64 .text\n    0x38 R_BPF_64_ABS64 .text\n    0x58 R_BPF_64_ABS64 .text\n  }\n]\n",
+      "stderr": ""
+    },
+    {
+      "name": "disassemble-bpfel",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-objdump",
+        "-d",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/bpfel.o"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [
+        "<add64>:",
+        "exit"
+      ],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "\n/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/bpfel.o:\tfile format elf64-bpf\n\nDisassembly of section .text:\n\n0000000000000000 <add64>:\n       0:\tbf 10 00 00 00 00 00 00\tr0 = r1\n       1:\t0f 20 00 00 00 00 00 00\tr0 += r2\n       2:\t95 00 00 00 00 00 00 00\texit\n\n0000000000000018 <call_external>:\n       3:\t85 10 00 00 ff ff ff ff\tcall -0x1\n       4:\t95 00 00 00 00 00 00 00\texit\n\n0000000000000028 <stack_roundtrip>:\n       5:\t7b 1a f8 ff 00 00 00 00\t*(u64 *)(r10 - 0x8) = r1\n       6:\t79 a0 f8 ff 00 00 00 00\tr0 = *(u64 *)(r10 - 0x8)\n       7:\t95 00 00 00 00 00 00 00\texit\n",
+      "stderr": ""
+    },
+    {
+      "name": "emit-bpfeb",
+      "command": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfeb",
+        "-mcpu=v1",
+        "-O2",
+        "-verify-machineinstrs",
+        "-filetype=obj",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch13/backend.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/bpfeb.o"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "inspect-bpfeb",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-readobj",
+        "--file-headers",
+        "--relocations",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/bpfeb.o"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [
+        "EM_BPF",
+        "BigEndian",
+        "R_BPF_64_32",
+        "external"
+      ],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "\nFile: /private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/bpfeb.o\nFormat: elf64-bpf\nArch: bpfeb\nAddressSize: 64bit\nLoadName: <Not found>\nElfHeader {\n  Ident {\n    Magic: (7F 45 4C 46)\n    Class: 64-bit (0x2)\n    DataEncoding: BigEndian (0x2)\n    FileVersion: 1\n    OS/ABI: SystemV (0x0)\n    ABIVersion: 0\n    Unused: (00 00 00 00 00 00 00)\n  }\n  Type: Relocatable (0x1)\n  Machine: EM_BPF (0xF7)\n  Version: 1\n  Entry: 0x0\n  ProgramHeaderOffset: 0x0\n  SectionHeaderOffset: 0x230\n  Flags [ (0x0)\n  ]\n  HeaderSize: 64\n  ProgramHeaderEntrySize: 0\n  ProgramHeaderCount: 0\n  SectionHeaderEntrySize: 64\n  SectionHeaderCount: 7\n  StringTableSectionIndex: 1\n}\nRelocations [\n  Section (3) .rel.text {\n    0x18 R_BPF_64_32 external\n  }\n  Section (5) .rel.eh_frame {\n    0x1C R_BPF_64_ABS64 .text\n    0x38 R_BPF_64_ABS64 .text\n    0x58 R_BPF_64_ABS64 .text\n  }\n]\n",
+      "stderr": ""
+    },
+    {
+      "name": "disassemble-bpfeb",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-objdump",
+        "-d",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/bpfeb.o"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [
+        "<add64>:",
+        "exit"
+      ],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "\n/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/bpfeb.o:\tfile format elf64-bpf\n\nDisassembly of section .text:\n\n0000000000000000 <add64>:\n       0:\tbf 01 00 00 00 00 00 00\tr0 = r1\n       1:\t0f 02 00 00 00 00 00 00\tr0 += r2\n       2:\t95 00 00 00 00 00 00 00\texit\n\n0000000000000018 <call_external>:\n       3:\t85 01 00 00 ff ff ff ff\tcall -0x1\n       4:\t95 00 00 00 00 00 00 00\texit\n\n0000000000000028 <stack_roundtrip>:\n       5:\t7b a1 ff f8 00 00 00 00\t*(u64 *)(r10 - 0x8) = r1\n       6:\t79 0a ff f8 00 00 00 00\tr0 = *(u64 *)(r10 - 0x8)\n       7:\t95 00 00 00 00 00 00 00\texit\n",
+      "stderr": ""
+    },
+    {
+      "name": "reject-stack-arguments",
+      "command": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch13/six-arguments.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch13/unsupported.s"
+      ],
+      "returncode": 1,
+      "expected_returncode": "nonzero",
+      "required_text": [
+        "stack arguments are not supported"
+      ],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": "error: <unknown>:0:0: in function six i64 (i64, i64, i64, i64, i64, i64): stack arguments are not supported\n\n"
+    }
+  ],
+  "passed": true,
+  "checks": 26
+}

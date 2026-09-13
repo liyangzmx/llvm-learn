@@ -1,0 +1,308 @@
+{
+  "chapter": "ch1",
+  "llvm_build": "/opt/llvm-project/build",
+  "time_utc": "2026-09-13T15:12:46.091840+00:00",
+  "output_directory": "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1",
+  "cases": [
+    {
+      "name": "llc-version",
+      "command": [
+        "/opt/llvm-project/build/bin/llc",
+        "--version"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [
+        "LLVM version 18.1.8"
+      ],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "LLVM (http://llvm.org/):\n  LLVM version 18.1.8\n  DEBUG build with assertions.\n  Default target: arm64-apple-darwin24.6.0\n  Host CPU: apple-m1\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    bpf        - BPF (host endian)\n    bpfeb      - BPF (big endian)\n    bpfel      - BPF (little endian)\n    hexagon    - Hexagon\n    ppc32      - PowerPC 32\n    ppc32le    - PowerPC 32 LE\n    ppc64      - PowerPC 64\n    ppc64le    - PowerPC 64 LE\n    riscv32    - 32-bit RISC-V\n    riscv64    - 64-bit RISC-V\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64\n",
+      "stderr": ""
+    },
+    {
+      "name": "registered-targets",
+      "passed": true,
+      "detail": "Required code-generation targets are present in the executable: aarch64, aarch64_32, aarch64_be, arm, arm64, arm64_32, armeb, bpf, bpfeb, bpfel, hexagon, ppc32, ppc32le, ppc64, ppc64le, riscv32, riscv64, thumb, thumbeb, x86, x86-64"
+    },
+    {
+      "name": "clang-version",
+      "command": [
+        "/opt/llvm-project/build/bin/clang",
+        "--version"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [
+        "clang version 18.1.8"
+      ],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "clang version 18.1.8 (https://github.com/llvm/llvm-project.git 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /opt/llvm-project/build/bin\n",
+      "stderr": ""
+    },
+    {
+      "name": "clang-ir",
+      "command": [
+        "/opt/llvm-project/build/bin/clang",
+        "--target=bpfel",
+        "-O0",
+        "-Xclang",
+        "-disable-O0-optnone",
+        "-fno-discard-value-names",
+        "-S",
+        "-emit-llvm",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch1/sum.c",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum.ll"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "frontend-stack-form",
+      "passed": true,
+      "detail": "At O0 the frontend emits addressable locals before mem2reg."
+    },
+    {
+      "name": "ssa",
+      "command": [
+        "/opt/llvm-project/build/bin/opt",
+        "-passes=mem2reg",
+        "-verify-each",
+        "-S",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum-ssa.ll"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "ssa-phi",
+      "passed": true,
+      "detail": "Promotable locals become SSA values, including loop PHIs."
+    },
+    {
+      "name": "assemble",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-as",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum-ssa.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum.bc"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "disassemble",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-dis",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum.bc",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/roundtrip.ll"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "roundtrip-verify",
+      "command": [
+        "/opt/llvm-project/build/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/roundtrip.ll"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "middle-end",
+      "command": [
+        "/opt/llvm-project/build/bin/opt",
+        "-passes=default<O2>",
+        "-verify-each",
+        "-S",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum-ssa.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum-opt.ll"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "bpf-asm",
+      "command": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O2",
+        "-verify-machineinstrs",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum-opt.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum.s"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "bpf-object",
+      "command": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O2",
+        "-verify-machineinstrs",
+        "-filetype=obj",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum-opt.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum.o"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "object-header",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-readobj",
+        "--file-headers",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum.o"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [
+        "EM_BPF"
+      ],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "\nFile: /private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum.o\nFormat: elf64-bpf\nArch: bpfel\nAddressSize: 64bit\nLoadName: <Not found>\nElfHeader {\n  Ident {\n    Magic: (7F 45 4C 46)\n    Class: 64-bit (0x2)\n    DataEncoding: LittleEndian (0x1)\n    FileVersion: 1\n    OS/ABI: SystemV (0x0)\n    ABIVersion: 0\n    Unused: (00 00 00 00 00 00 00)\n  }\n  Type: Relocatable (0x1)\n  Machine: EM_BPF (0xF7)\n  Version: 1\n  Entry: 0x0\n  ProgramHeaderOffset: 0x0\n  SectionHeaderOffset: 0x210\n  Flags [ (0x0)\n  ]\n  HeaderSize: 64\n  ProgramHeaderEntrySize: 0\n  ProgramHeaderCount: 0\n  SectionHeaderEntrySize: 64\n  SectionHeaderCount: 5\n  StringTableSectionIndex: 1\n}\n",
+      "stderr": ""
+    },
+    {
+      "name": "object-disassembly",
+      "command": [
+        "/opt/llvm-project/build/bin/llvm-objdump",
+        "-d",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum.o"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [
+        "<sum>:",
+        "<main>:",
+        "exit"
+      ],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "\n/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum.o:\tfile format elf64-bpf\n\nDisassembly of section .text:\n\n0000000000000000 <sum>:\n       0:\tb7 00 00 00 00 00 00 00\tr0 = 0x0\n       1:\tbf 12 00 00 00 00 00 00\tr2 = r1\n       2:\t67 02 00 00 20 00 00 00\tr2 <<= 0x20\n       3:\tc7 02 00 00 20 00 00 00\tr2 s>>= 0x20\n       4:\tb7 03 00 00 01 00 00 00\tr3 = 0x1\n       5:\t6d 23 0f 00 00 00 00 00\tif r3 s> r2 goto +0xf <LBB0_2>\n       6:\tbf 12 00 00 00 00 00 00\tr2 = r1\n       7:\t07 02 00 00 fe ff ff ff\tr2 += -0x2\n       8:\t67 02 00 00 20 00 00 00\tr2 <<= 0x20\n       9:\t77 02 00 00 20 00 00 00\tr2 >>= 0x20\n      10:\t07 01 00 00 ff ff ff ff\tr1 += -0x1\n      11:\tbf 13 00 00 00 00 00 00\tr3 = r1\n      12:\t67 03 00 00 20 00 00 00\tr3 <<= 0x20\n      13:\t77 03 00 00 20 00 00 00\tr3 >>= 0x20\n      14:\t2f 23 00 00 00 00 00 00\tr3 *= r2\n      15:\t18 02 00 00 fe ff ff ff 00 00 00 00 01 00 00 00\tr2 = 0x1fffffffe ll\n      17:\t5f 23 00 00 00 00 00 00\tr3 &= r2\n      18:\t77 03 00 00 01 00 00 00\tr3 >>= 0x1\n      19:\t0f 31 00 00 00 00 00 00\tr1 += r3\n      20:\tbf 10 00 00 00 00 00 00\tr0 = r1\n\n00000000000000a8 <LBB0_2>:\n      21:\t95 00 00 00 00 00 00 00\texit\n\n00000000000000b0 <main>:\n      22:\tb7 01 00 00 0a 00 00 00\tr1 = 0xa\n      23:\t85 10 00 00 ff ff ff ff\tcall -0x1\n      24:\tbf 01 00 00 00 00 00 00\tr1 = r0\n      25:\t67 01 00 00 20 00 00 00\tr1 <<= 0x20\n      26:\t77 01 00 00 20 00 00 00\tr1 >>= 0x20\n      27:\tb7 00 00 00 01 00 00 00\tr0 = 0x1\n      28:\t55 01 01 00 2d 00 00 00\tif r1 != 0x2d goto +0x1 <LBB1_2>\n      29:\tb7 00 00 00 00 00 00 00\tr0 = 0x0\n\n00000000000000f0 <LBB1_2>:\n      30:\t95 00 00 00 00 00 00 00\texit\n",
+      "stderr": ""
+    },
+    {
+      "name": "execute-before",
+      "command": [
+        "/opt/llvm-project/build/bin/lli",
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum.ll"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "execute-after",
+      "command": [
+        "/opt/llvm-project/build/bin/lli",
+        "--force-interpreter",
+        "-mtriple=bpfel",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/sum-opt.ll"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "host-ir",
+      "command": [
+        "/opt/llvm-project/build/bin/clang",
+        "-O0",
+        "-S",
+        "-emit-llvm",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch1/sum.c",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/host.ll"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "host-jit",
+      "command": [
+        "/opt/llvm-project/build/bin/lli",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch1/host.ll"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "required_text": [],
+      "forbidden_text": [],
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "passed": true,
+  "checks": 19
+}

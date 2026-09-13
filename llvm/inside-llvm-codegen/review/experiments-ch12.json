@@ -1,0 +1,193 @@
+{
+  "llvm_version": "18.1.8",
+  "llvm_build": "/opt/llvm-project/build",
+  "source_root": "/opt/llvm-project",
+  "book_root": "/opt/coding/mlir-toy/llvm/inside-llvm-codegen",
+  "source_commit": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff",
+  "input_sha256": {
+    "add.s": "883038ec1f31ba75064d36c2da835497a7cbfc06250f02b7a72f430e9fe9d52d",
+    "encoding.s": "4c98f8f07fca05f37068956b0ce6b7fc8737d88b96ebf723da9ab6f597bcb4b8",
+    "runner.py": "b75204e76148089dd3c90a8029de971fea7913343497e341300f368012b9a3f7",
+    "test.cpp": "302623b4a9aa325b3f281758dea48bdd1836e40b90cc5662295d3046c14e3ba9"
+  },
+  "results": {
+    "target": "bpfel",
+    "cpu": "generic",
+    "optimization": "O2",
+    "instruction_count": 15,
+    "encoding_le": [
+      "bf10000000000000",
+      "632af8ff00000000",
+      "630afcff00000000",
+      "6702000020000000",
+      "18030000887766550000000044332211",
+      "9500000000000000"
+    ],
+    "encoding_be": [
+      "bf01000000000000",
+      "63a2fff800000000",
+      "63a0fffc00000000",
+      "6720000000000020",
+      "18300000556677880000000011223344",
+      "9500000000000000"
+    ],
+    "external_call_relocation": "R_BPF_64_32",
+    "eh_frame_relocation": "R_BPF_64_ABS64",
+    "assembly_roundtrip_same_instructions": true,
+    "machine_verifier": "passed",
+    "execution_scope": "Compiled/assembled/disassembled; no BPF kernel/JIT execution."
+  },
+  "commands": [
+    {
+      "name": "version",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "--version"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "asm",
+      "argv": [
+        "/opt/llvm-project/build/bin/clang++",
+        "--target=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-S",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch12/test.cpp",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch12/test.s"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "object",
+      "argv": [
+        "/opt/llvm-project/build/bin/clang++",
+        "--target=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-c",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch12/test.cpp",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch12/test.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "ir",
+      "argv": [
+        "/opt/llvm-project/build/bin/clang++",
+        "--target=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-S",
+        "-emit-llvm",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch12/test.cpp",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch12/test.ll"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "mir",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=prologepilog",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch12/test.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch12/test.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "add-inst",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-mc",
+        "--triple=bpfel",
+        "--show-inst",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch12/add.s"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "encoding-le",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-mc",
+        "--triple=bpfel",
+        "--show-inst",
+        "--show-encoding",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch12/encoding.s"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "encoding-be",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-mc",
+        "--triple=bpfeb",
+        "--show-inst",
+        "--show-encoding",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch12/encoding.s"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "encoding-object",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-mc",
+        "--triple=bpfel",
+        "--filetype=obj",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch12/encoding.s",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch12/encoding.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "reassemble",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-mc",
+        "--triple=bpfel",
+        "--filetype=obj",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch12/test.s",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch12/reassembled.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "disassembly",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-objdump",
+        "-d",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch12/test.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "reassembled-disassembly",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-objdump",
+        "-d",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch12/reassembled.o"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "object-info",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-readobj",
+        "--sections",
+        "--symbols",
+        "--relocations",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch12/test.o"
+      ],
+      "exit_code": 0
+    }
+  ]
+}

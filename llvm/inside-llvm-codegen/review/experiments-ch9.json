@@ -1,0 +1,453 @@
+{
+  "llvm_version": "18.1.8",
+  "llvm_build": "/opt/llvm-project/build",
+  "source_root": "/opt/llvm-project",
+  "book_root": "/opt/coding/mlir-toy/llvm/inside-llvm-codegen",
+  "source_commit": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff",
+  "input_sha256": {
+    "cse.ll": "8c4d477d682885c692aed29461d457ed10c764bdf5496e18d0ba0a611817a48b",
+    "cse.mir": "8af5fc948d5484a5f102128a5d2cd8e3a1b23c33dc5c034b142cfd8ac6bf9746",
+    "dce.mir": "ef05bfe6693eeab28bec6e373e551e0299b6bdb0904f3e78f7c9be3f552fdb70",
+    "if-conversion.cpp": "4fefd7a089838bbcbac2db367fac43500a33dca212c8665dac59476a429abbc8",
+    "licm.mir": "13aedb932bc593a3e69bfe5d5b96668b71c53557b4d3c39d761274e4e4318954",
+    "lifetime.ll": "ba218c3e5cbc32f2dae4ae61818ad18fe65d77b9eafb3c5023cc82e054d45f01",
+    "phi.mir": "7a9c22f94d272a1e6b69aa22b7d04ea4f41536a2c4cb29513808e349053beb42",
+    "runner.py": "64e2435b6846aa37feff8b70bcaf1f30813a7acb248b3c474d7e6cfcdb283650",
+    "sink.mir": "ebff2f1afd97da28dd1d65af7d6b5f780b6aa4d47d3d44c5304b95a3680ba943",
+    "stack-marked.ll": "ca86d27ef1c23ae3cc094420eabc0c8d6d57017a2917c808a7babb61b9c44009",
+    "stack.c": "30dfffb5466b757bb7b819fe7b9c7d0896bf18631831d2a7086d5a0a39db9ad1",
+    "tail.ll": "42600413f21d0c01289e6228440d38ab38b1f37e92498789e25f9506f7756c2a"
+  },
+  "results": {
+    "dce": "expected MIR transformation; machine verifier passed",
+    "cse": "expected MIR transformation; machine verifier passed",
+    "phi": "expected MIR transformation; machine verifier passed",
+    "sink": "expected MIR transformation; machine verifier passed",
+    "licm": "expected MIR transformation; machine verifier passed",
+    "tail": {
+      "target": "bpfel",
+      "cpu": "v4",
+      "blocks": {
+        "before": 7,
+        "default": 7,
+        "size10": 6
+      },
+      "duplicate_source": "if.end"
+    },
+    "lifetime": {
+      "input_objects": 2,
+      "shared_objects": 1,
+      "bytes": 64,
+      "pei_frame_indices_resolved": true
+    },
+    "stack_aarch64": {
+      "clang_objects": 3,
+      "marked_objects": 2,
+      "object_bytes": 4096,
+      "marked_merge": "x -> z"
+    },
+    "if_conversion": {
+      "target": "x86_64-unknown-linux-gnu",
+      "blocks": {
+        "before": 4,
+        "disabled": 4,
+        "enabled": 1
+      },
+      "cmov_count": 2,
+      "required_flag": "-x86-early-ifcvt"
+    },
+    "global_cse_riscv": {
+      "arithmetic_instructions": {
+        "before": 6,
+        "after": 3
+      },
+      "stores_preserved": 4
+    }
+  },
+  "commands": [
+    {
+      "name": "version",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "--version"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "dce",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-verify-machineinstrs",
+        "-run-pass=dead-mi-elimination",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/dce.mir",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/dce.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "cse",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-verify-machineinstrs",
+        "-run-pass=machine-cse",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/cse.mir",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/cse.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "phi",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-verify-machineinstrs",
+        "-run-pass=opt-phis",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/phi.mir",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/phi.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "sink",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-verify-machineinstrs",
+        "-run-pass=machine-sink",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/sink.mir",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/sink.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "licm",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-verify-machineinstrs",
+        "-run-pass=early-machinelicm",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/licm.mir",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/licm.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "tail-as",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-as",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/tail.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/tail.bc"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "tail-verify",
+      "argv": [
+        "/opt/llvm-project/build/bin/opt",
+        "-passes=verify",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/tail.bc",
+        "-disable-output"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "cse-as",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-as",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/cse.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/cse.bc"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "cse-verify",
+      "argv": [
+        "/opt/llvm-project/build/bin/opt",
+        "-passes=verify",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/cse.bc",
+        "-disable-output"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "lifetime-as",
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-as",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/lifetime.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/lifetime.bc"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "lifetime-verify",
+      "argv": [
+        "/opt/llvm-project/build/bin/opt",
+        "-passes=verify",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/lifetime.bc",
+        "-disable-output"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "tail-before",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v4",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-before=early-tailduplication",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/tail.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/tail-before.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "tail-default",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v4",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=early-tailduplication",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/tail.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/tail-default.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "tail-size10",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v4",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=early-tailduplication",
+        "-tail-dup-size=10",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/tail.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/tail-size10.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "lifetime-before",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-before=stack-coloring",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/lifetime.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/lifetime-before.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "lifetime-after",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=stack-coloring",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/lifetime.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/lifetime-after.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "lifetime-pei",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=generic",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=prologepilog",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/lifetime.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/lifetime-pei.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "stack-clang",
+      "argv": [
+        "/opt/llvm-project/build/bin/clang",
+        "--target=aarch64-unknown-linux-gnu",
+        "-O2",
+        "-S",
+        "-emit-llvm",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/stack.c",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/stack.ll"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "stack-before",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=aarch64-unknown-linux-gnu",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-before=stack-coloring",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/stack.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/stack-before.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "stack-after",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=aarch64-unknown-linux-gnu",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=stack-coloring",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/stack.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/stack-after.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "stack-marked",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=aarch64-unknown-linux-gnu",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=stack-coloring",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/stack-marked.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/stack-marked.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "if-clang",
+      "argv": [
+        "/opt/llvm-project/build/bin/clang++",
+        "--target=x86_64-unknown-linux-gnu",
+        "-O0",
+        "-Xclang",
+        "-disable-O0-optnone",
+        "-S",
+        "-emit-llvm",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/if-conversion.cpp",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/if-raw.ll"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "if-mem2reg",
+      "argv": [
+        "/opt/llvm-project/build/bin/opt",
+        "-passes=mem2reg",
+        "-S",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/if-raw.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/if.ll"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "if-before",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=x86_64-unknown-linux-gnu",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-before=early-ifcvt",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/if.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/if-before.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "if-disabled",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=x86_64-unknown-linux-gnu",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=early-ifcvt",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/if.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/if-disabled.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "if-enabled",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=x86_64-unknown-linux-gnu",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=early-ifcvt",
+        "-x86-early-ifcvt",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/if.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/if-enabled.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "cse-riscv-before",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=riscv64-unknown-linux-gnu",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-before=machine-cse",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/cse.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/cse-riscv-before.mir"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "cse-riscv-after",
+      "argv": [
+        "/opt/llvm-project/build/bin/llc",
+        "-mtriple=riscv64-unknown-linux-gnu",
+        "-O2",
+        "-verify-machineinstrs",
+        "-stop-after=machine-cse",
+        "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch9/cse.ll",
+        "-o",
+        "/private/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/inside-llvm-experiments-_3wqsgz7/ch9/cse-riscv-after.mir"
+      ],
+      "exit_code": 0
+    }
+  ]
+}

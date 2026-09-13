@@ -1,6 +1,6 @@
 # 附录 A LLVM 的中间表示（LLVM 18.1.8 校订）
 
-> 基于原文全文和 `/opt/llvm-project` 的 LLVM 18.1.8 静态核对；书中版本为 LLVM 15。原文见 [origin](origin/inside-llvm-codegen-appendix-a.md)，逐项记录见 [review](review/appendix-a.md)。本轮未构建、未执行 IR 或 BPF 程序。历史图和输出作为对照，修正文意以本稿为准。
+> 本附录主体沿用前一轮基于 `/opt/llvm-project` 的 LLVM 18.1.8 静态校订；书中版本为 LLVM 15。原文见 [origin](origin/inside-llvm-codegen-appendix-a.md)，逐项记录见 [review](review/appendix-a.md)。本轮同步修正 EntryToken 的结果类型，相关运行证据见第 7 章。其余历史图和输出仍作为对照，执行验证范围以正文各章实验记录为准。
 
 Appendix A 附录 A
 
@@ -328,11 +328,11 @@ SDNode（SD 是 SelectionDAG 的缩写）结构示意图如图 A-5 所示。
 
 仍然以代码清单 A-6 的 LLVM IR 为例，使用命令 llc --march=bpf -debug-only=isel test.ll可以输出 DAG 信息，结果如代码清单 A-9 所示。
 
-**代码清单 A-9 DAG 结构示意（RET 符号按 LLVM 18 更新，节点编号和数量是历史例子）**
+**代码清单 A-9 DAG 结构示意（EntryToken 结果类型与 RET 符号按 LLVM 18 更新，节点编号和数量是历史例子）**
 
 ```text
 SelectionDAG has 12 nodes:
-    t0: ch = EntryToken
+    t0: ch,glue = EntryToken
             t4: i64,ch = CopyFromReg t0, Register:i64 %1
       t6: i32 = truncate t4
         t2: i64,ch = CopyFromReg t0, Register:i64 %0
@@ -342,6 +342,8 @@ SelectionDAG has 12 nodes:
 t10: ch,glue = CopyToReg t0, Register:i64 $r0, t8
 t11: ch = BPFISD::RET_GLUE t10, Register:i64 $r0, t10:1
 ```
+
+LLVM 18.1.8 的 `SelectionDAG` 构造函数用 `getVTList(MVT::Other, MVT::Glue)` 创建 EntryToken，所以节点有 chain 和 glue 两个结果。`getEntryNode()` 返回第 0 个结果，即 chain；不能据此把整个节点解释成只有一个结果。源码见 [SelectionDAG.cpp](/opt/llvm-project/llvm/lib/CodeGen/SelectionDAG/SelectionDAG.cpp:1319)，完整输入与实测 DAG 见 [第 7 章](inside-llvm-codegen-ch7.md)。
 
 可以使用图来描述上述 IR，由于整个图较大，因此这里仅仅展示从函数入口到 add 指令的 DAG，如图 A-6 所示。
 

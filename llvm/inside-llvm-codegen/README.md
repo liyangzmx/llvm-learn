@@ -1,8 +1,8 @@
-# 《深入理解 LLVM：代码生成》原文与 LLVM 18.1.8 校订
+# LLVM 18.1.8 代码生成：教材、源码与可复现实验
 
-原文来自本目录的 [PDF](pdf/inside-llvm-codegen.pdf)。书的前言、第 1 章及版本输出明确使用 **LLVM 15 / 15.0.1**；本次校订以本地 `/opt/llvm-project` 的 **LLVM 18.1.8** 为基准。
+本教材以本地 `/opt/llvm-project` 的 **LLVM 18.1.8** 为准，围绕原书的 13 章主题重新核对和编写。关键结论由源码、完整实验输入和实际运行结果支持；原书 LLVM 15 的历史内容单独保存在 [origin](origin/README.md)，源文件为 [原 PDF](pdf/inside-llvm-codegen.pdf)。
 
-这里有两套完整章节：`origin/` 保留原文，根目录的 `inside-llvm-codegen-chN.md` 在原文基础上直接修正错误、旧 API 和代码，并保留源码依据。它们不是原书摘要。每章的 `review/` 记录逐个代码清单的处理方式，以及尚需运行确认的部分。
+先读 [第 1 章](inside-llvm-codegen-ch1.md) 设置环境，再阅读各章。`experiments/chN/` 提供完整输入和 runner；`review/experiments-chN.json` 保存检查条件与结果；各章的 `review/chN.md` 记录依据和适用范围。附录主要保留前一轮静态校订内容，正文的新实验结论以各章报告为准。
 
 ## 章节索引
 
@@ -27,32 +27,52 @@
 
 前言、目录、两部分导言、附录扉页和书后材料也保存在 [原文目录](origin/README.md)。PDF 的全部 435 页均有归属，正文印刷页码与 PDF 页码相差 13。
 
-## 校订方法与范围
+## 当前基线与构建
 
-- 使用三个 subagent 分工校对章节，并复核交叉章节中重复出现的 IR、调度与寄存器分配概念；根任务负责原文恢复、附录、汇总和完整性检查。
-- 核对源码提交：`3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`，标签 `llvmorg-18.1.8`。本地已有 7 个 BPF 文件修改，相关定义同时读取该提交的原版；没有改动 LLVM 工作树。详见 [基线及文件校验值](review/source-baseline.json)。
-- `review/` 中的源码路径/行号用于定位核查依据；受本地修改影响的文件，旧行号应结合 `git show HEAD:路径` 阅读，不应把用户的本地改动当成上游版本差异。
-- 直接修正文中的错误；历史调试输出、生成文件数值编号和性能数据明确保留为历史记录。省略上下文的片段、通用伪代码、完整 IR 和工具输出分别说明用途。
-- 图表、公式和特殊字体以原 PDF 为可追溯底稿；影响结论的错误图在正文中给出修正说明或 Mermaid。原图自身未改写，不能把历史原图当成 LLVM 18 的新执行结果。
+- 原书基线为 LLVM 15 / 15.0.1，本地源码提交为 `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`，标签 `llvmorg-18.1.8`。
+- 初版原文转换、静态校订及移除整页图片后的成果已在开始实验前提交，提交号为 `c5924c6`。
+- 沿用 `/opt/llvm-project/build` 的 Ninja、Debug、断言及 `clang;mlir;clang-tools-extra` 配置。为章节实验补齐 BPF、AArch64（Native）、X86、RISCV、Hexagon、PowerPC、ARM，并修复空的默认 target triple。完整配置及按需构建命令见第 1 章，实际配置和构建记录见 [build.json](review/build.json)。
+- 现有 BPF 工作树中未定义的 `XOR5W32` 已恢复为对应的 `XORW32`，仅此一处构建修复，见 [补丁](review/build-source-fix.patch)。其他用户源码改动保留。初版校验值见 [历史源码基线](review/source-baseline.json)，当前环境与工具 SHA-256 见 [environment.json](review/environment.json)。
 
-主要修正涉及 opaque pointer、Phi 取值及并行复制、数据流方程、支配与循环条件、TableGen 参数、`nsw` 语义、调度队列及公式、寄存器分配与溢出策略、MC 与目标文件的区别，以及 PassManager 的继承关系和接口。
+## 运行实验
 
-**本轮没有构建 LLVM，没有执行 Clang/opt/llc、LLVM IR/MIR、TableGen 或 BPF 示例。** 数据流集合等少量数学例子用独立 Python 运算复核。后续需固定 triple、CPU/features、优化等级和 Pass 停止点，再验证 IR 的解析、生成结果和程序行为；各章末尾已经列出具体待验证项。旧实验数据及线上工具界面未重新复现。
-
-## 原文转换与检查
-
-PDF 大部分页面含文字层；PDF 第 20、21、120、134、137、224、239 页没有完整文字层，已经读图补录正文、代码续页或图节点，恢复稿保存在 `tools/page-transcriptions/`。
-
-`origin/source-layout.txt` 是 Poppler 的原始全文文本提取；`origin/manifest.json` 记录原 PDF 的 SHA-256、页码归属、代码区域和人工补录页。`origin/assets/figures/` 保存原图裁剪，完整版面直接查阅原 PDF。Markdown 保留页码标记，转换脚本仅在内存中临时渲染页面以裁取图形，不保存整页图片。
-
-转换工具不依赖 LLVM 构建。以下命令需有 `pdfplumber`、`pypdfium2`、Pillow 和 Poppler；请使用有这些依赖的 Python：
+从本仓库运行下列命令；各章输入和工具路径均可定位，不依赖下载实验文件：
 
 ```sh
-# 重新生成 origin 的文本、原图裁剪及恢复稿；不会改写校订稿。
-python3 tools/extract_book.py
+export LLVM_SRC=/opt/llvm-project
+export LLVM_BUILD=/opt/llvm-project/build
+export BOOK_ROOT=/opt/coding/mlir-toy/llvm/inside-llvm-codegen
 
-# 核对页码覆盖、章节/清单标识、本地链接、图片与 Markdown 围栏。
-python3 tools/check_book.py
+# 运行全部 13 章，日志和中间产物默认放入新的临时目录。
+python3 "$BOOK_ROOT/tools/run_experiments.py"
+
+# 修改某章输入或工具后，只重跑有关章节。
+python3 "$BOOK_ROOT/tools/run_experiments.py" --chapters 2 7 10
 ```
 
-结构检查结果见 [validation.json](review/validation.json)。这类检查证明文件完整性，不等于 LLVM IR 通过 verifier 或程序运行正确。
+统一 runner 为所有章节设置相同工具环境，保存完整日志的目录位置，并在运行前后核对工具和实验输入的 SHA-256，检查运行中是否发生变化。结果汇总见 [experiments-summary.json](review/experiments-summary.json)。各章 runner 也可以独立运行，其参数见 `--help`。
+
+当前保存的完整验收结果：**13/13 章实验通过**，14 个工具及 96 个实验文件在运行前后未变化；正文 **18/18 个完整 LLVM IR 代码块**通过解析与 verifier。文档结构检查覆盖 435 页原文归属、62 份 Markdown、758 个本地链接及 211 张被引用的图片，错误和警告均为 0。这些数字对应本次输入与环境，不表示已穷尽所有程序或目标配置。
+
+实验按问题选择不同证据：IR parser/verifier、MachineVerifier、Pass 前后结构、数学模型交叉验证、TableGen 生成、对象字节/重定位、IR 解释执行或本机 JIT。跨目标编译不等于已在该目标机器上运行；本地 BPF 对象没有被装载到 Linux 内核，模型中的调度周期和指令计数也不等于真实硬件性能。具体限制随对应实验写在正文中。
+
+正文保留原章节主题，但不再保留无法重现的旧数字作为 LLVM 18 的结论。简化模型、接口片段和可独立执行文件分别说明，关键例子使用本次输入与实际观察；不以生成工具退出成功代替程序语义证明。
+
+## 原文与文档检查
+
+原 PDF 的全部 435 页按章节和前后材料归档。`origin/source-layout.txt` 保存 Poppler 原始文字层提取，`origin/manifest.json` 记录 PDF 的 SHA-256、页码和补录页。PDF 第 20、21、120、134、137、224、239 页的缺失文字层已人工补录，恢复稿位于 `tools/page-transcriptions/`。
+
+`origin/assets/figures/` 保留原图裁剪，完整版面直接查阅 PDF。转换脚本仅在内存中临时渲染页面，不保存整页图片；没有恢复已删除的页图目录。
+
+```sh
+# 需 pdfplumber、pypdfium2、Pillow 和 Poppler；只重新生成原文。
+python3 "$BOOK_ROOT/tools/extract_book.py"
+
+# 需 Pillow；检查页码、章节/清单标识、本地链接、图片和 Markdown 围栏。
+python3 "$BOOK_ROOT/tools/check_book.py"
+
+# 使用同一 LLVM 构建，解析并验证正文中 llvm/llvm-ir 围栏的完整输入。
+python3 "$BOOK_ROOT/tools/check_ir_snippets.py"
+```
+
+文档结构结果见 [validation.json](review/validation.json)，正文完整 IR 的解析与验证记录见 [ir-snippets.json](review/ir-snippets.json)。这些检查与章节运行实验分别记录；解析通过不表示已经执行程序或证明优化等价。

@@ -1,0 +1,454 @@
+{
+  "chapter": 7,
+  "scope": "full",
+  "llvm_version": "LLVM (http://llvm.org/):\n  LLVM version 18.1.8\n  DEBUG build with assertions.\n  Default target: arm64-apple-darwin24.6.0\n  Host CPU: apple-m1\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    bpf        - BPF (host endian)\n    bpfeb      - BPF (big endian)\n    bpfel      - BPF (little endian)\n    hexagon    - Hexagon\n    ppc32      - PowerPC 32\n    ppc32le    - PowerPC 32 LE\n    ppc64      - PowerPC 64\n    ppc64le    - PowerPC 64 LE\n    riscv32    - 32-bit RISC-V\n    riscv64    - 64-bit RISC-V\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64",
+  "llvm_commit": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff",
+  "llvm_modified_tracked_files": [
+    "llvm/lib/Target/BPF/BPF.td",
+    "llvm/lib/Target/BPF/BPFCallingConv.td",
+    "llvm/lib/Target/BPF/BPFInstrFormats.td",
+    "llvm/lib/Target/BPF/BPFInstrInfo.td",
+    "llvm/lib/Target/BPF/BPFRegisterInfo.td",
+    "llvm/lib/Target/BPF/GISel/BPFRegisterBanks.td"
+  ],
+  "input_sha256": {
+    "runner.py": "52c16266cb2b316b5318140a923f43cef007ca799d0c051ea8f69e217afe35f0",
+    "models.py": "578bb1582c22f1d0d14ca9901ae5f2f7c6ef6e3a1d3aea5e7574d27d1cd0b46a",
+    "legalization.ll": "7e99e3e02e966ab81548f42d01efeabbcd010107d992eddde801752f77dd8bbf",
+    "globalisel.ll": "92556b1c754e3cb4cee16a4568aaf7e51ec56004a0d3e52811b84154e63b2a32",
+    "globalisel.c": "ac684265dcd05391815de1a24590f74434a3a14d1fa04314e3c72ede6dd3c12e",
+    "callee.c": "125a2abd2b4c235932c4fb29f6b45588266450328ff477327228539882f8e4d6",
+    "README.md": "89ed19a8a0a2bb2dc3cd146811521fcd394c8bc597450745d948317025641a84",
+    "selection.ll": "5d4812581199abc35a043afb4e4dc2264cb7ae4d3d3e2f478d9211f871cbc275",
+    "fastisel.ll": "11a31ea8f1384dbd6715798651ba6b24f2736341da337eed4e4b6a4cf9396180",
+    "softfloat.ll": "12cf3e4ac6d5b8d0514c5292166dd8622602465f433e64218bcd4fee7e13f4b7"
+  },
+  "commands": [
+    {
+      "name": "version",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "--version"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "verify-selection",
+      "argv": [
+        "${LLVM_BUILD}/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "${BOOK_ROOT}/experiments/ch7/selection.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "verify-globalisel",
+      "argv": [
+        "${LLVM_BUILD}/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "${BOOK_ROOT}/experiments/ch7/globalisel.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "verify-fastisel",
+      "argv": [
+        "${LLVM_BUILD}/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "${BOOK_ROOT}/experiments/ch7/fastisel.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "verify-legalization",
+      "argv": [
+        "${LLVM_BUILD}/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "${BOOK_ROOT}/experiments/ch7/legalization.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "verify-softfloat",
+      "argv": [
+        "${LLVM_BUILD}/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "${BOOK_ROOT}/experiments/ch7/softfloat.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "clang-callee",
+      "argv": [
+        "${LLVM_BUILD}/bin/clang",
+        "--target=bpfel",
+        "-mcpu=v1",
+        "-O0",
+        "-fno-discard-value-names",
+        "-S",
+        "-emit-llvm",
+        "${BOOK_ROOT}/experiments/ch7/callee.c",
+        "-o",
+        "${OUTPUT}/callee.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "verify-callee",
+      "argv": [
+        "${LLVM_BUILD}/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "${OUTPUT}/callee.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "callee-finalize",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-verify-machineinstrs",
+        "-O0",
+        "-fast-isel=false",
+        "-stop-after=finalize-isel",
+        "-debug-only=isel,isel-dump",
+        "${OUTPUT}/callee.ll",
+        "-o",
+        "${OUTPUT}/callee-finalize.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "bpf-v1",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-verify-machineinstrs",
+        "-O0",
+        "-fast-isel=false",
+        "-stop-after=finalize-isel",
+        "-debug-only=isel,isel-dump",
+        "${BOOK_ROOT}/experiments/ch7/selection.ll",
+        "-o",
+        "${OUTPUT}/bpf-v1.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "bpf-v3",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v3",
+        "-verify-machineinstrs",
+        "-O0",
+        "-fast-isel=false",
+        "-stop-after=finalize-isel",
+        "${BOOK_ROOT}/experiments/ch7/selection.ll",
+        "-o",
+        "${OUTPUT}/bpf-v3.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "bpf-legalization",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-verify-machineinstrs",
+        "-O0",
+        "-fast-isel=false",
+        "-stop-after=finalize-isel",
+        "${BOOK_ROOT}/experiments/ch7/legalization.ll",
+        "-o",
+        "${OUTPUT}/bpf-legalization.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "bpf-softfloat-rejected",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=bpfel",
+        "-mcpu=v1",
+        "-O0",
+        "-fast-isel=false",
+        "${BOOK_ROOT}/experiments/ch7/softfloat.ll",
+        "-o",
+        "${OUTPUT}/softfloat.s"
+      ],
+      "returncode": 1
+    },
+    {
+      "name": "tablegen-bpf",
+      "argv": [
+        "${LLVM_BUILD}/bin/llvm-tblgen",
+        "-gen-dag-isel",
+        "-I",
+        "${LLVM_SRC}/llvm/include",
+        "-I",
+        "${LLVM_SRC}/llvm/lib/Target/BPF",
+        "${LLVM_SRC}/llvm/lib/Target/BPF/BPF.td",
+        "-o",
+        "${OUTPUT}/BPFGenDAGISel.inc"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "tablegen-fast",
+      "argv": [
+        "${LLVM_BUILD}/bin/llvm-tblgen",
+        "-gen-fast-isel",
+        "-I",
+        "${LLVM_SRC}/llvm/include",
+        "-I",
+        "${LLVM_SRC}/llvm/lib/Target/AArch64",
+        "${LLVM_SRC}/llvm/lib/Target/AArch64/AArch64.td",
+        "-o",
+        "${OUTPUT}/AArch64GenFastISel.inc"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "clang-globalisel",
+      "argv": [
+        "${LLVM_BUILD}/bin/clang",
+        "--target=aarch64-unknown-linux-gnu",
+        "-mcpu=generic",
+        "-O1",
+        "-S",
+        "-emit-llvm",
+        "${BOOK_ROOT}/experiments/ch7/globalisel.c",
+        "-o",
+        "${OUTPUT}/globalisel-from-c.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "verify-globalisel-from-c",
+      "argv": [
+        "${LLVM_BUILD}/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "${OUTPUT}/globalisel-from-c.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "gi-irtranslator",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=aarch64-unknown-linux-gnu",
+        "-mcpu=generic",
+        "-verify-machineinstrs",
+        "-O0",
+        "-global-isel=true",
+        "-global-isel-abort=1",
+        "-stop-after=irtranslator",
+        "${BOOK_ROOT}/experiments/ch7/globalisel.ll",
+        "-o",
+        "${OUTPUT}/gi-irtranslator.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "gi-legalizer",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=aarch64-unknown-linux-gnu",
+        "-mcpu=generic",
+        "-verify-machineinstrs",
+        "-O0",
+        "-global-isel=true",
+        "-global-isel-abort=1",
+        "-stop-after=legalizer",
+        "${BOOK_ROOT}/experiments/ch7/globalisel.ll",
+        "-o",
+        "${OUTPUT}/gi-legalizer.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "gi-regbankselect",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=aarch64-unknown-linux-gnu",
+        "-mcpu=generic",
+        "-verify-machineinstrs",
+        "-O0",
+        "-global-isel=true",
+        "-global-isel-abort=1",
+        "-stop-after=regbankselect",
+        "${BOOK_ROOT}/experiments/ch7/globalisel.ll",
+        "-o",
+        "${OUTPUT}/gi-regbankselect.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "gi-instruction-select",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=aarch64-unknown-linux-gnu",
+        "-mcpu=generic",
+        "-verify-machineinstrs",
+        "-O0",
+        "-global-isel=true",
+        "-global-isel-abort=1",
+        "-stop-after=instruction-select",
+        "${BOOK_ROOT}/experiments/ch7/globalisel.ll",
+        "-o",
+        "${OUTPUT}/gi-instruction-select.mir"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "fastisel",
+      "argv": [
+        "${LLVM_BUILD}/bin/llc",
+        "-mtriple=aarch64-unknown-linux-gnu",
+        "-mcpu=generic",
+        "-verify-machineinstrs",
+        "-O0",
+        "-global-isel=false",
+        "-fast-isel=true",
+        "-fast-isel-abort=3",
+        "-stop-after=finalize-isel",
+        "-debug-only=isel",
+        "${BOOK_ROOT}/experiments/ch7/fastisel.ll",
+        "-o",
+        "${OUTPUT}/fastisel.mir"
+      ],
+      "returncode": 0
+    }
+  ],
+  "checks": [
+    {
+      "name": "teaching-bit-vectors-and-costs",
+      "passed": true,
+      "observed": {
+        "anyext_low_bits_checked_values": 6,
+        "assumed_bank_costs": {
+          "gpr": 1,
+          "fpr": 14
+        },
+        "scope": "bit-vector examples; not full poison/undef semantics or RegBankSelect cost search"
+      }
+    },
+    {
+      "name": "entry-token-two-results",
+      "passed": true,
+      "observed": "EntryToken has chain and glue; getEntryNode() returns result 0."
+    },
+    {
+      "name": "pattern-register",
+      "passed": true,
+      "observed": "bb.0.entry:\n    liveins: $r1, $r2\n  \n    %1:gpr = COPY $r2\n    %0:gpr = COPY $r1\n    %2:gpr = ADD_rr %0, %1\n    $r0 = COPY %2\n    RET implicit $r0"
+    },
+    {
+      "name": "pattern-immediate",
+      "passed": true,
+      "observed": "bb.0.entry:\n    liveins: $r1\n  \n    %0:gpr = COPY $r1\n    %1:gpr = ADD_ri %0, 42\n    $r0 = COPY %1\n    RET implicit $r0"
+    },
+    {
+      "name": "v1-promotes-register-not-memory",
+      "passed": true,
+      "observed": "bb.0.entry:\n    liveins: $r1, $r2\n  \n    %1:gpr = COPY $r2\n    %0:gpr = COPY $r1\n    %2:gpr = LDW %1, 0 :: (load (s32) from %ir.q)\n    %3:gpr = LDW %0, 0 :: (load (s32) from %ir.p)\n    %4:gpr = ADD_rr %3, killed %2\n    STW %4, %0, 0 :: (store (s32) into %ir.p)\n    $r0 = COPY %4\n    RET implicit $r0"
+    },
+    {
+      "name": "v3-alu32",
+      "passed": true,
+      "observed": "bb.0.entry:\n    liveins: $r1, $r2\n  \n    %1:gpr = COPY $r2\n    %0:gpr = COPY $r1\n    %2:gpr32 = LDW32 %1, 0 :: (load (s32) from %ir.q)\n    %3:gpr32 = LDW32 %0, 0 :: (load (s32) from %ir.p)\n    %4:gpr32 = ADD_rr_32 %3, killed %2\n    STW32 %4, %0, 0 :: (store (s32) into %ir.p)\n    $w0 = COPY %4\n    RET implicit $w0"
+    },
+    {
+      "name": "machine-phi-survives-isel",
+      "passed": true,
+      "observed": "bb.0.entry:\n    successors: %bb.1(0x40000000), %bb.2(0x40000000)\n    liveins: $r1, $r2, $r3\n  \n    %5:gpr = COPY $r3\n    %4:gpr = COPY $r2\n    %3:gpr = COPY $r1\n    %6:gpr = AND_ri %3, 1\n    JEQ_ri killed %6, 0, %bb.2\n    JMP %bb.1\n  \n  bb.1.yes:\n    successors: %bb.3(0x80000000)\n  \n    %0:gpr = LDD %4, 0 :: (volatile load (s64) from %ir.p)\n    JMP %bb.3\n  \n  bb.2.no:\n    successors: %bb.3(0x80000000)\n  \n    %1:gpr = LDD %5, 0 :: (volatile load (s64) from %ir.q)\n    JMP %bb.3\n  \n  bb.3.join:\n    %2:gpr = PHI %1, %bb.2, %0, %bb.1\n    $r0 = COPY %2\n    RET implicit $r0"
+    },
+    {
+      "name": "caller-i32-object",
+      "passed": true,
+      "observed": "bb.0.entry:\n    %0:gpr = MOV_ri 1\n    STD killed %0, %stack.0.d, 0 :: (store (s64) into %ir.d)\n    %1:gpr = MOV_ri 2\n    STD killed %1, %stack.1.e, 0 :: (store (s64) into %ir.e)\n    %2:gpr = LDD %stack.0.d, 0 :: (dereferenceable load (s64) from %ir.d)\n    %3:gpr = LDD %stack.1.e, 0 :: (dereferenceable load (s64) from %ir.e)\n    ADJCALLSTACKDOWN 0, 0, implicit-def dead $r11, implicit $r11\n    $r1 = COPY %2\n    $r2 = COPY %3\n    JAL @callee, implicit-def $r0, implicit-def dead $r1, implicit-def dead $r2, implicit-def dead $r3, implicit-def dead $r4, implicit-def dead $r5, implicit $r11, implicit $r1, implicit $r2\n    ADJCALLSTACKUP 0, 0, implicit-def dead $r11, implicit $r11\n    %4:gpr = COPY $r0\n    STW %4, %stack.2.f, 0 :: (store (s32) into %ir.f)\n    %5:gpr = LDW %stack.2.f, 0 :: (dereferenceable load (s32) from %ir.f)\n    $r0 = COPY %5\n    RET implicit $r0"
+    },
+    {
+      "name": "signed-i16-expansion",
+      "passed": true,
+      "observed": "bb.0.entry:\n    liveins: $r1, $r2\n  \n    %1:gpr = COPY $r2\n    %0:gpr = COPY $r1\n    %2:gpr = ADD_rr %0, %1\n    %3:gpr = SLL_ri %2, 48\n    %4:gpr = SRA_ri %3, 48\n    $r0 = COPY %4\n    RET implicit $r0"
+    },
+    {
+      "name": "i128-two-halves",
+      "passed": true,
+      "observed": "bb.0.entry:\n    successors: %bb.1(0x40000000), %bb.2(0x40000000)\n    liveins: $r1, $r2, $r3\n  \n    %2:gpr = COPY $r3\n    %1:gpr = COPY $r2\n    %0:gpr = COPY $r1\n    %3:gpr = LDD %2, 0 :: (load (s64) from %ir.q)\n    %4:gpr = LDD %1, 0 :: (load (s64) from %ir.p)\n    %5:gpr = ADD_rr %4, killed %3\n    %6:gpr = MOV_ri 0\n    %7:gpr = MOV_ri 1\n    JUGT_rr %4, %5, %bb.2\n  \n  bb.1.entry:\n    successors: %bb.2(0x80000000)\n  \n  \n  bb.2.entry:\n    %8:gpr = PHI %6, %bb.1, %7, %bb.0\n    %9:gpr = LDD %2, 8 :: (load (s64) from %ir.q + 8)\n    %10:gpr = LDD %1, 8 :: (load (s64) from %ir.p + 8)\n    STD %5, %0, 0 :: (store (s64) into %ir.dst)\n    %11:gpr = ADD_rr %10, killed %9\n    %12:gpr = ADD_rr %11, killed %8\n    STD killed %12, %0, 8 :: (store (s64) into %ir.dst + 8)\n    RET"
+    },
+    {
+      "name": "vector-scalarization",
+      "passed": true,
+      "observed": "bb.0.entry:\n    liveins: $r1, $r2, $r3\n  \n    %2:gpr = COPY $r3\n    %1:gpr = COPY $r2\n    %0:gpr = COPY $r1\n    %3:gpr = LDD %2, 8 :: (load (s64) from %ir.q + 8)\n    %4:gpr = LDD %1, 8 :: (load (s64) from %ir.p + 8)\n    %5:gpr = ADD_rr %4, killed %3\n    %6:gpr = LDD %2, 0 :: (load (s64) from %ir.q)\n    %7:gpr = LDD %1, 0 :: (load (s64) from %ir.p)\n    STD killed %5, %0, 8 :: (store (s64) into %ir.dst + 8)\n    %8:gpr = ADD_rr %7, killed %6\n    STD killed %8, %0, 0 :: (store (s64) into %ir.dst)\n    RET"
+    },
+    {
+      "name": "softfloat-libcall-diagnostic",
+      "passed": true,
+      "observed": "error: <unknown>:0:0: in function divide double (double, double): A call to built-in function '__divdf3' is not supported."
+    },
+    {
+      "name": "generated-matcher-table",
+      "passed": true,
+      "observed": {
+        "bytes": 156946,
+        "sha256": "2622c947262cdd46681480081b299a68e159e96e5ed23779746651ef23df84ba"
+      }
+    },
+    {
+      "name": "generated-fast-emitter",
+      "passed": true,
+      "observed": {
+        "bytes": 551760,
+        "sha256": "56eec65d88a04ad6911b92cbc8016848e8dc90ba260721a7efd4af38135538f3"
+      }
+    },
+    {
+      "name": "aarch64-registered",
+      "passed": true,
+      "observed": "LLVM (http://llvm.org/):\n  LLVM version 18.1.8\n  DEBUG build with assertions.\n  Default target: arm64-apple-darwin24.6.0\n  Host CPU: apple-m1\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    bpf        - BPF (host endian)\n    bpfeb      - BPF (big endian)\n    bpfel      - BPF (little endian)\n    hexagon    - Hexagon\n    ppc32      - PowerPC 32\n    ppc32le    - PowerPC 32 LE\n    ppc64      - PowerPC 64\n    ppc64le    - PowerPC 64 LE\n    riscv32    - 32-bit RISC-V\n    riscv64    - 64-bit RISC-V\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64"
+    },
+    {
+      "name": "irtranslator-llt-s16",
+      "passed": true,
+      "observed": "bb.1.entry:\n    liveins: $w0, $w1\n  \n    %2:_(s32) = COPY $w0\n    %0:_(s16) = G_TRUNC %2(s32)\n    %3:_(s32) = COPY $w1\n    %1:_(s16) = G_TRUNC %3(s32)\n    %4:_(s16) = G_ADD %0, %1\n    %5:_(s32) = G_ANYEXT %4(s16)\n    $w0 = COPY %5(s32)\n    RET_ReallyLR implicit $w0"
+    },
+    {
+      "name": "legalizer-widens-s16",
+      "passed": true,
+      "observed": "bb.1.entry:\n    liveins: $w0, $w1\n  \n    %2:_(s32) = COPY $w0\n    %3:_(s32) = COPY $w1\n    %8:_(s32) = G_ADD %2, %3\n    $w0 = COPY %8(s32)\n    RET_ReallyLR implicit $w0"
+    },
+    {
+      "name": "bank-not-register-class",
+      "passed": true,
+      "observed": "bb.1.entry:\n    liveins: $w0, $w1\n  \n    %0:gpr(s32) = COPY $w0\n    %1:gpr(s32) = COPY $w1\n    %2:gpr(s32) = G_OR %0, %1\n    $w0 = COPY %2(s32)\n    RET_ReallyLR implicit $w0"
+    },
+    {
+      "name": "selected-target-opcode",
+      "passed": true,
+      "observed": "bb.1.entry:\n    liveins: $w0, $w1\n  \n    %0:gpr32 = COPY $w0\n    %1:gpr32 = COPY $w1\n    %2:gpr32 = nsw ADDWrr %0, %1\n    $w0 = COPY %2\n    RET_ReallyLR implicit $w0"
+    },
+    {
+      "name": "fastisel-without-fallback",
+      "passed": true,
+      "observed": "bb.0.entry:\n    liveins: $w0, $w1\n  \n    %2:gpr32 = COPY $w1\n    %0:gpr32 = COPY $w0\n    %1:gpr32 = COPY killed %0\n    %3:gpr32 = COPY killed %2\n    %5:gpr32 = ADDWrr %1, %3\n    $w0 = COPY %5\n    RET_ReallyLR implicit $w0"
+    }
+  ],
+  "limitations": [
+    "Cross-target code generation and machine verification do not execute BPF or AArch64 machine code.",
+    "Debug node IDs and generated matcher offsets are observations, not stable APIs.",
+    "No compiler-speed or generated-program performance benchmark."
+  ]
+}

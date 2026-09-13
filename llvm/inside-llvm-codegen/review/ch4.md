@@ -1,6 +1,6 @@
-# 第 4 章静态校核记录
+# 第 4 章核查与实验记录
 
-基线：原书 LLVM 15.0.1 → 本地 LLVM 18.1.8，HEAD `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`。完整阅读原章及相应实现；未编译或执行任何示例。原图保留为历史对照，正文覆盖修正。
+基线为 LLVM 18.1.8，源码提交 `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`。全文按源码和本章实验修订；工具来自统一更新后的 Debug / assertions 构建。本文区分真实工具输出、教学算法模型和仅按源码核对的接口。
 
 | 范围 | 核查位置/符号 | 结论与处理 |
 |---|---|---|
@@ -12,7 +12,7 @@
 | 4.2.3/清单4-1 | DominanceFrontierImpl / GenericIteratedDominanceFrontier | DF与IDF区分；祖先边界有条件、完整DF可能二次规模；补初始化/遍历后继/返回值并修拼写。 |
 | 4.3.1/表4-2 | GenericDomTreeConstruction注释+集合方程 | OUT并自身而非交自身；补全Dom初始化；区分显式Dom O(n²)空间与idom链。 |
 | 4.3.2/图4-7/表4-3 | dominates / updateDFSNumbers | 区间来自DT不是CFG；补32慢查询阈值、不可达特殊规则和编号失效；表重新对齐。 |
-| 4.4 | 上述全部源码 | 无编译命令，本章算法示例为理论/说明性内容，静态核对完成。 |
+| 4.4 | 上述全部源码 | 本章理论与 LLVM 分析交叉验证，精度和复杂度的前提分别说明。 |
 
 ## 证据定位
 
@@ -26,8 +26,16 @@
 - [llvm/lib/Transforms/Utils/PromoteMemoryToRegister.cpp:730](/opt/llvm-project/llvm/lib/Transforms/Utils/PromoteMemoryToRegister.cpp:730)：`IDF and live-in PHI placement`。
 - [llvm/lib/Transforms/Scalar/ADCE.cpp:493](/opt/llvm-project/llvm/lib/Transforms/Scalar/ADCE.cpp:493)：`ReverseIDFCalculator / control dependence`。
 
-## 限制
+## 已执行覆盖与结论
 
-- 算法讲解、手写伪代码和原书截图已与实现边界区分；本次不声称编译通过或获得示例输出。
-- LLVM IR 已修复可静态确认的语法/版本问题，完整解析、MIR verifier、Pass触发、汇编字节和性能留待后续。
-- 源码中的目标钩子、功能属性和选项会改变具体流水线，通用 Pass 次序不能当作所有目标的无条件次序。
+| 本章位置 | 可复现实验 | 实际观察 |
+|---|---|---|
+| 4.1 / 表4-1 | `graph7.ll`，print<domtree> / print<domfrontier> | 解析 LLVM 输出，所有 idom 与 DF 集合和表格一致。 |
+| 4.1 / PDT | `postdom-roots.ll` | 两个 ret 与无限自环；LLVM PDT 有虚拟根，Roots 包含 exit1/exit2/spin。 |
+| 4.2 / 4.3 | 四节点有向图穷举 | 4,096 个无入口入边图中 2,432 个全部可达；删除节点法、Dom 集合、定义式 semi+NCA 全部一致；允许非入口自环。 |
+| 4.2.1～4.2.2 / 图4-6 | 完整六节点图与固定 DFS 次序 | sdom(4)=1，但 idom(4)=0；路径0→5→3→4绕开1。正文给出全部边，不依赖隐含图信息。 |
+| 4-1 | 直接 DF 定义与 DJ 子树扫描 | 上述 2,432 个图中逐节点一致。 |
+| 4.2 / 增量概念 | 图4-2增加5→6后重算 | idom(6)由2改为1，演示边改变语义；不是调用增量 API 的覆盖测试。 |
+| 4.2.3 / IDF | `join-loop.ll` → mem2reg,verify | join 与 header 各一个 PHI，显示新 PHI 定义引出进一步汇聚。 |
+
+脚本与输入见 `experiments/ch4/`，命令和版本见 [experiments-ch4.json](experiments-ch4.json)。小规模枚举是交叉验证，不是对任意输入的数学证明；高效 link/eval 仍按 LLVM 源码说明，不声称 Python 模型实现 LLVM 的全部优化。没有测量历史性能百分比，也未穷举 DomTreeUpdater 的增量 API 序列。

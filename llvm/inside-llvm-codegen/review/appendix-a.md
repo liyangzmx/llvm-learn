@@ -1,6 +1,6 @@
 # 附录 A 核查记录
 
-LLVM 18.1.8 静态核查；未构建、未运行示例。
+本附录主体记录前一轮 LLVM 18.1.8 静态核查。本轮同步第 7 章实测的 EntryToken 结果类型；其余附录清单没有新增独立执行验证。
 
 | 清单/位置 | 核查依据 | 结论与修正 |
 | --- | --- | --- |
@@ -9,12 +9,12 @@ LLVM 18.1.8 静态核查；未构建、未运行示例。
 | A-4/A-5 | LangRef.rst:835；LLParser.cpp | 标明文法骨架，补partition，纠正prologue解释；并非完整可执行IR |
 | A-6 | LangRef.rst:4542 | 加法语义成立，nsw是poison约束；未运行O2 |
 | A-7/A-8 | User.h；Value.h:376,421 | Use-Def与Def-Use写反；users不等同调用图 |
-| A-9 | SelectionDAGNodes.h；BPFISelLowering.cpp:678 | RET_FLAG→RET_GLUE；SDValue引用结果；日志非本轮输出 |
+| A-9 | SelectionDAGNodes.h；SelectionDAG.cpp:1319；BPFISelLowering.cpp:678 | RET_FLAG→RET_GLUE；SDValue引用结果；EntryToken有ch/glue两个结果，getEntryNode引用结果0。节点编号仍为示意，实际DAG实验见第7章 |
 | A-10 | MachineInstr.h；BPFInstrInfo.td（HEAD） | tied-def及gpr含义；多个Def/隐式操作数；片段不是完整MIR文件 |
 | A-11/A-12 | BPFInstrInfo.td；MCInst.h:184；BPFMCInstLower.cpp | 删除不可靠固定opcode枚举示例，历史日志明确版本；MIR→MC非一对一 |
 | A.1/A.3/A.4 | DerivedTypes.h:52；Metadata.h:62；MCInst.h:184 | 布局解释错配、浮点名称、opaque ptr、元数据继承、字段数量修正 |
 
-待后续：实际 IR/工具命令输出；C++ 片段的包含文件、调用上下文与构建验证尚未执行。
+验证范围：正文相关 IR、DAG、MIR 和 MC 实验见第 2、7、12 章；本附录的历史输出和 C++ 接口片段未逐项改成独立构建测试。
 
 ## 独立复核补充
 

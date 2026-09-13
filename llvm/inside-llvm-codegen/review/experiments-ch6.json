@@ -1,0 +1,297 @@
+{
+  "chapter": 6,
+  "status": "passed",
+  "tools": {
+    "llvm-tblgen": [
+      "LLVM (http://llvm.org/):",
+      "  LLVM version 18.1.8",
+      "  DEBUG build with assertions."
+    ]
+  },
+  "checks": [
+    {
+      "name": "multiclass_records",
+      "status": "passed",
+      "records": [
+        "MyBackend_rm",
+        "MyBackend_rr"
+      ]
+    },
+    {
+      "name": "literal_and_value_rules",
+      "status": "passed",
+      "values": {
+        "negative": -42,
+        "hexadecimal": 42,
+        "binary": 42,
+        "a": [
+          0,
+          1,
+          1,
+          0
+        ],
+        "slice": [
+          30,
+          10
+        ],
+        "joined": "12ab",
+        "direct_arguments": 2
+      }
+    },
+    {
+      "name": "def_class_partial_encoding",
+      "status": "passed",
+      "undefined_low_bits": 26,
+      "assigned_high_values": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "bad-field.td",
+      "status": "passed",
+      "diagnostic": "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch6/bad-field.td:2:31: error: Value 'absent' unknown!"
+    },
+    {
+      "name": "bad-bits.td",
+      "status": "passed",
+      "diagnostic": "/opt/coding/mlir-toy/llvm/inside-llvm-codegen/experiments/ch6/bad-bits.td:1:30: error: Cannot set bit #1 of value 'a' more than once"
+    },
+    {
+      "name": "bpf_alu_records",
+      "status": "passed",
+      "variants": [
+        "ADD_rr",
+        "ADD_ri",
+        "ADD_rr_32",
+        "ADD_ri_32"
+      ],
+      "constraints": "$dst = $src2",
+      "size": 8
+    },
+    {
+      "name": "complex_pattern_record",
+      "status": "passed",
+      "select_func": "SelectAddr",
+      "outputs": 2
+    },
+    {
+      "name": "ldw_predicate_and_pattern",
+      "status": "passed",
+      "predicates": [
+        {
+          "def": "BPFNoALU32",
+          "kind": "def",
+          "printable": "BPFNoALU32"
+        }
+      ],
+      "pattern": [
+        {
+          "args": [
+            [
+              {
+                "def": "i64",
+                "kind": "def",
+                "printable": "i64"
+              },
+              "dst"
+            ],
+            [
+              {
+                "args": [
+                  [
+                    {
+                      "def": "ADDRri",
+                      "kind": "def",
+                      "printable": "ADDRri"
+                    },
+                    "addr"
+                  ]
+                ],
+                "kind": "dag",
+                "operator": {
+                  "def": "zextloadi32",
+                  "kind": "def",
+                  "printable": "zextloadi32"
+                },
+                "printable": "(zextloadi32 ADDRri:$addr)"
+              },
+              null
+            ]
+          ],
+          "kind": "dag",
+          "operator": {
+            "def": "set",
+            "kind": "def",
+            "printable": "set"
+          },
+          "printable": "(set i64:$dst, (zextloadi32 ADDRri:$addr))"
+        }
+      ]
+    },
+    {
+      "name": "generated_matcher_and_callback",
+      "status": "passed",
+      "bytes": 156946
+    },
+    {
+      "name": "instruction_and_encoding_generators",
+      "status": "passed"
+    }
+  ],
+  "commands": [
+    {
+      "tool": "llvm-tblgen",
+      "args": [
+        "--dump-json",
+        "$INPUT/language.td"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-tblgen",
+      "args": [
+        "--dump-json",
+        "$INPUT/records.td"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-tblgen",
+      "args": [
+        "--print-records",
+        "$INPUT/bad-field.td"
+      ],
+      "returncode": 1
+    },
+    {
+      "tool": "llvm-tblgen",
+      "args": [
+        "--print-records",
+        "$INPUT/bad-bits.td"
+      ],
+      "returncode": 1
+    },
+    {
+      "tool": "llvm-tblgen",
+      "args": [
+        "-I",
+        "$OUT/llvm18-source/llvm/include",
+        "-I",
+        "$OUT/llvm18-source/llvm/lib/Target/BPF",
+        "--dump-json",
+        "$OUT/llvm18-source/llvm/lib/Target/BPF/BPF.td"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-tblgen",
+      "args": [
+        "-I",
+        "$OUT/llvm18-source/llvm/include",
+        "-I",
+        "$OUT/llvm18-source/llvm/lib/Target/BPF",
+        "-gen-dag-isel",
+        "$OUT/llvm18-source/llvm/lib/Target/BPF/BPF.td",
+        "-o",
+        "$OUT/BPFGenDAGISel.inc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-tblgen",
+      "args": [
+        "-I",
+        "$OUT/llvm18-source/llvm/include",
+        "-I",
+        "$OUT/llvm18-source/llvm/lib/Target/BPF",
+        "-gen-instr-info",
+        "$OUT/llvm18-source/llvm/lib/Target/BPF/BPF.td",
+        "-o",
+        "$OUT/BPFGenInstrInfo.inc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-tblgen",
+      "args": [
+        "-I",
+        "$OUT/llvm18-source/llvm/include",
+        "-I",
+        "$OUT/llvm18-source/llvm/lib/Target/BPF",
+        "-gen-emitter",
+        "$OUT/llvm18-source/llvm/lib/Target/BPF/BPF.td",
+        "-o",
+        "$OUT/BPFGenMCCodeEmitter.inc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-tblgen",
+      "args": [
+        "-I",
+        "$LLVM_SRC/llvm/include",
+        "-I",
+        "$LLVM_SRC/llvm/lib/Target/BPF",
+        "-gen-dag-isel",
+        "$LLVM_SRC/llvm/lib/Target/BPF/BPF.td",
+        "-o",
+        "$OUT/working-tree-BPFGenDAGISel.inc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-tblgen",
+      "args": [
+        "-I",
+        "$LLVM_SRC/llvm/include",
+        "-I",
+        "$LLVM_SRC/llvm/lib/Target/BPF",
+        "-gen-instr-info",
+        "$LLVM_SRC/llvm/lib/Target/BPF/BPF.td",
+        "-o",
+        "$OUT/working-tree-BPFGenInstrInfo.inc"
+      ],
+      "returncode": 0
+    },
+    {
+      "tool": "llvm-tblgen",
+      "args": [
+        "-I",
+        "$LLVM_SRC/llvm/include",
+        "-I",
+        "$LLVM_SRC/llvm/lib/Target/BPF",
+        "-gen-emitter",
+        "$LLVM_SRC/llvm/lib/Target/BPF/BPF.td",
+        "-o",
+        "$OUT/working-tree-BPFGenMCCodeEmitter.inc"
+      ],
+      "returncode": 0
+    }
+  ],
+  "source_revision": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff",
+  "source_mode": "git archive of llvm/include and llvm/lib/Target/BPF; working tree read for comparison only",
+  "working_tree_generated_comparison": {
+    "-gen-dag-isel": {
+      "identical": true,
+      "baseline_sha256": "2622c947262cdd46681480081b299a68e159e96e5ed23779746651ef23df84ba",
+      "working_tree_sha256": "2622c947262cdd46681480081b299a68e159e96e5ed23779746651ef23df84ba"
+    },
+    "-gen-instr-info": {
+      "identical": true,
+      "baseline_sha256": "1e69f51659ba6c5a49031a0ce562a2ad01a820f5283327e1275a596d22d17487",
+      "working_tree_sha256": "1e69f51659ba6c5a49031a0ce562a2ad01a820f5283327e1275a596d22d17487"
+    },
+    "-gen-emitter": {
+      "identical": true,
+      "baseline_sha256": "7c6619ff84d939934c01d0401d288b9dbf32b792cde8b9f7b53def069ddec051",
+      "working_tree_sha256": "7c6619ff84d939934c01d0401d288b9dbf32b792cde8b9f7b53def069ddec051"
+    }
+  },
+  "tool_files": {
+    "llvm-tblgen": {
+      "size": 23270712,
+      "mtime_ns": 1789309714173254121
+    }
+  }
+}

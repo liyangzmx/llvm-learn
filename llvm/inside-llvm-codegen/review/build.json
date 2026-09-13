@@ -1,0 +1,77 @@
+{
+  "source_root": "/opt/llvm-project",
+  "build_root": "/opt/llvm-project/build",
+  "prior_documentation_commit": "c5924c6",
+  "initial_observations": {
+    "cached_targets": "BPF;Native",
+    "llc_registered_targets": [
+      "bpf",
+      "bpfeb",
+      "bpfel"
+    ],
+    "default_target_triple": ""
+  },
+  "configure": {
+    "command": [
+      "cmake",
+      "-G",
+      "Ninja",
+      "-S",
+      "/opt/llvm-project/llvm",
+      "-B",
+      "/opt/llvm-project/build",
+      "-DLLVM_TARGETS_TO_BUILD=BPF;Native;X86;RISCV;Hexagon;PowerPC;ARM",
+      "-DLLVM_DEFAULT_TARGET_TRIPLE=arm64-apple-darwin24.6.0"
+    ],
+    "exit_code": 0,
+    "other_cache_entries_preserved": true
+  },
+  "builds": [
+    {
+      "command": [
+        "cmake",
+        "--build",
+        "/opt/llvm-project/build",
+        "--parallel",
+        "12",
+        "--target",
+        "clang",
+        "opt",
+        "llc",
+        "lli",
+        "llvm-as",
+        "llvm-dis",
+        "llvm-tblgen",
+        "FileCheck",
+        "llvm-mc",
+        "llvm-objdump",
+        "llvm-readobj",
+        "llvm-config",
+        "mlir-translate"
+      ],
+      "ninja_steps": 4701,
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "cmake",
+        "--build",
+        "/opt/llvm-project/build",
+        "--parallel",
+        "12",
+        "--target",
+        "mlir-opt"
+      ],
+      "ninja_steps": 291,
+      "exit_code": 0
+    }
+  ],
+  "source_fix": "build-source-fix.patch",
+  "install_performed": false,
+  "post_build_dry_runs": "ninja -n reported no work to do for requested LLVM tools and mlir-opt",
+  "notes": [
+    "Debug and assertions retained; compile pool 12 and link pool 1.",
+    "Linker duplicate-library warnings did not prevent successful builds.",
+    "Only the documented undefined opcode typo changed LLVM source; other original local changes were hash-checked unchanged."
+  ]
+}
