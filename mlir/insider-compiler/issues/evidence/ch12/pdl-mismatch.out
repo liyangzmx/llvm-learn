@@ -1,0 +1,9 @@
+module {
+  module @ir {
+    func.func @identity(%arg0: i32) -> f32 {
+      %0 = "foo.op"(%arg0) : (i32) -> f32
+      return %0 : f32
+    }
+  }
+}
+

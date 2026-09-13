@@ -1,0 +1,3 @@
+dlti-newer.mlir:8:35: error: unknown attrribute type: target_system_spec
+  dlti.target_system_spec = #dlti.target_system_spec<
+                                  ^

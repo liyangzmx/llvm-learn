@@ -1,0 +1,12 @@
+// 在 node 3 第一层循环内插入 node 2 的切片，目标深度为 1。
+evaluating fusion profitability at depth : 1
+  additional compute fraction: 23.81%  // (260 - 210) / 210
+  storage reduction factor: 6.67x     // 源写区域 / 切片写区域 = 400 / 60
+  fused nest cost: 260                // 融合后估计的动态操作成本
+  src write region size: 400          // 100 个不同 f32 元素，100 * 4 字节
+  slice write region size: 60         // 一个切片覆盖 15 个 f32 元素，15 * 4 字节
+LoopFusion fusion stats:
+  best loop depth: 1
+  src loop nest compute cost: 100
+  dst loop nest compute cost: 110
+  fused loop nest compute cost: 260

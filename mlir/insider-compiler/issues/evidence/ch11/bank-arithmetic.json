@@ -1,0 +1,78 @@
+{
+  "assumptions": "32 banks; one f32 word per bank step; row increases across lanes; col=0; distinct addresses; no broadcast",
+  "book_original_scalar_32_lanes": {
+    "unique_banks": 1,
+    "addresses_per_bank": {
+      "0": 32
+    }
+  },
+  "book_proposed_scalar_32_lanes": {
+    "unique_banks": 4,
+    "addresses_per_bank": {
+      "0": 8,
+      "8": 8,
+      "16": 8,
+      "24": 8
+    }
+  },
+  "local_xor_scalar_32_lanes": {
+    "unique_banks": 8,
+    "addresses_per_bank": {
+      "0": 4,
+      "4": 4,
+      "8": 4,
+      "12": 4,
+      "16": 4,
+      "20": 4,
+      "24": 4,
+      "28": 4
+    }
+  },
+  "original_eight_128bit_vectors": {
+    "unique_banks": 4,
+    "addresses_per_bank": {
+      "0": 8,
+      "1": 8,
+      "2": 8,
+      "3": 8
+    }
+  },
+  "local_xor_eight_128bit_vectors": {
+    "unique_banks": 32,
+    "addresses_per_bank": {
+      "0": 1,
+      "1": 1,
+      "2": 1,
+      "3": 1,
+      "4": 1,
+      "5": 1,
+      "6": 1,
+      "7": 1,
+      "8": 1,
+      "9": 1,
+      "10": 1,
+      "11": 1,
+      "12": 1,
+      "13": 1,
+      "14": 1,
+      "15": 1,
+      "16": 1,
+      "17": 1,
+      "18": 1,
+      "19": 1,
+      "20": 1,
+      "21": 1,
+      "22": 1,
+      "23": 1,
+      "24": 1,
+      "25": 1,
+      "26": 1,
+      "27": 1,
+      "28": 1,
+      "29": 1,
+      "30": 1,
+      "31": 1
+    }
+  },
+  "book_proposed_first_out_of_bounds_column": 17
+}

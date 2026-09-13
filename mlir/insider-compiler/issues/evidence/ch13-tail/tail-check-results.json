@@ -1,0 +1,110 @@
+{
+  "scope": "No Triton parser/verifier, pass, PTX, or GPU execution.",
+  "listings": [
+    {
+      "number": 48,
+      "file": "listing-13-48.mlir",
+      "delimiters": "PASS",
+      "validity": "source-reviewed, not parsed with Triton"
+    },
+    {
+      "number": 49,
+      "file": "listing-13-49.mlir",
+      "delimiters": "PASS",
+      "validity": "source-reviewed, not parsed with Triton"
+    },
+    {
+      "number": 50,
+      "file": "listing-13-50.mlir",
+      "delimiters": "PASS",
+      "validity": "source-reviewed, not parsed with Triton"
+    },
+    {
+      "number": 51,
+      "file": "listing-13-51.mlir",
+      "delimiters": "PASS",
+      "validity": "source-reviewed, not parsed with Triton"
+    },
+    {
+      "number": 52,
+      "file": "listing-13-52.mlir",
+      "delimiters": "PASS",
+      "validity": "source-reviewed, not parsed with Triton"
+    },
+    {
+      "number": 53,
+      "file": "listing-13-53.mlir",
+      "delimiters": "PASS",
+      "validity": "source-reviewed, not parsed with Triton"
+    },
+    {
+      "number": 54,
+      "file": "listing-13-54.mlir",
+      "delimiters": "PASS",
+      "validity": "source-reviewed, not parsed with Triton"
+    },
+    {
+      "number": 55,
+      "file": "listing-13-55.txt",
+      "delimiters": "PASS",
+      "validity": "transient invalid IR, intentionally not verifier input"
+    },
+    {
+      "number": 56,
+      "file": "listing-13-56.txt",
+      "delimiters": "PASS",
+      "validity": "transient invalid IR, intentionally not verifier input"
+    },
+    {
+      "number": 57,
+      "file": "listing-13-57.mlir",
+      "delimiters": "PASS",
+      "validity": "source-reviewed, not parsed with Triton"
+    },
+    {
+      "number": 58,
+      "file": "listing-13-58.mlir",
+      "delimiters": "PASS",
+      "validity": "source-reviewed, not parsed with Triton"
+    },
+    {
+      "number": 59,
+      "file": "listing-13-59.mlir",
+      "delimiters": "PASS",
+      "validity": "source-reviewed, not parsed with Triton"
+    }
+  ],
+  "markdown": {
+    "listing_match": "12/12 PASS",
+    "pages_119_130": "12/12 PASS",
+    "tables_8_13": "6/6 PASS",
+    "footnotes": "7/7 PASS",
+    "figure_6": "PASS"
+  },
+  "allocation_arithmetic": {
+    "rep_shape": [
+      16,
+      1
+    ],
+    "in_vec": 1,
+    "out_vec": 1,
+    "padded_shape": [
+      16,
+      2
+    ],
+    "f32_bytes": 128,
+    "status": "PASS"
+  },
+  "select_if_store_trace_model": [
+    {
+      "condition": false,
+      "store_count": 1,
+      "all_values_and_store_order_equal": true
+    },
+    {
+      "condition": true,
+      "store_count": 2,
+      "all_values_and_store_order_equal": true
+    }
+  ]
+}

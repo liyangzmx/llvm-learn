@@ -1,0 +1,4 @@
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/index.out:3:10: error: failed to legalize operation 'builtin.unrealized_conversion_cast' that was explicitly marked illegal
+    %0 = builtin.unrealized_conversion_cast %arg0 : index to i64
+         ^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/index.out:3:10: note: see current operation: %0 = "builtin.unrealized_conversion_cast"(%arg0) : (index) -> i64

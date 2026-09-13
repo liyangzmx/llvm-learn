@@ -1,0 +1,50 @@
+--- Producer/Consumer Fusion ---
+Evaluating dst loop 3
+Evaluating dst loop 3
+Evaluating src loop 2 for dst loop 3
+Checking whether fusion is profitable between src op:
+ affine.store %cst, %alloc[%arg0] : memref<100xf32> and destination loop:
+affine.for %arg0 = 10 to 20 {
+  %0 = affine.load %alloc[%arg0] : memref<100xf32>
+  affine.for %arg1 = 15 to 25 {
+    %1 = affine.load %alloc[%arg1] : memref<100xf32>
+  }
+}
+  evaluating fusion profitability at depth : 1
+   additional compute fraction: 23.81%
+   storage reduction factor: 6.67x
+   fused nest cost: 260
+   src write region size: 400
+   slice write region size: 60
+ LoopFusion fusion stats:
+  best loop depth: 1
+  src loop nest compute cost: 100
+  dst loop nest compute cost: 110
+  fused loop nest compute cost: 260
+   src mem: 400
+   dst mem: 60
+   fused mem: 120
+   slice mem: 60
+ fusion is most profitable at depth 1 with 24% redundant computation and a 73.913043% storage reduction.
+Creating private memref for %alloc = memref.alloc() : memref<100xf32>
+Fused src loop 2 into dst loop 3 at depth 1:
+affine.for %arg0 = 10 to 20 {
+  affine.for %arg1 = 10 to 25 {
+    affine.store %cst, %alloc[%arg1] : memref<100xf32>
+  }
+  %0 = affine.load %alloc[%arg0] : memref<100xf32>
+  affine.for %arg1 = 15 to 25 {
+    %1 = affine.load %alloc[%arg1] : memref<100xf32>
+  }
+}
+Removing src loop 2 after fusion
+Evaluating dst loop 1
+Evaluating dst loop 2
+Evaluating dst loop 0
+--- Sibling Fusion ---
+--- Producer/Consumer Fusion ---
+Evaluating dst loop 3
+Evaluating dst loop 3
+Evaluating dst loop 1
+Evaluating dst loop 4
+Evaluating dst loop 0

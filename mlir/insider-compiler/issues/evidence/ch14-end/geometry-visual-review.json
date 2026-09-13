@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "source_scan_pages": [
+    33,
+    34
+  ],
+  "reviewed_pngs": [
+    "fig15-1.png",
+    "fig15-2.png"
+  ],
+  "observations": [
+    "Five exact vertices and closed feasible region verified",
+    "Four objective contours and the (-1,1) descent direction verified",
+    "Axis/point/constraint labels readable without material clipping"
+  ],
+  "files_sha256": {
+    "fig15-1.svg": "f688fb1f5994b60eecfba8fd08ee3275afbf30277164b972e8c9643dc04bc521",
+    "fig15-1.png": "f6e4ca2b54564b4520f4c8a30f63dfa97084cb611382797244deaff09bb2273d",
+    "fig15-2.svg": "e1817e451da1d9d450b6b54f7364e2de28c853b7c055fe9b0acfbd148eed9c52",
+    "fig15-2.png": "8dd3848f7a89bcc61a4ca45c00aee57a5c88958e4f72323969dc4f0d607acce2"
+  }
+}

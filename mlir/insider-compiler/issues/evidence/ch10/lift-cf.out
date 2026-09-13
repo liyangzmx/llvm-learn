@@ -1,0 +1,24 @@
+module {
+  func.func @simple_std_for_loop(%arg0: index, %arg1: index, %arg2: index) {
+    %0 = ub.poison : index
+    %c1_i32 = arith.constant 1 : i32
+    %c0_i32 = arith.constant 0 : i32
+    %1 = scf.while (%arg3 = %arg0) : (index) -> index {
+      %2 = arith.cmpi slt, %arg3, %arg1 : index
+      %3:3 = scf.if %2 -> (index, i32, i32) {
+        %c1 = arith.constant 1 : index
+        %5 = arith.addi %arg3, %arg2 : index
+        scf.yield %5, %c0_i32, %c1_i32 : index, i32, i32
+      } else {
+        scf.yield %0, %c1_i32, %c0_i32 : index, i32, i32
+      }
+      %4 = arith.trunci %3#2 : i32 to i1
+      scf.condition(%4) %3#0 : index
+    } do {
+    ^bb0(%arg3: index):
+      scf.yield %arg3 : index
+    }
+    return
+  }
+}
+

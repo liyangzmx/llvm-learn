@@ -1,0 +1,294 @@
+$ /opt/llvm-project/build/bin/mlir-opt --version
+exit: 0
+LLVM (http://llvm.org/):
+  LLVM version 18.1.8
+  DEBUG build with assertions.
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/transform.mlir --transform-interpreter
+exit: 0
+module {
+  func.func @basic_cast_and_call() {
+    call @second() : () -> ()
+    "test.foo"() : () -> ()
+    call @third() : () -> ()
+    return
+  }
+  func.func @second() {
+    "test.bar"() : () -> ()
+    return
+  }
+  func.func private @third()
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op) {
+      %0 = transform.structured.match ops{["func.func"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1:3 = transform.split_handle %0 : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+      %2 = transform.structured.match ops{["test.foo"]} in %1#0 : (!transform.any_op) -> !transform.any_op
+      %3 = transform.func.cast_and_call @second before %2 : (!transform.any_op) -> !transform.any_op
+      %4 = transform.func.cast_and_call %1#2 after %2 : (!transform.any_op, !transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/pdl.mlir
+exit: 0
+module {
+  pdl.pattern : benefit(1) {
+    %0 = type
+    %1 = operand : %0
+    %2 = operation "foo.op"(%1 : !pdl.value)  -> (%0 : !pdl.type)
+    rewrite %2 {
+      replace %2 with(%1 : !pdl.value)
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/pdl.mlir --convert-pdl-to-pdl-interp
+exit: 0
+module {
+  pdl_interp.func @matcher(%arg0: !pdl.operation) {
+    pdl_interp.check_operation_name of %arg0 is "foo.op" -> ^bb2, ^bb1
+  ^bb1:  // 7 preds: ^bb0, ^bb2, ^bb3, ^bb4, ^bb5, ^bb6, ^bb7
+    pdl_interp.finalize
+  ^bb2:  // pred: ^bb0
+    pdl_interp.check_operand_count of %arg0 is 1 -> ^bb3, ^bb1
+  ^bb3:  // pred: ^bb2
+    pdl_interp.check_result_count of %arg0 is 1 -> ^bb4, ^bb1
+  ^bb4:  // pred: ^bb3
+    %0 = pdl_interp.get_operand 0 of %arg0
+    pdl_interp.is_not_null %0 : !pdl.value -> ^bb5, ^bb1
+  ^bb5:  // pred: ^bb4
+    %1 = pdl_interp.get_result 0 of %arg0
+    pdl_interp.is_not_null %1 : !pdl.value -> ^bb6, ^bb1
+  ^bb6:  // pred: ^bb5
+    %2 = pdl_interp.get_value_type of %0 : !pdl.type
+    %3 = pdl_interp.get_value_type of %1 : !pdl.type
+    pdl_interp.are_equal %2, %3 : !pdl.type -> ^bb7, ^bb1
+  ^bb7:  // pred: ^bb6
+    pdl_interp.record_match @rewriters::@pdl_generated_rewriter(%0, %arg0 : !pdl.value, !pdl.operation) : benefit(1), loc([%arg0]), root("foo.op") -> ^bb1
+  }
+  module @rewriters {
+    pdl_interp.func @pdl_generated_rewriter(%arg0: !pdl.value, %arg1: !pdl.operation) {
+      pdl_interp.replace %arg1 with (%arg0 : !pdl.value)
+      pdl_interp.finalize
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-pdll -x=mlir /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll
+exit: 0
+module {
+  pdl.pattern @ReplaceTenWithEleven : benefit(0) {
+    %0 = operands loc(#loc1)
+    %1 = attribute = 10 : i32 loc(#loc2)
+    %2 = types loc(#loc1)
+    %3 = operation "arith.constant"(%0 : !pdl.range<value>)  {"value" = %1} -> (%2 : !pdl.range<type>) loc(#loc1)
+    rewrite %3 {
+      %4 = attribute = 11 : i32 loc(#loc4)
+      %5 = operation "arith.constant"  {"value" = %4} loc(#loc5)
+      replace %3 with %5 loc(#loc6)
+    } loc(#loc3)
+  } loc(#loc)
+} loc(#loc)
+#loc = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":1:1)
+#loc1 = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":3:18)
+#loc2 = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":3:46)
+#loc3 = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":5:3)
+#loc4 = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":6:48)
+#loc5 = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":6:20)
+#loc6 = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":7:5)
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll:6:20: warning: operation result types are marked to be inferred, but `arith.constant` is unknown. Ensure that `arith.constant` supports zero results or implements `InferTypeOpInterface`. Include the ODS definition of this operation to remove this warning.
+    let newConst = op<arith.constant> {value = attr<"11 : i32">};
+                   ^
+
+
+$ /opt/llvm-project/build/bin/mlir-pdll -x=cpp /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll
+exit: 0
+namespace {
+
+struct ReplaceTenWithEleven : ::mlir::PDLPatternModule {
+  template <typename... ConfigsT>
+  ReplaceTenWithEleven(::mlir::MLIRContext *context, ConfigsT &&...configs)
+    : ::mlir::PDLPatternModule(::mlir::parseSourceString<::mlir::ModuleOp>(
+R"mlir(pdl.pattern @ReplaceTenWithEleven : benefit(0) {
+  %0 = operands loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":3:18)
+  %1 = attribute = 10 : i32 loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":3:46)
+  %2 = types loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":3:18)
+  %3 = operation "arith.constant"(%0 : !pdl.range<value>)  {"value" = %1} -> (%2 : !pdl.range<type>) loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":3:18)
+  rewrite %3 {
+    %4 = attribute = 11 : i32 loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":6:48)
+    %5 = operation "arith.constant"  {"value" = %4} loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":6:20)
+    replace %3 with %5 loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":7:5)
+  } loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":5:3)
+} loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":1:1)
+    )mlir", context), std::forward<ConfigsT>(configs)...) {
+  }
+};
+
+} // end namespace
+
+template <typename... ConfigsT>
+static void LLVM_ATTRIBUTE_UNUSED populateGeneratedPDLLPatterns(::mlir::RewritePatternSet &patterns, ConfigsT &&...configs) {
+  patterns.add<ReplaceTenWithEleven>(patterns.getContext(), configs...);
+}
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll:6:20: warning: operation result types are marked to be inferred, but `arith.constant` is unknown. Ensure that `arith.constant` supports zero results or implements `InferTypeOpInterface`. Include the ODS definition of this operation to remove this warning.
+    let newConst = op<arith.constant> {value = attr<"11 : i32">};
+                   ^
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/pdll-pdl.out --convert-pdl-to-pdl-interp
+exit: 0
+module {
+  pdl_interp.func @matcher(%arg0: !pdl.operation) {
+    pdl_interp.check_operation_name of %arg0 is "arith.constant" -> ^bb2, ^bb1
+  ^bb1:  // 4 preds: ^bb0, ^bb2, ^bb3, ^bb4
+    pdl_interp.finalize
+  ^bb2:  // pred: ^bb0
+    %0 = pdl_interp.get_attribute "value" of %arg0
+    pdl_interp.is_not_null %0 : !pdl.attribute -> ^bb3, ^bb1
+  ^bb3:  // pred: ^bb2
+    pdl_interp.check_attribute %0 is 10 : i32 -> ^bb4, ^bb1
+  ^bb4:  // pred: ^bb3
+    pdl_interp.record_match @rewriters::@pdl_generated_rewriter(%arg0 : !pdl.operation) : benefit(0), generatedOps(["arith.constant"]), loc([%arg0]), root("arith.constant") -> ^bb1
+  }
+  module @rewriters {
+    pdl_interp.func @pdl_generated_rewriter(%arg0: !pdl.operation) {
+      %0 = pdl_interp.create_attribute 11 : i32
+      %1 = pdl_interp.get_results of %arg0 : !pdl.range<value>
+      %2 = pdl_interp.get_value_type of %1 : !pdl.range<type>
+      %3 = pdl_interp.create_operation "arith.constant" {"value" = %0}  -> (%2 : !pdl.range<type>)
+      %4 = pdl_interp.get_results of %3 : !pdl.range<value>
+      pdl_interp.replace %arg0 with (%4 : !pdl.range<value>)
+      pdl_interp.finalize
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/pdll-run.mlir --test-pdl-bytecode-pass
+exit: 0
+module {
+  module @ir {
+    func.func @constant() -> i32 {
+      %c11_i32 = arith.constant 11 : i32
+      return %c11_i32 : i32
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/pdl-run.mlir --allow-unregistered-dialect --test-pdl-bytecode-pass
+exit: 0
+module {
+  module @ir {
+    func.func @identity(%arg0: i32) -> i32 {
+      return %arg0 : i32
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/pdl-mismatch.mlir --allow-unregistered-dialect --test-pdl-bytecode-pass
+exit: 0
+module {
+  module @ir {
+    func.func @identity(%arg0: i32) -> f32 {
+      %0 = "foo.op"(%arg0) : (i32) -> f32
+      return %0 : f32
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath.mlir
+exit: 0
+module {
+  irdl.dialect @cmath {
+    irdl.type @complex {
+      %0 = irdl.is f32 
+      %1 = irdl.is f64 
+      %2 = irdl.any_of(%0, %1) 
+      irdl.parameters(%2)
+    }
+    irdl.operation @mul {
+      %0 = irdl.is f32 
+      %1 = irdl.is f64 
+      %2 = irdl.any_of(%0, %1) 
+      %3 = irdl.parametric @complex<%2> 
+      irdl.operands(%3, %3)
+      irdl.results(%3)
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-valid.mlir --irdl-file=/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-qualified.mlir
+exit: 1
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-qualified.mlir:12:10: error: @cmath::@complex does not refer to any existing symbol
+    %3 = irdl.parametric @cmath::@complex<%2>
+         ^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-qualified.mlir:12:10: note: see current operation: %3 = "irdl.parametric"(%2) <{base_type = @cmath::@complex}> : (!irdl.attribute) -> !irdl.attribute
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-valid.mlir --irdl-file=/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath.mlir
+exit: 0
+module {
+  func.func @mul(%arg0: !cmath.complex<f32>, %arg1: !cmath.complex<f32>) -> !cmath.complex<f32> {
+    %0 = "cmath.mul"(%arg0, %arg1) : (!cmath.complex<f32>, !cmath.complex<f32>) -> !cmath.complex<f32>
+    return %0 : !cmath.complex<f32>
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-invalid.mlir --irdl-file=/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath.mlir
+exit: 1
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-invalid.mlir:2:8: error: expected '!cmath.complex<f32>' but got '!cmath.complex<f64>'
+  %r = "cmath.mul"(%a, %b) : (!cmath.complex<f32>, !cmath.complex<f64>) -> !cmath.complex<f32>
+       ^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-invalid.mlir:2:8: note: see current operation: %0 = "cmath.mul"(%arg0, %arg1) : (!cmath.complex<f32>, !cmath.complex<f64>) -> !cmath.complex<f32>
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/overlap.mlir
+exit: 0
+module {
+  irdl.dialect @overlap {
+    irdl.operation @test {
+      %0 = irdl.any
+      %1 = irdl.base "!builtin.vector" 
+      %2 = irdl.any_of(%0, %1) 
+      irdl.operands(%2)
+      irdl.results(%0)
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/empty.mlir --irdl-file=/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/overlap.mlir
+exit: 1
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/overlap.mlir:0:0: error: any_of constraints are not in the correct form
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/overlap.mlir:0:0: note: see current operation: 
+"builtin.module"() ({
+  "irdl.dialect"() <{sym_name = "overlap"}> ({
+    "irdl.operation"() <{sym_name = "test"}> ({
+      %0 = "irdl.any"() : () -> !irdl.attribute
+      %1 = "irdl.base"() <{base_name = "!builtin.vector"}> : () -> !irdl.attribute
+      %2 = "irdl.any_of"(%0, %1) : (!irdl.attribute, !irdl.attribute) -> !irdl.attribute
+      "irdl.operands"(%2) <{variadicity = #irdl<variadicity_array[ single]>}> : (!irdl.attribute) -> ()
+      "irdl.results"(%0) <{variadicity = #irdl<variadicity_array[ single]>}> : (!irdl.attribute) -> ()
+    }) : () -> ()
+  }) : () -> ()
+}) : () -> ()

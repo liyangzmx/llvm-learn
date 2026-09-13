@@ -1,0 +1,136 @@
+[
+  {
+    "listing": 3,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch11/markdown-listing-11-3.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 4,
+    "command": [
+      "/opt/llvm-project/build/bin/llvm-as",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch11/markdown-listing-11-4.ll",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 5,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch11/markdown-listing-11-5.mlir",
+      "-o",
+      "/dev/null",
+      "--allow-unregistered-dialect"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 6,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch11/markdown-listing-11-6.mlir",
+      "-o",
+      "/dev/null",
+      "--allow-unregistered-dialect"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 7,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch11/markdown-listing-11-7.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 8,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch11/markdown-listing-11-8.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 9,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch11/markdown-listing-11-9.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 10,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch11/markdown-listing-11-10.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 11,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch11/markdown-listing-11-11.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 12,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch11/markdown-listing-11-12.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 13,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch11/markdown-listing-11-13.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 14,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch11/markdown-listing-11-14.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "case": "range-folding",
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "range-folding.mlir",
+      "--scf-for-loop-range-folding"
+    ],
+    "exit_code": 0,
+    "expected_exit_code": 0,
+    "passed": true
+  },
+  {
+    "case": "invalid-indirect-call",
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "invalid-indirect-call.mlir"
+    ],
+    "exit_code": 1,
+    "expected_exit_code": 1,
+    "passed": true
+  }
+]

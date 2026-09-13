@@ -1,0 +1,105 @@
+{
+  "status": "semantic_mismatch_reproduced",
+  "host_execution": "native macOS arm64 via /usr/bin/clang",
+  "llvm_source_commit": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff",
+  "source_sha256": "741ec7b91f1d3dd9ee7a658c2346b28f14341e1b9bcbf3e4d5bdd3b565d1dff2",
+  "observed_A_2_1": {
+    "original": 2,
+    "transformed": 1
+  },
+  "records": [
+    {
+      "command": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/tiling-negative-distance.runtime.mlir",
+        "-lower-affine",
+        "-convert-scf-to-cf",
+        "-convert-arith-to-llvm",
+        "-finalize-memref-to-llvm",
+        "-convert-func-to-llvm",
+        "-reconcile-unrealized-casts",
+        "-o",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/tiling-original.llvm.mlir"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/private/tmp/insider-ch11-build/ch11-translate",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/tiling-original.llvm.mlir"
+      ],
+      "exit_code": 0,
+      "stdout": "; ModuleID = 'LLVMDialectModule'\nsource_filename = \"LLVMDialectModule\"\n\ndeclare void @free(ptr)\n\ndeclare ptr @malloc(i64)\n\ndefine void @negative_inner_distance(ptr %0, ptr %1, i64 %2, i64 %3, i64 %4, i64 %5, i64 %6) {\n  %8 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } undef, ptr %0, 0\n  %9 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %8, ptr %1, 1\n  %10 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %9, i64 %2, 2\n  %11 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %10, i64 %3, 3, 0\n  %12 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %11, i64 %5, 4, 0\n  %13 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %12, i64 %4, 3, 1\n  %14 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %13, i64 %6, 4, 1\n  br label %15\n\n15:                                               ; preds = %36, %7\n  %16 = phi i64 [ %37, %36 ], [ 1, %7 ]\n  %17 = icmp slt i64 %16, 5\n  br i1 %17, label %18, label %38\n\n18:                                               ; preds = %15\n  br label %19\n\n19:                                               ; preds = %22, %18\n  %20 = phi i64 [ %35, %22 ], [ 0, %18 ]\n  %21 = icmp slt i64 %20, 4\n  br i1 %21, label %22, label %36\n\n22:                                               ; preds = %19\n  %23 = add i64 %16, -1\n  %24 = add i64 %20, 1\n  %25 = extractvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %14, 1\n  %26 = mul i64 %23, 5\n  %27 = add i64 %26, %24\n  %28 = getelementptr i32, ptr %25, i64 %27\n  %29 = load i32, ptr %28, align 4\n  %30 = add i32 %29, 1\n  %31 = extractvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %14, 1\n  %32 = mul i64 %16, 5\n  %33 = add i64 %32, %20\n  %34 = getelementptr i32, ptr %31, i64 %33\n  store i32 %30, ptr %34, align 4\n  %35 = add i64 %20, 1\n  br label %19\n\n36:                                               ; preds = %19\n  %37 = add i64 %16, 1\n  br label %15\n\n38:                                               ; preds = %15\n  ret void\n}\n\ndefine i32 @run() {\n  %1 = call ptr @malloc(i64 ptrtoint (ptr getelementptr (i32, ptr null, i32 25) to i64))\n  %2 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } undef, ptr %1, 0\n  %3 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %2, ptr %1, 1\n  %4 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %3, i64 0, 2\n  %5 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %4, i64 5, 3, 0\n  %6 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %5, i64 5, 3, 1\n  %7 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %6, i64 5, 4, 0\n  %8 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %7, i64 1, 4, 1\n  br label %9\n\n9:                                                ; preds = %21, %0\n  %10 = phi i64 [ %22, %21 ], [ 0, %0 ]\n  %11 = icmp slt i64 %10, 5\n  br i1 %11, label %12, label %23\n\n12:                                               ; preds = %9\n  br label %13\n\n13:                                               ; preds = %16, %12\n  %14 = phi i64 [ %20, %16 ], [ 0, %12 ]\n  %15 = icmp slt i64 %14, 5\n  br i1 %15, label %16, label %21\n\n16:                                               ; preds = %13\n  %17 = mul i64 %10, 5\n  %18 = add i64 %17, %14\n  %19 = getelementptr i32, ptr %1, i64 %18\n  store i32 0, ptr %19, align 4\n  %20 = add i64 %14, 1\n  br label %13\n\n21:                                               ; preds = %13\n  %22 = add i64 %10, 1\n  br label %9\n\n23:                                               ; preds = %9\n  call void @negative_inner_distance(ptr %1, ptr %1, i64 0, i64 5, i64 5, i64 5, i64 1)\n  %24 = getelementptr i32, ptr %1, i64 11\n  %25 = load i32, ptr %24, align 4\n  call void @free(ptr %1)\n  ret i32 %25\n}\n\n!llvm.module.flags = !{!0}\n\n!0 = !{i32 2, !\"Debug Info Version\", i32 3}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/usr/bin/clang",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/tiling-original.ll",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/tiling-negative-distance.runtime.c",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/insider-tiling-prryixt3/original"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: overriding the module target triple with arm64-apple-macosx15.0.0 [-Woverride-module]\n1 warning generated.\n"
+    },
+    {
+      "command": [
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/insider-tiling-prryixt3/original"
+      ],
+      "exit_code": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/tiling-negative-distance.runtime.mlir",
+        "-affine-loop-tile=tile-size=2",
+        "-lower-affine",
+        "-convert-scf-to-cf",
+        "-convert-arith-to-llvm",
+        "-finalize-memref-to-llvm",
+        "-convert-func-to-llvm",
+        "-reconcile-unrealized-casts",
+        "-o",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/tiling-transformed.llvm.mlir"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/private/tmp/insider-ch11-build/ch11-translate",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/tiling-transformed.llvm.mlir"
+      ],
+      "exit_code": 0,
+      "stdout": "; ModuleID = 'LLVMDialectModule'\nsource_filename = \"LLVMDialectModule\"\n\ndeclare void @free(ptr)\n\ndeclare ptr @malloc(i64)\n\ndefine void @negative_inner_distance(ptr %0, ptr %1, i64 %2, i64 %3, i64 %4, i64 %5, i64 %6) {\n  %8 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } undef, ptr %0, 0\n  %9 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %8, ptr %1, 1\n  %10 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %9, i64 %2, 2\n  %11 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %10, i64 %3, 3, 0\n  %12 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %11, i64 %5, 4, 0\n  %13 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %12, i64 %4, 3, 1\n  %14 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %13, i64 %6, 4, 1\n  br label %15\n\n15:                                               ; preds = %50, %7\n  %16 = phi i64 [ %51, %50 ], [ 1, %7 ]\n  %17 = icmp slt i64 %16, 5\n  br i1 %17, label %18, label %52\n\n18:                                               ; preds = %15\n  br label %19\n\n19:                                               ; preds = %48, %18\n  %20 = phi i64 [ %49, %48 ], [ 0, %18 ]\n  %21 = icmp slt i64 %20, 4\n  br i1 %21, label %22, label %50\n\n22:                                               ; preds = %19\n  %23 = add i64 %16, 2\n  br label %24\n\n24:                                               ; preds = %46, %22\n  %25 = phi i64 [ %47, %46 ], [ %16, %22 ]\n  %26 = icmp slt i64 %25, %23\n  br i1 %26, label %27, label %48\n\n27:                                               ; preds = %24\n  %28 = add i64 %20, 2\n  br label %29\n\n29:                                               ; preds = %32, %27\n  %30 = phi i64 [ %45, %32 ], [ %20, %27 ]\n  %31 = icmp slt i64 %30, %28\n  br i1 %31, label %32, label %46\n\n32:                                               ; preds = %29\n  %33 = add i64 %25, -1\n  %34 = add i64 %30, 1\n  %35 = extractvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %14, 1\n  %36 = mul i64 %33, 5\n  %37 = add i64 %36, %34\n  %38 = getelementptr i32, ptr %35, i64 %37\n  %39 = load i32, ptr %38, align 4\n  %40 = add i32 %39, 1\n  %41 = extractvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %14, 1\n  %42 = mul i64 %25, 5\n  %43 = add i64 %42, %30\n  %44 = getelementptr i32, ptr %41, i64 %43\n  store i32 %40, ptr %44, align 4\n  %45 = add i64 %30, 1\n  br label %29\n\n46:                                               ; preds = %29\n  %47 = add i64 %25, 1\n  br label %24\n\n48:                                               ; preds = %24\n  %49 = add i64 %20, 2\n  br label %19\n\n50:                                               ; preds = %19\n  %51 = add i64 %16, 2\n  br label %15\n\n52:                                               ; preds = %15\n  ret void\n}\n\ndefine i32 @run() {\n  %1 = call ptr @malloc(i64 ptrtoint (ptr getelementptr (i32, ptr null, i32 25) to i64))\n  %2 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } undef, ptr %1, 0\n  %3 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %2, ptr %1, 1\n  %4 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %3, i64 0, 2\n  %5 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %4, i64 5, 3, 0\n  %6 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %5, i64 5, 3, 1\n  %7 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %6, i64 5, 4, 0\n  %8 = insertvalue { ptr, ptr, i64, [2 x i64], [2 x i64] } %7, i64 1, 4, 1\n  br label %9\n\n9:                                                ; preds = %39, %0\n  %10 = phi i64 [ %40, %39 ], [ 0, %0 ]\n  %11 = icmp slt i64 %10, 5\n  br i1 %11, label %12, label %41\n\n12:                                               ; preds = %9\n  br label %13\n\n13:                                               ; preds = %37, %12\n  %14 = phi i64 [ %38, %37 ], [ 0, %12 ]\n  %15 = icmp slt i64 %14, 5\n  br i1 %15, label %16, label %39\n\n16:                                               ; preds = %13\n  %17 = add i64 %10, 2\n  %18 = icmp slt i64 %17, 5\n  %19 = select i1 %18, i64 %17, i64 5\n  br label %20\n\n20:                                               ; preds = %35, %16\n  %21 = phi i64 [ %36, %35 ], [ %10, %16 ]\n  %22 = icmp slt i64 %21, %19\n  br i1 %22, label %23, label %37\n\n23:                                               ; preds = %20\n  %24 = add i64 %14, 2\n  %25 = icmp slt i64 %24, 5\n  %26 = select i1 %25, i64 %24, i64 5\n  br label %27\n\n27:                                               ; preds = %30, %23\n  %28 = phi i64 [ %34, %30 ], [ %14, %23 ]\n  %29 = icmp slt i64 %28, %26\n  br i1 %29, label %30, label %35\n\n30:                                               ; preds = %27\n  %31 = mul i64 %21, 5\n  %32 = add i64 %31, %28\n  %33 = getelementptr i32, ptr %1, i64 %32\n  store i32 0, ptr %33, align 4\n  %34 = add i64 %28, 1\n  br label %27\n\n35:                                               ; preds = %27\n  %36 = add i64 %21, 1\n  br label %20\n\n37:                                               ; preds = %20\n  %38 = add i64 %14, 2\n  br label %13\n\n39:                                               ; preds = %13\n  %40 = add i64 %10, 2\n  br label %9\n\n41:                                               ; preds = %9\n  call void @negative_inner_distance(ptr %1, ptr %1, i64 0, i64 5, i64 5, i64 5, i64 1)\n  %42 = getelementptr i32, ptr %1, i64 11\n  %43 = load i32, ptr %42, align 4\n  call void @free(ptr %1)\n  ret i32 %43\n}\n\n!llvm.module.flags = !{!0}\n\n!0 = !{i32 2, !\"Debug Info Version\", i32 3}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/usr/bin/clang",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/tiling-transformed.ll",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/tiling-negative-distance.runtime.c",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/insider-tiling-prryixt3/transformed"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: overriding the module target triple with arm64-apple-macosx15.0.0 [-Woverride-module]\n1 warning generated.\n"
+    },
+    {
+      "command": [
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/insider-tiling-prryixt3/transformed"
+      ],
+      "exit_code": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  ]
+}

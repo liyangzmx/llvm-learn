@@ -1,0 +1,3 @@
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch8/book-8-1.mlir:3:11: error: invalid properties {values = dense<0.000000e+00> : tensor<1xf32>} for op tosa.const: expected key entry for value in DictionaryAttr to set Properties.
+  %a_zp = "tosa.const"() <{values = dense<0.0> : tensor<1xf32>}> : () -> tensor<1xf32>
+          ^

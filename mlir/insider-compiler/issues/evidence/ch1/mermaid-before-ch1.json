@@ -1,0 +1,363 @@
+{
+  "diagrams": [
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch10.md 图 1",
+      "viewBox": "0 0 400.765625 486",
+      "mermaid_code_sha256": "578b2e58073b97f233dfb02bf7e9f529a9c6968376563db0c5d4f7be605124d7"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch10.md 图 2",
+      "viewBox": "0 0 558.5234375 798",
+      "mermaid_code_sha256": "4998343f03fda950c550e3dade7abf8078b1cd0ce412924c19574635238dffda"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch10.md 图 3",
+      "viewBox": "0 0 655.8359375 278",
+      "mermaid_code_sha256": "80ab0c41a2d198b38eafee276b27661641dcb8e6a175ca39fbdf9a367201227f"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch10.md 图 4",
+      "viewBox": "0 0 446.7265625 278",
+      "mermaid_code_sha256": "a6f27ac0aace5148a80c4772ae2c35a2e424fbef014a7e115976b81dbb0683f4"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch10.md 图 5",
+      "viewBox": "0 0 451.234375 174",
+      "mermaid_code_sha256": "f24fcd3c2b6c0e958502c70ed569a943f6b6936dab2d502fbda725a5f0358c8e"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch10.md 图 6",
+      "viewBox": "0 0 357.640625 382",
+      "mermaid_code_sha256": "e59434d5a5f12bb23bf3667afa664960063c5cce153f56d492240d578c5e7950"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch10.md 图 7",
+      "viewBox": "0 0 554.1328125 382",
+      "mermaid_code_sha256": "b7692ae8288777519c7137c78b1ed50db29cdc191c7077a7b7afd948f818b3f8"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch10.md 图 8",
+      "viewBox": "0 0 506.375 590",
+      "mermaid_code_sha256": "54cae14947c2254d6d4f2f54214eeea14cf7c2f26f1122bc8755ad96bc3d9674"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch10.md 图 9",
+      "viewBox": "0 0 299.8828125 174",
+      "mermaid_code_sha256": "d802562a9d0165a65fe5c596b084a5cc8190e1da0d5ab5d604a4c88da5273bf0"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch10.md 图 10",
+      "viewBox": "0 0 334.25 174",
+      "mermaid_code_sha256": "1a15df7e42bb99c2e3be40ae38a2e162a618160165e1d5e68d6d0f5637c77581"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch11.md 图 1",
+      "viewBox": "0 0 834.5859375 118",
+      "mermaid_code_sha256": "eddc143655085b1135dcb7379f5777a04cd27b0469af7d60249caa2868880c51"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch11.md 图 2",
+      "viewBox": "0 0 310.5546875 456",
+      "mermaid_code_sha256": "8ba8340c53bef569d96fd5ec3d1c8233efa4c935f7dbfccbdf0f2c72192674b2"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch11.md 图 3",
+      "viewBox": "0 0 768.3203125 576",
+      "mermaid_code_sha256": "89e955c6f1c1f95b421420259729ddb65fdcd56208752e48ed12d414095d9d51"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch11.md 图 4",
+      "viewBox": "0 0 846.3984375 760",
+      "mermaid_code_sha256": "d6038191448bea89688cb534a76d640f48c85baa7f7b88f2148b7bc0d3fc5e4b"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch11.md 图 5",
+      "viewBox": "0 0 555.35546875 278",
+      "mermaid_code_sha256": "21ae576b1684e1b7eb02d31c32c3aaf6b1c3510f3d7c1b91bad54eb52d12f64f"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch11.md 图 6",
+      "viewBox": "0 0 553.390625 302",
+      "mermaid_code_sha256": "0e01d21ce5ece4b4e10bb1f40c25f96b72dcc65d95aaec139604e9278d04629a"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch11.md 图 7",
+      "viewBox": "0 0 327.59375 638",
+      "mermaid_code_sha256": "812aeb489b1f94fdadb5a5a6f46dafe141cc2c427da57c34d8aca212773b567d"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch12.md 图 1",
+      "viewBox": "0 2.6995010375976562 1169.21875 202.30050659179688",
+      "mermaid_code_sha256": "46975f9dfe1e0058e5021c69d1a0e491c9fac269af48dcf6ae30404e3c269172"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch12.md 图 2",
+      "viewBox": "0 0 1181.7421875 326",
+      "mermaid_code_sha256": "6f882dc7355d99d83fd87b6a7c3b166a323992b04225b65ca3463b6c70b75071"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch13.md 图 1",
+      "viewBox": "0 0 1411.3125 140",
+      "mermaid_code_sha256": "8d05be064e71eb104cb598cde2e4498cd5ce6f58b3139e9b213cae10ce8853c0"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch13.md 图 2",
+      "viewBox": "0 0 679.28125 532",
+      "mermaid_code_sha256": "efb02c1e36c1040031e5d1640ddc5797dd5a9e3947b5b691cc1b48f55bc166f8"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch13.md 图 3",
+      "viewBox": "0 0 1266.43359375 1201.453125",
+      "mermaid_code_sha256": "3d245f7e62bc2f4d4dcc2be9bfc86473d97467073f34298631425822918d43ee"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch13.md 图 4",
+      "viewBox": "0 0 1051.94140625 790",
+      "mermaid_code_sha256": "52c327d28c811b3667954baf05a5a641a0afcd5062214572fa798516d3a6d827"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch13.md 图 5",
+      "viewBox": "0 0 1029.9765625 1028",
+      "mermaid_code_sha256": "2030725f7a21f6c88e1475737f80ff26a5f0f2e911301af8d1094469c7f95417"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch13.md 图 6",
+      "viewBox": "0 0 586 846",
+      "mermaid_code_sha256": "f261ab942df7f7298fc9d43595aad2326acbb876231999f191ac8fa05146acd3"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch2.md 图 1",
+      "viewBox": "0 0 995.5 350.5",
+      "mermaid_code_sha256": "2c85cf370ccb67a2aa9735d34a9252d1548d8db45722ea845acfddefb2e48b94"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch3.md 图 1",
+      "viewBox": "0 0 770.9921875 392",
+      "mermaid_code_sha256": "b7ea5398d0532042e1b434a4658662a23a83cb4aa14cc4041b83e1a1daa7884d"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch3.md 图 2",
+      "viewBox": "0 0 765.1171875 368",
+      "mermaid_code_sha256": "1506beb9bf49919d54e7bf267174d1ea2edd9aea95c42ce5fb2612a82b459841"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch3.md 图 3",
+      "viewBox": "0 0 1146.8515625 234",
+      "mermaid_code_sha256": "1cb52a7d35caa1b422ebe3efeb1f1118d490dadd7a13933cf3c307ad32035cab"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch3.md 图 4",
+      "viewBox": "0 0 276 1422",
+      "mermaid_code_sha256": "0c29ec7982b20ba7749e5119c7cd9bfccaf24126ed20616c5776110ead6d1011"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch3.md 图 5",
+      "viewBox": "0 0 946 421",
+      "mermaid_code_sha256": "f68a30cf9d61a9c6d3fd6269906c4b9b500cf0dfab3d9f9392937e995cec5925"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch3.md 图 6",
+      "viewBox": "0 0 482.1796875 596",
+      "mermaid_code_sha256": "8cd2dd0481c9fa9d87627af166f8d6dbd8c162b5c55aea7f3f39a1aba44edeff"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch3.md 图 7",
+      "viewBox": "0 0 280.56640625 280",
+      "mermaid_code_sha256": "42f9b2ff5c7e2c94d91ec9149439daaba2e4acd8ff27548ccc1fa5cb6c463866"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch3.md 图 8",
+      "viewBox": "0 0 913.546875 1734",
+      "mermaid_code_sha256": "45a78f18ab61bfda73476bee304010437eca621a89cd926e9954acd9838c7e30"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch4.md 图 1",
+      "viewBox": "0 0 532.0859375 574",
+      "mermaid_code_sha256": "cae848eba0de46716f589714a0781e790ce596118a4ebd31c1728e66cd0bd302"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch4.md 图 2",
+      "viewBox": "0 0 556.62109375 350",
+      "mermaid_code_sha256": "794bf98119b47b4001591012499df32311af3171383b3f81a9aa33248d6004ae"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch5.md 图 1",
+      "viewBox": "0 0 787.515625 1102",
+      "mermaid_code_sha256": "286fe0cf9f24589f13bd5dca631a254ac700bff2ae28af7d385766c4a6f17af8"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch5.md 图 2",
+      "viewBox": "0 0 482.123046875 560",
+      "mermaid_code_sha256": "e48cfebc4edd4d73cd88339aa9600bc3e0dada74c7ce6aa0e501b2f54f3d12ee"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch6.md 图 1",
+      "viewBox": "0 0 348.71875 474.46875",
+      "mermaid_code_sha256": "4bcb18362b163ff72cbc076117f254db7418296f7833f426b3aa6109e1cdbf32"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch6.md 图 2",
+      "viewBox": "0 0 1322.8671875 1440",
+      "mermaid_code_sha256": "eb0048d4786dccfd0c405464c1e1104bc811f91e54baf36f8be69f2674fd789e"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch6.md 图 3",
+      "viewBox": "0 0 1171.763671875 770",
+      "mermaid_code_sha256": "98b1b8767bb6593659df17d7dee15842228ca66b2d0ab2ffd210a8732cbdbb17"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch6.md 图 4",
+      "viewBox": "0 0 951.744140625 1965.40625",
+      "mermaid_code_sha256": "caab4f4950b6b0a735f161de97d6842bc0a6f8b2c70ac4adad26473164fe07ad"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch7.md 图 1",
+      "viewBox": "0 0 813.671875 646",
+      "mermaid_code_sha256": "8af3266d063879e3b1690fd98f238302a20629105ff4aae24b091876546c0467"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch7.md 图 2",
+      "viewBox": "0 0 752.3671875 246",
+      "mermaid_code_sha256": "a67bc1bee832785159a422bdbd5860df854600a1d06c0ba09d37dc3ebc5e6664"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch7.md 图 3",
+      "viewBox": "0 0 816.1875 174",
+      "mermaid_code_sha256": "8fe449d62ea8bb3522b3408193e02705894788d934a701158612aaa156712b5e"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch7.md 图 4",
+      "viewBox": "0 0 953.609375 209",
+      "mermaid_code_sha256": "6f5219abd2197f01b83c5808a888dcc63fce5f26042eab15c79b4112975a78d0"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch8.md 图 1",
+      "viewBox": "0 0 740.90625 174",
+      "mermaid_code_sha256": "a69f642f798ba2428e7424d75ecbc49ccd18a42f6c3cf13b60339e96afd6ebd8"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch9.md 图 1",
+      "viewBox": "0 0 437.984375 486",
+      "mermaid_code_sha256": "0205f22abd070874f30fa67b9cbdbb8a07d24c077005e38f329231cdca9bc234"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch9.md 图 2",
+      "viewBox": "0 0 564.501953125 430",
+      "mermaid_code_sha256": "8df471ceb4287a566f06bb6bab9fbef1b1853d6661c32a1cf1e5899b7b285a29"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch9.md 图 3",
+      "viewBox": "0 0 683.5390625 222",
+      "mermaid_code_sha256": "72c541b60eb76eb372111e13d66978d5afe719b012f550b54b5ce1ba429423b0"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch9.md 图 4",
+      "viewBox": "0 0 975.3828125 342",
+      "mermaid_code_sha256": "49ec274ba32d547a098f0ade1e71fb5578a279a291b9fff7b5d54508b2620798"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch9.md 图 5",
+      "viewBox": "0 0 499.53125 598",
+      "mermaid_code_sha256": "8884eebf9badd5ffdc891f10500d770c05e859cc938de44263dd0547663480c6"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch9.md 图 6",
+      "viewBox": "0 0 562.3671875 278",
+      "mermaid_code_sha256": "7d2bb6ee14a09a23ed8a1794a86fdde2267e39c799fc76983b26cfbde51c3a32"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch9.md 图 7",
+      "viewBox": "0 0 536.9453125 758",
+      "mermaid_code_sha256": "02749f122c457880d12248cccdff4f68297715bbf85284468ccd81d883ed2a59"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch9.md 图 8",
+      "viewBox": "0 0 705.1171875 798",
+      "mermaid_code_sha256": "97dc87374fd0c01d15ff3711e5f33bda1d595cc1a7d2878820a7deab944c5162"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch9.md 图 9",
+      "viewBox": "0 0 857.5078125 1474",
+      "mermaid_code_sha256": "9c27f5f24adfc6db3fd04240297b2475dfdff6fed2d8fdc4dc75ed471cd17e7a"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-part2.md 图 1",
+      "viewBox": "0 0 1066.92578125 694",
+      "mermaid_code_sha256": "82e0326e863c7bf4acbdd93b9daa75e38a07afa3eb654df1cee5bd8543699cd1"
+    }
+  ],
+  "mermaidVersion": "11.12.0",
+  "status": "DONE 57 diagrams; 0 failures",
+  "source_files_sha256": {
+    "insider-compiler-ch10.md": "801650d103b9f86d261d4fcdff91c63865b68fc3b914df50f93e870c1c9170dc",
+    "insider-compiler-ch11.md": "131ded920cdaaf0fb588cc8778c769630a444da2a3204f218e3dc43621d0824e",
+    "insider-compiler-ch12.md": "169c26e0e88d5171fdac10ea443fe578906e7a5c4c592c74cea43c2c9bfbdca6",
+    "insider-compiler-ch13.md": "58779a33cecee9baff5f6775813d13bb10509f1ff8d436a2726c9b35575226de",
+    "insider-compiler-ch2.md": "c82228b0a5155b4ded952d30f2521676db3570f6bbcee1a430525a59046fcf06",
+    "insider-compiler-ch3.md": "33858c15cfa8b26e416b93447185c56eadaf29e730a7abc3216054b59c414480",
+    "insider-compiler-ch4.md": "b3617f0fb3184ffd2d48562fc73dda6a12475a1fcc8b6a27bb87406e3733f2ed",
+    "insider-compiler-ch5.md": "8ea98eed462e2e8995045441d29c2ccad80ee75b4ea8f0a9ff91427f1571a17a",
+    "insider-compiler-ch6.md": "c9a3a9f65fc5fe6e28051c9dbcbf2fec786af1fc24b94fe107556a855e89ff27",
+    "insider-compiler-ch7.md": "ab4e85daf44b29b265e8e44f5cd65727ff2fbda5b60d4da914ebdcda7c570fb7",
+    "insider-compiler-ch8.md": "0be7323757c9f68cb496c2a380e04bc5622167d729f8dc27e3aee718fed62706",
+    "insider-compiler-ch9.md": "b05631b1a73235b3b98fbf395a4ab81723afa604a4c3c528778cd14f5dd3c747",
+    "insider-compiler-part2.md": "3357cd58ee2c06809bed64b41b2753e9e8374b940bb3701c20708aac495ae797"
+  }
+}

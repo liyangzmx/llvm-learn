@@ -1,0 +1,13 @@
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/handle-consumed.mlir:8:5: error: op uses a handle invalidated by a previously executed transform op
+    transform.print %alias : !transform.any_op
+    ^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/handle-consumed.mlir:5:14: note: handle to invalidated ops
+    %alias = transform.cast %func : !transform.any_op to !transform.any_op
+             ^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/handle-consumed.mlir:7:12: note: invalidated by this transform op that consumes its operand #0 and invalidates all handles to payload IR entities associated with this operand and entities nested in them
+    %new = transform.apply_registered_pass "canonicalize" to %func : (!transform.any_op) -> !transform.any_op
+           ^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/handle-consumed.mlir:1:1: note: ancestor payload op
+func.func @f() { return }
+^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/handle-consumed.mlir:1:1: note: nested payload op

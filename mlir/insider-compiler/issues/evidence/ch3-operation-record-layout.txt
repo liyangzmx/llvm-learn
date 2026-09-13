@@ -1,0 +1,37 @@
+Clang record layout of LLVM 18.1.8 headers on current macOS arm64 host.
+0 | class mlir::Operation
+         0 |   class llvm::ilist_node_with_parent<class mlir::Operation, class mlir::Block> (base)
+         0 |     class llvm::ilist_node<class mlir::Operation> (base)
+         0 |       class llvm::ilist_node_impl<struct llvm::ilist_detail::node_options<class mlir::Operation, true, false, void, false> > (base)
+         0 |         class llvm::ilist_node_base<true> (base)
+         0 |           class llvm::PointerIntPair<class llvm::ilist_node_base<true> *, 1> PrevAndSentinel
+         0 |             struct llvm::detail::PunnedPointer<class llvm::ilist_node_base<true> *> Value
+         0 |               unsigned char[8] Data
+         8 |           ilist_node_base<true> * Next
+         0 |   class llvm::TrailingObjects<class mlir::Operation, class mlir::detail::OperandStorage, enum mlir::detail::OpProperties, class mlir::BlockOperand, class mlir::Region, class mlir::OpOperand> (base) (empty)
+         0 |     class llvm::trailing_objects_internal::TrailingObjectsImpl<8, class mlir::Operation, class llvm::TrailingObjects<class mlir::Operation, class mlir::detail::OperandStorage, enum mlir::detail::OpProperties, class mlir::BlockOperand, class mlir::Region, class mlir::OpOperand>, class mlir::Operation, class mlir::detail::OperandStorage, enum mlir::detail::OpProperties, class mlir::BlockOperand, class mlir::Region, class mlir::OpOperand> (base) (empty)
+         0 |       class llvm::trailing_objects_internal::TrailingObjectsImpl<8, class mlir::Operation, class llvm::TrailingObjects<class mlir::Operation, class mlir::detail::OperandStorage, enum mlir::detail::OpProperties, class mlir::BlockOperand, class mlir::Region, class mlir::OpOperand>, class mlir::detail::OperandStorage, enum mlir::detail::OpProperties, class mlir::BlockOperand, class mlir::Region, class mlir::OpOperand> (base) (empty)
+         0 |         class llvm::trailing_objects_internal::TrailingObjectsImpl<8, class mlir::Operation, class llvm::TrailingObjects<class mlir::Operation, class mlir::detail::OperandStorage, enum mlir::detail::OpProperties, class mlir::BlockOperand, class mlir::Region, class mlir::OpOperand>, enum mlir::detail::OpProperties, class mlir::BlockOperand, class mlir::Region, class mlir::OpOperand> (base) (empty)
+         0 |           class llvm::trailing_objects_internal::TrailingObjectsImpl<8, class mlir::Operation, class llvm::TrailingObjects<class mlir::Operation, class mlir::detail::OperandStorage, enum mlir::detail::OpProperties, class mlir::BlockOperand, class mlir::Region, class mlir::OpOperand>, class mlir::BlockOperand, class mlir::Region, class mlir::OpOperand> (base) (empty)
+         0 |             class llvm::trailing_objects_internal::TrailingObjectsImpl<8, class mlir::Operation, class llvm::TrailingObjects<class mlir::Operation, class mlir::detail::OperandStorage, enum mlir::detail::OpProperties, class mlir::BlockOperand, class mlir::Region, class mlir::OpOperand>, class mlir::Region, class mlir::OpOperand> (base) (empty)
+         0 |               class llvm::trailing_objects_internal::TrailingObjectsImpl<8, class mlir::Operation, class llvm::TrailingObjects<class mlir::Operation, class mlir::detail::OperandStorage, enum mlir::detail::OpProperties, class mlir::BlockOperand, class mlir::Region, class mlir::OpOperand>, class mlir::OpOperand> (base) (empty)
+         0 |                 class llvm::trailing_objects_internal::TrailingObjectsBase (base) (empty)
+        16 |   Block * block
+        24 |   class mlir::Location location
+        24 |     class mlir::LocationAttr impl
+        24 |       class mlir::Attribute (base)
+        24 |         ImplType * impl
+        32 |   unsigned int orderIndex
+        36 |   const unsigned int numResults
+        40 |   const unsigned int numSuccs
+   44:0-22 |   const unsigned int numRegions
+    46:7-7 |   _Bool hasOperandStorage
+    47:0-7 |   unsigned char propertiesStorageSize
+        48 |   class mlir::OperationName name
+        48 |     Impl * impl
+        56 |   class mlir::DictionaryAttr attrs
+        56 |     class mlir::detail::StorageUserBase<class mlir::DictionaryAttr, class mlir::Attribute, struct mlir::detail::DictionaryAttrStorage, class mlir::detail::AttributeUniquer> (base)
+        56 |       class mlir::Attribute (base)
+        56 |         ImplType * impl
+           | [sizeof=64, dsize=64, align=8,
+           |  nvsize=64, nvalign=8]

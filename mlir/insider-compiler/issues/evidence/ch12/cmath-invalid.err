@@ -1,0 +1,4 @@
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-invalid.mlir:2:8: error: expected '!cmath.complex<f32>' but got '!cmath.complex<f64>'
+  %r = "cmath.mul"(%a, %b) : (!cmath.complex<f32>, !cmath.complex<f64>) -> !cmath.complex<f32>
+       ^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-invalid.mlir:2:8: note: see current operation: %0 = "cmath.mul"(%arg0, %arg1) : (!cmath.complex<f32>, !cmath.complex<f64>) -> !cmath.complex<f32>

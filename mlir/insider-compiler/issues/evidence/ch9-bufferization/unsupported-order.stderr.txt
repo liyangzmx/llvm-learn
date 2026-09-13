@@ -1,0 +1,34 @@
+invalid analysisheuristic option
+UNREACHABLE executed at /opt/llvm-project/mlir/lib/Dialect/Bufferization/Transforms/Bufferize.cpp:185!
+PLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace.
+Stack dump:
+0.	Program arguments: /opt/llvm-project/build/bin/mlir-opt analysis.mlir --one-shot-bufferize=analysis-heuristic=bottom-up-from-terminators
+ #0 0x0000000103493b54 llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/opt/llvm-project/build/bin/mlir-opt+0x1007bfb54)
+ #1 0x00000001034940ec PrintStackTraceSignalHandler(void*) (/opt/llvm-project/build/bin/mlir-opt+0x1007c00ec)
+ #2 0x0000000103491ee0 llvm::sys::RunSignalHandlers() (/opt/llvm-project/build/bin/mlir-opt+0x1007bdee0)
+ #3 0x00000001034951d0 SignalHandler(int) (/opt/llvm-project/build/bin/mlir-opt+0x1007c11d0)
+ #4 0x000000019dd256a4 (/usr/lib/system/libsystem_platform.dylib+0x1804ad6a4)
+ #5 0x000000019dceb848 (/usr/lib/system/libsystem_pthread.dylib+0x180473848)
+ #6 0x000000019dbf49e4 (/usr/lib/system/libsystem_c.dylib+0x18037c9e4)
+ #7 0x000000010336dbcc llvm::install_out_of_memory_new_handler() (/opt/llvm-project/build/bin/mlir-opt+0x100699bcc)
+ #8 0x0000000103e0a388 (anonymous namespace)::parseHeuristicOption(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&) (/opt/llvm-project/build/bin/mlir-opt+0x101136388)
+ #9 0x0000000103e04ea0 (anonymous namespace)::OneShotBufferizePass::runOnOperation() (/opt/llvm-project/build/bin/mlir-opt+0x101130ea0)
+#10 0x00000001086eab88 mlir::detail::OpToOpPassAdaptor::run(mlir::Pass*, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int)::$_1::operator()() const (/opt/llvm-project/build/bin/mlir-opt+0x105a16b88)
+#11 0x00000001086eab14 void llvm::function_ref<void ()>::callback_fn<mlir::detail::OpToOpPassAdaptor::run(mlir::Pass*, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int)::$_1>(long) (/opt/llvm-project/build/bin/mlir-opt+0x105a16b14)
+#12 0x000000010333c1b8 llvm::function_ref<void ()>::operator()() const (/opt/llvm-project/build/bin/mlir-opt+0x1006681b8)
+#13 0x00000001086de58c void mlir::MLIRContext::executeAction<mlir::PassExecutionAction, mlir::Pass&>(llvm::function_ref<void ()>, llvm::ArrayRef<mlir::IRUnit>, mlir::Pass&) (/opt/llvm-project/build/bin/mlir-opt+0x105a0a58c)
+#14 0x00000001086de2b4 mlir::detail::OpToOpPassAdaptor::run(mlir::Pass*, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int) (/opt/llvm-project/build/bin/mlir-opt+0x105a0a2b4)
+#15 0x00000001086de9ec mlir::detail::OpToOpPassAdaptor::runPipeline(mlir::OpPassManager&, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int, mlir::PassInstrumentor*, mlir::PassInstrumentation::PipelineParentInfo const*) (/opt/llvm-project/build/bin/mlir-opt+0x105a0a9ec)
+#16 0x00000001086e0e3c mlir::PassManager::runPasses(mlir::Operation*, mlir::AnalysisManager) (/opt/llvm-project/build/bin/mlir-opt+0x105a0ce3c)
+#17 0x00000001086e0c1c mlir::PassManager::run(mlir::Operation*) (/opt/llvm-project/build/bin/mlir-opt+0x105a0cc1c)
+#18 0x00000001086d3a94 performActions(llvm::raw_ostream&, std::__1::shared_ptr<llvm::SourceMgr> const&, mlir::MLIRContext*, mlir::MlirOptMainConfig const&) (/opt/llvm-project/build/bin/mlir-opt+0x1059ffa94)
+#19 0x00000001086d35fc processBuffer(llvm::raw_ostream&, std::__1::unique_ptr<llvm::MemoryBuffer, std::__1::default_delete<llvm::MemoryBuffer>>, mlir::MlirOptMainConfig const&, mlir::DialectRegistry&, llvm::ThreadPool*) (/opt/llvm-project/build/bin/mlir-opt+0x1059ff5fc)
+#20 0x00000001086d33e8 mlir::MlirOptMain(llvm::raw_ostream&, std::__1::unique_ptr<llvm::MemoryBuffer, std::__1::default_delete<llvm::MemoryBuffer>>, mlir::DialectRegistry&, mlir::MlirOptMainConfig const&)::$_0::operator()(std::__1::unique_ptr<llvm::MemoryBuffer, std::__1::default_delete<llvm::MemoryBuffer>>, llvm::raw_ostream&) const (/opt/llvm-project/build/bin/mlir-opt+0x1059ff3e8)
+#21 0x00000001086d3370 mlir::LogicalResult llvm::function_ref<mlir::LogicalResult (std::__1::unique_ptr<llvm::MemoryBuffer, std::__1::default_delete<llvm::MemoryBuffer>>, llvm::raw_ostream&)>::callback_fn<mlir::MlirOptMain(llvm::raw_ostream&, std::__1::unique_ptr<llvm::MemoryBuffer, std::__1::default_delete<llvm::MemoryBuffer>>, mlir::DialectRegistry&, mlir::MlirOptMainConfig const&)::$_0>(long, std::__1::unique_ptr<llvm::MemoryBuffer, std::__1::default_delete<llvm::MemoryBuffer>>, llvm::raw_ostream&) (/opt/llvm-project/build/bin/mlir-opt+0x1059ff370)
+#22 0x0000000108865fe4 llvm::function_ref<mlir::LogicalResult (std::__1::unique_ptr<llvm::MemoryBuffer, std::__1::default_delete<llvm::MemoryBuffer>>, llvm::raw_ostream&)>::operator()(std::__1::unique_ptr<llvm::MemoryBuffer, std::__1::default_delete<llvm::MemoryBuffer>>, llvm::raw_ostream&) const (/opt/llvm-project/build/bin/mlir-opt+0x105b91fe4)
+#23 0x0000000108865ad8 mlir::splitAndProcessBuffer(std::__1::unique_ptr<llvm::MemoryBuffer, std::__1::default_delete<llvm::MemoryBuffer>>, llvm::function_ref<mlir::LogicalResult (std::__1::unique_ptr<llvm::MemoryBuffer, std::__1::default_delete<llvm::MemoryBuffer>>, llvm::raw_ostream&)>, llvm::raw_ostream&, bool, bool) (/opt/llvm-project/build/bin/mlir-opt+0x105b91ad8)
+#24 0x00000001086c8218 mlir::MlirOptMain(llvm::raw_ostream&, std::__1::unique_ptr<llvm::MemoryBuffer, std::__1::default_delete<llvm::MemoryBuffer>>, mlir::DialectRegistry&, mlir::MlirOptMainConfig const&) (/opt/llvm-project/build/bin/mlir-opt+0x1059f4218)
+#25 0x00000001086c84e4 mlir::MlirOptMain(int, char**, llvm::StringRef, llvm::StringRef, mlir::DialectRegistry&) (/opt/llvm-project/build/bin/mlir-opt+0x1059f44e4)
+#26 0x00000001086c8750 mlir::MlirOptMain(int, char**, llvm::StringRef, mlir::DialectRegistry&) (/opt/llvm-project/build/bin/mlir-opt+0x1059f4750)
+#27 0x0000000102cd61c8 main (/opt/llvm-project/build/bin/mlir-opt+0x1000021c8)
+#28 0x000000019d94ab98 

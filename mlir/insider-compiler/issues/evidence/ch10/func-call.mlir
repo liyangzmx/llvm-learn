@@ -1,0 +1,2 @@
+func.func @my() -> () { return }
+func.call @my() : () -> ()

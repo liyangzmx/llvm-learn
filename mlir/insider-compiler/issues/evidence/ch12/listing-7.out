@@ -1,0 +1,11 @@
+module {
+  pdl.pattern : benefit(1) {
+    %0 = type
+    %1 = operand : %0
+    %2 = operation "foo.op"(%1 : !pdl.value)  -> (%0 : !pdl.type)
+    rewrite %2 {
+      replace %2 with(%1 : !pdl.value)
+    }
+  }
+}
+

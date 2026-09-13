@@ -1,0 +1,11 @@
+memref<f32> -> !llvm.struct<(ptr, ptr, i64)>
+memref<1xf32> -> !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+memref<?xf32> -> !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>
+memref<10x42x42x43x123xf32> -> !llvm.struct<(ptr, ptr, i64, array<5 x i64>, array<5 x i64>)>
+memref<10x?x42x?x123xf32> -> !llvm.struct<(ptr, ptr, i64, array<5 x i64>, array<5 x i64>)>
+memref<1x?xvector<4xf32>> -> !llvm.struct<(ptr, ptr, i64, array<2 x i64>, array<2 x i64>)>
+memref<*xf32> -> !llvm.struct<(i64, ptr)>
+memref<?xf32, 3> -> !llvm.struct<(ptr<3>, ptr<3>, i64, array<1 x i64>, array<1 x i64>)>
+vector<f32> -> vector<1xf32>
+vector<4xf32> -> vector<4xf32>
+vector<2x3x4xf32> -> !llvm.array<2 x array<3 x vector<4xf32>>>

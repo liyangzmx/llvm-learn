@@ -1,0 +1,79 @@
+[
+  {
+    "listing": 34,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch9-tail/listing-9-34.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 35,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch9-tail/listing-9-35.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 36,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch9-tail/listing-9-36.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 37,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch9-tail/listing-9-37.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 38,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch9-tail/listing-9-38.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 39,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch9-tail/listing-9-39.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  },
+  {
+    "listing": 40,
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch9-tail/listing-9-40.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 0,
+    "stderr": ""
+  }
+]

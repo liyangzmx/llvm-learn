@@ -1,0 +1,3 @@
+mlir/insider-compiler/issues/evidence/ch9-matmul-custom-maps-original.mlir:3:17: error: custom op 'linalg.matmul' [parseNamedStructuredOpRegion] ods-gen generated region expects 3 args, got 0
+  linalg.matmul indexing_maps = [
+                ^

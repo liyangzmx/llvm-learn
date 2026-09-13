@@ -1,0 +1,3 @@
+Pass Manager with 8 passes:
+builtin.module(expand-realloc{emit-deallocs=false},canonicalize{  max-iterations=10 max-num-rewrites=-1 region-simplify=true test-convergence=false top-down=true},ownership-based-buffer-deallocation{private-function-dynamic-ownership=false},canonicalize{  max-iterations=10 max-num-rewrites=-1 region-simplify=true test-convergence=false top-down=true},buffer-deallocation-simplification,bufferization-lower-deallocations,cse,canonicalize{  max-iterations=10 max-num-rewrites=-1 region-simplify=true test-convergence=false top-down=true})
+

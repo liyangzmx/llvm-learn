@@ -1,0 +1,27 @@
+FUNCTION access
+LOOP 1 parallel=1
+LOOP 2 parallel=1
+LOOP 3 parallel=1
+LOOP 4 parallel=1
+affine.store
+Domain: 0, Range: 4, Symbols: 2, Locals: 0
+6 constraints
+(Value	Value	None	None	Value	Value	const)
+ 2	-4	-1	0	1	0	0	= 0
+ 0	3	0	-1	0	-1	0	= 0
+ 1	0	0	0	0	0	0	>= 0
+ -1	0	0	0	0	0	99	>= 0
+ 0	1	0	0	0	0	0	>= 0
+ 0	-1	0	0	0	0	49	>= 0
+
+affine.load
+Domain: 0, Range: 4, Symbols: 2, Locals: 0
+6 constraints
+(Value	Value	None	None	Value	Value	const)
+ 7	9	-1	0	-1	0	0	= 0
+ 0	11	0	-1	0	1	0	= 0
+ 1	0	0	0	0	0	0	>= 0
+ -1	0	0	0	0	0	99	>= 0
+ 0	1	0	0	0	0	0	>= 0
+ 0	-1	0	0	0	0	49	>= 0
+

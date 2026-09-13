@@ -1,0 +1,8 @@
+module {
+  func.func @trivial_ops(%arg0: index, %arg1: index) {
+    %0 = builtin.unrealized_conversion_cast %arg0 : index to i64
+    %1 = builtin.unrealized_conversion_cast %arg1 : index to i64
+    %2 = llvm.add %0, %1 : i64
+    return
+  }
+}

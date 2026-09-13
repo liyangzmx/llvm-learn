@@ -1,0 +1,7 @@
+module {
+  func.func @unranked_rank(%arg0: memref<*xf32>) -> index {
+    %0 = memref.rank %arg0 : memref<*xf32>
+    return %0 : index
+  }
+}
+

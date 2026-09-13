@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "pdf_files": 7,
+  "source_pages": 416,
+  "chapters": 15,
+  "supplements": 4,
+  "numbered_listings": 275,
+  "numbered_figures": 64,
+  "numbered_tables": 33,
+  "mermaid_blocks": 63,
+  "original_footnotes": 88,
+  "new_formulas_rendered": 540,
+  "new_geometric_figures_reviewed": 2,
+  "prior_files_unchanged": 749,
+  "llvm_commit": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff"
+}

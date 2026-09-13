@@ -1,0 +1,21 @@
+module {
+  func.func @complex_mul(%arg0: complex<f32>, %arg1: complex<f32>) -> complex<f32> {
+    %0 = builtin.unrealized_conversion_cast %arg0 : complex<f32> to !llvm.struct<(f32, f32)>
+    %1 = builtin.unrealized_conversion_cast %arg1 : complex<f32> to !llvm.struct<(f32, f32)>
+    %2 = llvm.extractvalue %0[0] : !llvm.struct<(f32, f32)>
+    %3 = llvm.extractvalue %0[1] : !llvm.struct<(f32, f32)>
+    %4 = llvm.extractvalue %1[0] : !llvm.struct<(f32, f32)>
+    %5 = llvm.extractvalue %1[1] : !llvm.struct<(f32, f32)>
+    %6 = llvm.mlir.undef : !llvm.struct<(f32, f32)>
+    %7 = llvm.fmul %4, %2 : f32
+    %8 = llvm.fmul %5, %3 : f32
+    %9 = llvm.fsub %7, %8 : f32
+    %10 = llvm.fmul %3, %4 : f32
+    %11 = llvm.fmul %2, %5 : f32
+    %12 = llvm.fadd %10, %11 : f32
+    %13 = llvm.insertvalue %9, %6[0] : !llvm.struct<(f32, f32)>
+    %14 = llvm.insertvalue %12, %13[1] : !llvm.struct<(f32, f32)>
+    %15 = builtin.unrealized_conversion_cast %14 : !llvm.struct<(f32, f32)> to complex<f32>
+    return %15 : complex<f32>
+  }
+}

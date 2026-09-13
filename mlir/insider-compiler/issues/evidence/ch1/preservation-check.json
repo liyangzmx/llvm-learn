@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "checked_files": 719,
+  "chapter_and_supplement_markdown_files": 14,
+  "raw_page_txt_json_files": 700,
+  "prior_canonical_aggregate_files": 5,
+  "changed_files": [],
+  "baseline": "preexisting-content-sha256.json",
+  "scope": "Prior chapters 2–13 and part 2/3 Markdown; 350 prior raw OCR TXT/JSON page pairs; five prior canonical aggregate TXT files. Shared indexes, validation reports and chapter 1 source replacement are outside this preservation baseline."
+}

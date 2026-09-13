@@ -1,0 +1,43 @@
+LLVM (http://llvm.org/):
+  LLVM version 18.1.8
+  DEBUG build with assertions.
+
+$ /opt/llvm-project/build/bin/mlir-opt mlir/insider-compiler/issues/evidence/ch3-grammar-valid.mlir --allow-unregistered-dialect
+exit=0
+module {
+  func.func @forward(%arg0: i32) -> i32 {
+    cf.br ^bb1(%arg0 : i32)
+  ^bb1(%0: i32):  // pred: ^bb0
+    return %0 : i32
+  }
+  module {
+    %0:2 = "test.pair"() : () -> (i32, i32)
+    "test.consume"(%0#0, %0#1) : (i32, i32) -> ()
+    %1:4 = "test.zero_width"() : () -> (i0, si0, ui0, i32)
+    "test.function_type"() {t = (i32) -> i32} : () -> ()
+  }
+}
+
+
+$ /opt/llvm-project/build/bin/mlir-opt mlir/insider-compiler/issues/evidence/ch3-grammar-bad-successor.mlir --allow-unregistered-dialect
+exit=1
+mlir/insider-compiler/issues/evidence/ch3-grammar-bad-successor.mlir:2:19: error: expected ',' or ']'
+  "cf.br"(%x)[^bb1 : (%x : i32)] : (i32) -> ()
+                  ^
+
+$ /opt/llvm-project/build/bin/mlir-opt mlir/insider-compiler/issues/evidence/ch3-grammar-bad-function.mlir --allow-unregistered-dialect
+exit=1
+mlir/insider-compiler/issues/evidence/ch3-grammar-bad-function.mlir:1:32: error: expected '}' in attribute dictionary
+"test.function_type"() {t = i32 -> i32} : () -> ()
+                               ^
+
+$ /opt/llvm-project/build/bin/mlir-opt mlir/insider-compiler/issues/evidence/ch3-addi-overflow.mlir --allow-unregistered-dialect --mlir-print-op-generic
+exit=0
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32, i32) -> i32, sym_name = "sum"}> ({
+  ^bb0(%arg0: i32, %arg1: i32):
+    %0 = "arith.addi"(%arg0, %arg1) <{overflowFlags = #arith.overflow<nsw, nuw>}> : (i32, i32) -> i32
+    "func.return"(%0) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+

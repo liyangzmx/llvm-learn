@@ -1,0 +1,6 @@
+mlir/insider-compiler/issues/evidence/ch9-tail/transform-original-syntax.mlir:4:72: error: expected '[' in dynamic index list
+    %tiled_linalg_op, %loops:3 = transform.structured.tile_using_for %0 tile_sizes [8, [16], 1] : (!transform.any_op) -> (!transform.any_op, !transform.op<"scf.for">, !transform.op<"scf.for">, !transform.op<"scf.for">)
+                                                                       ^
+mlir/insider-compiler/issues/evidence/ch9-tail/transform-original-syntax.mlir:4:34: error: custom op 'transform.structured.tile_using_for' expected SSA value or integer
+    %tiled_linalg_op, %loops:3 = transform.structured.tile_using_for %0 tile_sizes [8, [16], 1] : (!transform.any_op) -> (!transform.any_op, !transform.op<"scf.for">, !transform.op<"scf.for">, !transform.op<"scf.for">)
+                                 ^

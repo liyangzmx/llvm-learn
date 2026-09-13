@@ -1,0 +1,26 @@
+module {
+  pdl_interp.func @matcher(%arg0: !pdl.operation) {
+    pdl_interp.check_operation_name of %arg0 is "arith.constant" -> ^bb2, ^bb1
+  ^bb1:  // 4 preds: ^bb0, ^bb2, ^bb3, ^bb4
+    pdl_interp.finalize
+  ^bb2:  // pred: ^bb0
+    %0 = pdl_interp.get_attribute "value" of %arg0
+    pdl_interp.is_not_null %0 : !pdl.attribute -> ^bb3, ^bb1
+  ^bb3:  // pred: ^bb2
+    pdl_interp.check_attribute %0 is 10 : i32 -> ^bb4, ^bb1
+  ^bb4:  // pred: ^bb3
+    pdl_interp.record_match @rewriters::@pdl_generated_rewriter(%arg0 : !pdl.operation) : benefit(0), generatedOps(["arith.constant"]), loc([%arg0]), root("arith.constant") -> ^bb1
+  }
+  module @rewriters {
+    pdl_interp.func @pdl_generated_rewriter(%arg0: !pdl.operation) {
+      %0 = pdl_interp.create_attribute 11 : i32
+      %1 = pdl_interp.get_results of %arg0 : !pdl.range<value>
+      %2 = pdl_interp.get_value_type of %1 : !pdl.range<type>
+      %3 = pdl_interp.create_operation "arith.constant" {"value" = %0}  -> (%2 : !pdl.range<type>)
+      %4 = pdl_interp.get_results of %3 : !pdl.range<value>
+      pdl_interp.replace %arg0 with (%4 : !pdl.range<value>)
+      pdl_interp.finalize
+    }
+  }
+}
+

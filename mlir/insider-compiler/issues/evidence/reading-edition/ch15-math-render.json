@@ -1,0 +1,3408 @@
+{
+  "formulas": [
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 1,
+      "line": 29,
+      "sha256": "f0617edefeddf970e938b795cc42c0a37281b51aac35c92313823d0aea628760",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 2,
+      "line": 37,
+      "sha256": "4c9de87069a3eaf13271122989c6ab3cbd1b43f8e61f3d6fcb8b9b3284f7b571",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 3,
+      "line": 37,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 4,
+      "line": 37,
+      "sha256": "c7f6796e75b9a514001c88b2d7aa9d0519ad7b39186d84987704edba7995a922",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 5,
+      "line": 37,
+      "sha256": "a1fce4363854ff888cff4b8e7875d600c2682390412a8cf79b37d0b11148b0fa",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 6,
+      "line": 39,
+      "sha256": "ca651b0ed0b726cb94e6ff09fab6af26aa5a7f862d2771b0e9ac36a6c355dafb",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 7,
+      "line": 43,
+      "sha256": "8a5df4f9ff0b4f480b10c51177a9996ebd8fa047fbbb65aa51c9dedc16c6e058",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 8,
+      "line": 51,
+      "sha256": "51e95f93ec26f889b4652c51e610c291ddc596394c896cf381d62ac35882b1e9",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 9,
+      "line": 53,
+      "sha256": "5cc3e98f2e2cd2d876f3bf32b872ea7876da0f4dd28a263ba81e85e0422baa5a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 10,
+      "line": 61,
+      "sha256": "c7f6796e75b9a514001c88b2d7aa9d0519ad7b39186d84987704edba7995a922",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 11,
+      "line": 61,
+      "sha256": "5be642df8174b5f03cf51db78eb8eeca9a80640b4904ac084288d8258dfacb24",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 12,
+      "line": 61,
+      "sha256": "b4a121d33c2f6cd4e42a3c5b4530fd941e2bc17bb3dbf932102f58c39e2c8dc8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 13,
+      "line": 61,
+      "sha256": "0b75484a18a2d6ba07fe54f588ab5cdc8777ab06b277869e9e2e117db4cdca9e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 14,
+      "line": 61,
+      "sha256": "aacfb5e5cd28e2b26b66022565bb49a81438761399e1337d841cc00d1fbe9610",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 15,
+      "line": 61,
+      "sha256": "93188956c3adf4e6fbd1517046217e27229b7889d4bd6337e9464b664bad8172",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 16,
+      "line": 69,
+      "sha256": "0efd591d8fc1947048f4f59ba5279f0beabcef8f97ea3ce7e4344c437e676088",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 17,
+      "line": 75,
+      "sha256": "6d27ca189b30af4f85eab024881ab00a37ef4bab14248c18349e900f40510397",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 18,
+      "line": 77,
+      "sha256": "2fd4a5d634e9e37293060f7b6d3c56d74c7f2d2c5d64bb536f8bd25b642c4971",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 19,
+      "line": 83,
+      "sha256": "e5e0093f285a4fb94c3fcc2ad7fd04edd10d429ccda87a9aa5e4718efadf182e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 20,
+      "line": 85,
+      "sha256": "afee2196f3cfcd0a671657eb337ba3bbe8162c4dc5210c98b7c58d0ade0c326b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 21,
+      "line": 93,
+      "sha256": "e1107a32b8fcb5f2069aa4c1a89151b85d1b9228c3b96e5f014bfc651369453e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 22,
+      "line": 99,
+      "sha256": "a1fce4363854ff888cff4b8e7875d600c2682390412a8cf79b37d0b11148b0fa",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 23,
+      "line": 99,
+      "sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 24,
+      "line": 99,
+      "sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 25,
+      "line": 101,
+      "sha256": "4f218032237abba50592349cc0145e62746d83d0269a8b8567c2c81a3cf579e2",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 26,
+      "line": 101,
+      "sha256": "c516c8f3c78afccba87f86636ad0ad039836373fe09f24807612ddefbde51c6c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 27,
+      "line": 101,
+      "sha256": "8b04dd9eb18827bef237448057da774790f601a42eb4d6dca580aa10ceacc873",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 28,
+      "line": 106,
+      "sha256": "8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 29,
+      "line": 107,
+      "sha256": "8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 30,
+      "line": 111,
+      "sha256": "ee10c5853f7891e738413782421f6fabde98387ccf78b131f1603efb5d43afae",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 31,
+      "line": 123,
+      "sha256": "8de0b3c47f112c59745f717a626932264c422a7563954872e237b223af4ad643",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 32,
+      "line": 123,
+      "sha256": "1b16b1df538ba12dc3f97edbb85caa7050d46c148134290feba80f8236c83db9",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 33,
+      "line": 123,
+      "sha256": "31cefca58a603fdf87358accfe627faffa76558f1981cd299ff1e79e5e8d85b9",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 34,
+      "line": 123,
+      "sha256": "8981b26b3b446b1c6f266dbcdfc8b1c5dc678be3629c8e1ae761cb4d7c95dfdc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 35,
+      "line": 123,
+      "sha256": "8981b26b3b446b1c6f266dbcdfc8b1c5dc678be3629c8e1ae761cb4d7c95dfdc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 36,
+      "line": 129,
+      "sha256": "7b16ea831d2fe854316a1621320da023d81dbd00364a985a072f3fa84cb3aafa",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 37,
+      "line": 136,
+      "sha256": "015f2cda4f8bab38c7f5fb530fb5ca04f768dae6235bf9bb38c5d8d1cc1dd2dc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 38,
+      "line": 139,
+      "sha256": "d38f53421f824a97eaf66f09988fc5389726e25ebda4a121ff6d6586c505f7f5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 39,
+      "line": 141,
+      "sha256": "8981b26b3b446b1c6f266dbcdfc8b1c5dc678be3629c8e1ae761cb4d7c95dfdc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 40,
+      "line": 143,
+      "sha256": "9a2ae80e5efa1bd70e667dcfdc783a2dff45edef3b6d6bd9d23b93b2a07a810f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 41,
+      "line": 145,
+      "sha256": "6ae01f6a16a9129e91031a524854ca374ed594248f54a09858c9f13a94a99115",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 42,
+      "line": 148,
+      "sha256": "8981b26b3b446b1c6f266dbcdfc8b1c5dc678be3629c8e1ae761cb4d7c95dfdc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 43,
+      "line": 150,
+      "sha256": "6e5eb86ca480a82b2848f87da448985a5f3c3245d1cfa335485b852f709709a2",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 44,
+      "line": 152,
+      "sha256": "9a2ae80e5efa1bd70e667dcfdc783a2dff45edef3b6d6bd9d23b93b2a07a810f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 45,
+      "line": 152,
+      "sha256": "834f67b3dd264083414cc698932c24c0d009a9eb5307ed60934543bb50e4b9ac",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 46,
+      "line": 153,
+      "sha256": "6fb1d067487af43874d0bed88242cbe264705bdc50741a5be48822b9f052fda4",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 47,
+      "line": 156,
+      "sha256": "4219f3c92eb4e2436ef9ddc8641f6a5a1cab66ea8fe4fb9da47a55736b24e8cd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 48,
+      "line": 156,
+      "sha256": "96765f99ce46a7f743655867bacb4ee7b6eb93c8dfb7dc69a61856c7f5085236",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 49,
+      "line": 156,
+      "sha256": "9a2ae80e5efa1bd70e667dcfdc783a2dff45edef3b6d6bd9d23b93b2a07a810f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 50,
+      "line": 156,
+      "sha256": "8981b26b3b446b1c6f266dbcdfc8b1c5dc678be3629c8e1ae761cb4d7c95dfdc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 51,
+      "line": 156,
+      "sha256": "3f4b5bf4ecfff1d43c1f8acdb01076b956706dc74a5939121d11175d3bb0f591",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 52,
+      "line": 156,
+      "sha256": "13d6058cfa01503ee1307b863e8cbb078a8f8bac369dc5dbee62dcc52602c2a8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 53,
+      "line": 160,
+      "sha256": "f0e308bffcd1debd3a5e2053e75d75c53ce8c962ab3c0307f919009c834c5888",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 54,
+      "line": 160,
+      "sha256": "72f7eb4cdb74b9c262ebf1c99a72a607acb9d41ea0f5b2ea0e08c35042935a2f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 55,
+      "line": 160,
+      "sha256": "1caf76efc3707321f49e3751c87657f86b90ce1dfa904a7f26bf3cfc495cb4bd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 56,
+      "line": 160,
+      "sha256": "962465f9ad99af3a03165ad221a20a2f5111dac2fa7c2ca56eee0402a323d741",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 57,
+      "line": 166,
+      "sha256": "100f51ad3fde6951e432c9e79ac444c5545109d1cdbbab5325facd68da125901",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 58,
+      "line": 178,
+      "sha256": "67bad659e38592f5d11d245364920f6209f70f26489251f9e36d109277fb42bd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 59,
+      "line": 180,
+      "sha256": "7a03384e6e8b85197651452d5bfaff72559b1af11aedb271b10f67c1c4e9154e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 60,
+      "line": 180,
+      "sha256": "67bad659e38592f5d11d245364920f6209f70f26489251f9e36d109277fb42bd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 61,
+      "line": 180,
+      "sha256": "fe3ce20fdccd534674959e72c66eb329c5f93c4431a5b7fe359c3b8697b812ff",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 62,
+      "line": 180,
+      "sha256": "1f87755a498605f32de065b88b0175e9ee0e39c63c4ee96fe97fe7dc3e6dacb7",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 63,
+      "line": 180,
+      "sha256": "67bad659e38592f5d11d245364920f6209f70f26489251f9e36d109277fb42bd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 64,
+      "line": 182,
+      "sha256": "f9caf28121f7b2275f443b07399b89babfceaa47990758611751454bf2c4d8a9",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 65,
+      "line": 193,
+      "sha256": "ace7c93ba6e4cbba4f8d5c993101879740d1622537387d57ea108eadca8f210a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 66,
+      "line": 195,
+      "sha256": "65f8ed76cbd2c35b67d99679a397dc6728ec5b217be3361505811ed5ce090a9f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 67,
+      "line": 195,
+      "sha256": "4c9de87069a3eaf13271122989c6ab3cbd1b43f8e61f3d6fcb8b9b3284f7b571",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 68,
+      "line": 197,
+      "sha256": "0592857f8befc5046ad96428079dc79451f5152cbb0c6cc33faf28ac733cc269",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 69,
+      "line": 208,
+      "sha256": "d9b1567a52bb6c4288bb7f6675dbb7c06c5641fdb9310727e5539899f9b994f5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 70,
+      "line": 210,
+      "sha256": "4c9de87069a3eaf13271122989c6ab3cbd1b43f8e61f3d6fcb8b9b3284f7b571",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 71,
+      "line": 210,
+      "sha256": "969fdb8d7a6c356e0ae4549c3dfc94152633981cc3dc04dc9e31ce332b6895c3",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 72,
+      "line": 216,
+      "sha256": "5f5d4931bac4fcaa310fada1817ef5e90ea447d20f26082e159fd15e402e07ed",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 73,
+      "line": 231,
+      "sha256": "969fdb8d7a6c356e0ae4549c3dfc94152633981cc3dc04dc9e31ce332b6895c3",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 74,
+      "line": 231,
+      "sha256": "71f43959a021b6033a3f181ed02dfb8aba04df329742c6e3c524a1bad1f39e99",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 75,
+      "line": 231,
+      "sha256": "077c010e5ad3e7bcece342a109501190fe6e37d11fcfa652612271e07d2b1ee1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 76,
+      "line": 231,
+      "sha256": "4c9de87069a3eaf13271122989c6ab3cbd1b43f8e61f3d6fcb8b9b3284f7b571",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 77,
+      "line": 231,
+      "sha256": "b2add6b557394d5f1a415501930ad174f9f162e364041fdf0cb6f690345d0b42",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 78,
+      "line": 231,
+      "sha256": "9777c6f66a79874099476f33912a5b854b6c011e8b39798b16fc4e59f636251a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 79,
+      "line": 231,
+      "sha256": "57d3b066c65d7603fc76830fe60044285ac57e3571a24ff79faec6b66e98ebec",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 80,
+      "line": 233,
+      "sha256": "1514a8d37ebc6a25e14159f90cd986f5957be92c159e9b9c6dce98d84b4fd9ff",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 81,
+      "line": 233,
+      "sha256": "86468aa6b0438a99a4c4670269f0a5080e4bd6a02b41770885587178b86940d9",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 82,
+      "line": 233,
+      "sha256": "5e23d9951b89fa2eb2f8dbe90bcdee09e1ba5f882b5bd987e1df07dda2f201da",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 83,
+      "line": 233,
+      "sha256": "5bfb850df292ef812824f5128288450dd1ac3cd039667f3da49cf83f2f6c093d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 84,
+      "line": 233,
+      "sha256": "cb24a7c7d77ee5d82291a886893dda66ced0f0157e06ac419933c234d97128c7",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 85,
+      "line": 243,
+      "sha256": "3bcfcbdbbe9f7c7ca41c8885ed1fc5df5f4596575a6566ce40d1464b76e651e6",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 86,
+      "line": 245,
+      "sha256": "7a5258ad7337320c0d17047da74e133e5b8a2f4551177015dbd0a4c7f958ed09",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 87,
+      "line": 250,
+      "sha256": "3e04e12e3f8379dfa379d65878534242059c3afea7bbe7ac5510e3385b2e9e27",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 88,
+      "line": 250,
+      "sha256": "5c6aa16dd8a97a5c007da46b343a911cd337dd96da2742bbbf2faf5751d2e080",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 89,
+      "line": 254,
+      "sha256": "7a03384e6e8b85197651452d5bfaff72559b1af11aedb271b10f67c1c4e9154e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 90,
+      "line": 254,
+      "sha256": "cdd12b79b3669be6a51429fe47a5e9330703d9ad71eb67c9fcfac1fcee84f225",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 91,
+      "line": 254,
+      "sha256": "6fa5c6141b9f29631d11fbef2546e5e758672953cf99bbf95a4cc151d0281678",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 92,
+      "line": 254,
+      "sha256": "9542e48d9e394500c6dd698a986725306b251c489d989e3a91d9d607c831340e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 93,
+      "line": 254,
+      "sha256": "d38f53421f824a97eaf66f09988fc5389726e25ebda4a121ff6d6586c505f7f5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 94,
+      "line": 255,
+      "sha256": "55b0ab9c817b073f6c2a467ebf74f9c882fbf3d301c1aa7becbad7f05055a63f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 95,
+      "line": 255,
+      "sha256": "f08a29624b3fbdafe9b4cb1d99698fcd5c71ff87e6d1181ea3af42672b5af10b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 96,
+      "line": 255,
+      "sha256": "3405530c212aebbead5374caca23ddb5a308e163356728cb7ca946450d4542a3",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 97,
+      "line": 255,
+      "sha256": "1581d72466c8531608b69853e932c46cdeae231bceea6a8e7db9c2358e5f51f2",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 98,
+      "line": 259,
+      "sha256": "96618057e1ad7eb831500f35141cd8db2a2f9ab6ad4e306a6b43b2b02ac2ec38",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 99,
+      "line": 262,
+      "sha256": "d5042124e3e20a2162c5cbc08b122b61a4c1789e67c6ed15c4d7bb86a9e0e8c7",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 100,
+      "line": 262,
+      "sha256": "55dbc39dec5a47e76fae118b130a3dcb904c0c655fe289f66eaa5d6df5411168",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 101,
+      "line": 262,
+      "sha256": "dc49a69d989a29f4fa754e0c8be649fa2e7da8ec43651356368d992777f99236",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 102,
+      "line": 262,
+      "sha256": "d5042124e3e20a2162c5cbc08b122b61a4c1789e67c6ed15c4d7bb86a9e0e8c7",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 103,
+      "line": 262,
+      "sha256": "e25ea58b5f9860d9a95136120ee9c401dfbba73208d3c375a722c919303c437d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 104,
+      "line": 262,
+      "sha256": "08896848057cce649b0896ca77ca4684a0a53225d316d6f212e6f3c17542d39a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 105,
+      "line": 262,
+      "sha256": "43e63162bbd2d3f02a9648a845408e832781f158237447b64e7779aaa71ea5ad",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 106,
+      "line": 262,
+      "sha256": "e3b98a4da31a127d4bde6e43033f66ba274cab0eb7eb1c70ec41402bf6273dd8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 107,
+      "line": 262,
+      "sha256": "d44bb41061c950502750ba844bd8144185babf68a3a9630a652ea6c1a2ba098b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 108,
+      "line": 274,
+      "sha256": "93e205464ab20b99dca55bd67c2065d3ae75b17293c143fbf60b117815691812",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 109,
+      "line": 282,
+      "sha256": "d41fa792f6c2010484b72f7744b388f73cfeca15cf5c670aafec142b55479786",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 110,
+      "line": 292,
+      "sha256": "5ddea48045d1f2359debfc9e56646868fb23e373d3c294a4257b2723513ccd29",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 111,
+      "line": 300,
+      "sha256": "d15256946c1336cae7e83f76527be8c50147a6903a9156dcc42104c150a2aaae",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 112,
+      "line": 300,
+      "sha256": "f3447bba535bb3a78a873d10348bb896e1d118cd0ee6cc884a056f4e8a7217a6",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 113,
+      "line": 308,
+      "sha256": "ad3e78750c348cc1b55e84e9bb71ab5cbbf745998ed3d92b9adbf910a3c432d5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 114,
+      "line": 308,
+      "sha256": "c925f402b5b247ce2ff372d80e53848003167dd06face7b97dfc911a40f7c801",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 115,
+      "line": 308,
+      "sha256": "6c7e888370da58ad7c0bf758fdadac40200fac0c697a4ee6b01910119407269c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 116,
+      "line": 308,
+      "sha256": "419bf7d3a5d55c08e27f7b82f674daff583fb6fe390dda5d3993474cef277743",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 117,
+      "line": 308,
+      "sha256": "8b19d341743126cc087a96cdfb5e2387f45c75c1deb5a8b19a0ce1f19d9fa74e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 118,
+      "line": 308,
+      "sha256": "4550b11dd4f8bd04c522986acf6db9dcd9f80cd775afc287c80340123b27df6d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 119,
+      "line": 308,
+      "sha256": "8464ba09e23d3139ca523b13990941f5619f5b3038c4107e8aa2ac03a63684fa",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 120,
+      "line": 308,
+      "sha256": "a45c41c7c8170583b223628d524b905ea075618ece8b26f6799d4bd93b18fc00",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 121,
+      "line": 308,
+      "sha256": "a45c41c7c8170583b223628d524b905ea075618ece8b26f6799d4bd93b18fc00",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 122,
+      "line": 310,
+      "sha256": "419bf7d3a5d55c08e27f7b82f674daff583fb6fe390dda5d3993474cef277743",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 123,
+      "line": 310,
+      "sha256": "615bdd17c2556f82f384392ea8557f8cc88b03501c759e23093ab0b2a9b5cd48",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 124,
+      "line": 310,
+      "sha256": "a2c508f756fd50443052e6d4dd608e8b9617507afac5be1bba5619787d3757f2",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 125,
+      "line": 310,
+      "sha256": "53928fca0613d5f23bcc0947b57079dc94b21a942725681209c2b36cd77388d5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 126,
+      "line": 316,
+      "sha256": "f2a3f222970c41b70a986442f6d134706fceabf0be761b00fc55f04101bb0f0c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 127,
+      "line": 316,
+      "sha256": "2a27b94be0d1e6c25e755331d19ecccbd486970480f8c69d7a75f95c159e281b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 128,
+      "line": 322,
+      "sha256": "f200f761c9b63bcd34747badaf5078205298d0188dafdbb9d2feadb7f51c7d9f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 129,
+      "line": 324,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 130,
+      "line": 324,
+      "sha256": "5c62e091b8c0565f1bafad0dad5934276143ae2ccef7a5381e8ada5b1a8d26d2",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 131,
+      "line": 328,
+      "sha256": "70b7d19af38f71098ca86acb35b9daa5cdfd7919ddb5baf7f614836bd9c3454e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 132,
+      "line": 328,
+      "sha256": "8e9fa623fecfe8ae5f817c234df598e686f4eb7e4ecc1febffef1e78c9ad55ac",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 133,
+      "line": 328,
+      "sha256": "c95db7dc69ee400fe8af09505ad7ca1e668fbe95d16a5a120c96b8746b2ba806",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 134,
+      "line": 328,
+      "sha256": "d9a67375318e7b638f61a707eb411032133f1ec1afd6e5bc3b0012055a395126",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 135,
+      "line": 330,
+      "sha256": "c4298ea0ff2c11617ae30be84dbd7291935be1b0786078d87a90a3c9add99478",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 136,
+      "line": 330,
+      "sha256": "7435dd184fb653522f3bc21b142de5f0560bd907d1425ee718d4a35c0927e71d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 137,
+      "line": 330,
+      "sha256": "aab9db6e286302fce09f7601593a6cad14bb51913fd64e0a1e0bca1290b20f71",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 138,
+      "line": 330,
+      "sha256": "62c66a7a5dd70c3146618063c344e531e6d4b59e379808443ce962b3abd63c5a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 139,
+      "line": 332,
+      "sha256": "8bbf705c263e3b0ae6511a481dbd1230274e3a62daf90a654f9844da8e6bcb76",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 140,
+      "line": 335,
+      "sha256": "8ce86a6ae65d3692e7305e2c58ac62eebd97d3d943e093f577da25c36988246b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 141,
+      "line": 335,
+      "sha256": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 142,
+      "line": 337,
+      "sha256": "217e69b923f51b3cc2c34b21898e3cad31b4d2fb9b901887b59a6e75833cabb9",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 143,
+      "line": 339,
+      "sha256": "a307fd0e2c669165a8123889a8ad66eaf7cf000be53f1cfcffb5e3883c1038b7",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 144,
+      "line": 339,
+      "sha256": "3c9fabf9d2e5261409034cc2131506452b0dd436f27a8437c755cf1a459dfa7a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 145,
+      "line": 341,
+      "sha256": "553c371a125922e5be90a8c385b645152837f9bfa28640989c2ec7a1ec28a7e3",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 146,
+      "line": 343,
+      "sha256": "62c66a7a5dd70c3146618063c344e531e6d4b59e379808443ce962b3abd63c5a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 147,
+      "line": 349,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 148,
+      "line": 349,
+      "sha256": "8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 149,
+      "line": 349,
+      "sha256": "8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 150,
+      "line": 349,
+      "sha256": "145dcae9ca8cebc71495425a79f6bf0ee5d0e9b74ee635d7fc7f3e739d885234",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 151,
+      "line": 351,
+      "sha256": "70b7d19af38f71098ca86acb35b9daa5cdfd7919ddb5baf7f614836bd9c3454e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 152,
+      "line": 351,
+      "sha256": "8e9fa623fecfe8ae5f817c234df598e686f4eb7e4ecc1febffef1e78c9ad55ac",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 153,
+      "line": 351,
+      "sha256": "c95db7dc69ee400fe8af09505ad7ca1e668fbe95d16a5a120c96b8746b2ba806",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 154,
+      "line": 351,
+      "sha256": "520011b0be3533f70143161c56fa8ad812f5c112671fb643de640880c1db29db",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 155,
+      "line": 351,
+      "sha256": "449167a0d297afe6f42ab5ead7ce993340a74b51a9c1c50744150617a501e0eb",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 156,
+      "line": 351,
+      "sha256": "f8f0cfe6cc63565f2b4351435f6ae3604f877808f7b9da5d46833f466a155739",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 157,
+      "line": 351,
+      "sha256": "0b0ef5c07fdc5aeb56ba6b47289db4bb5d9412908a8e607ce4752c5638d99244",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 158,
+      "line": 351,
+      "sha256": "66a27e58a2ae11a8a7595251686232c04979bce329c8ebd78b34ab58de5d2068",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 159,
+      "line": 353,
+      "sha256": "6399ff82a99bdc282578b5f0b1c1e2732beaeab9c054731551bdb46b8642c666",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 160,
+      "line": 355,
+      "sha256": "6232cab5cdfb0bf7bf38cdf1343cb3407a82c2b71aba8ed27e9d89884d58d6eb",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 161,
+      "line": 355,
+      "sha256": "519b8c078e14f210da37ca001e89a2818c5dc51a01b2642c2158a6d30e7af3e2",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 162,
+      "line": 355,
+      "sha256": "d9a67375318e7b638f61a707eb411032133f1ec1afd6e5bc3b0012055a395126",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 163,
+      "line": 355,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 164,
+      "line": 357,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 165,
+      "line": 357,
+      "sha256": "8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 166,
+      "line": 359,
+      "sha256": "46b86494f32a59853977a9bc08e9c81b1af2287031450b589b264a1acbeb3bf6",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 167,
+      "line": 363,
+      "sha256": "e37d5d099bb9316c24394f5e6ab184a188b7da43219e290b890ebf2c03663640",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 168,
+      "line": 365,
+      "sha256": "5652da9e25ce884dbfb6ccf9c32cbbd129136d9a3ed13cfb154a65c8bbb9506e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 169,
+      "line": 365,
+      "sha256": "3a810cba7741331f2949bcb54300daa23e42fafa2f3a81b26757f1cbc4f1ff03",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 170,
+      "line": 367,
+      "sha256": "3e47712ea062d309afb58a77f48d4d101820ed846a786b54b5cdb46f7ece6935",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 171,
+      "line": 370,
+      "sha256": "8e9fa623fecfe8ae5f817c234df598e686f4eb7e4ecc1febffef1e78c9ad55ac",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 172,
+      "line": 370,
+      "sha256": "c8e6d661088bde1d61c71d8abe094bdcb487a4a86775ae3aaf590f8ce36e6afc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 173,
+      "line": 370,
+      "sha256": "0bb4ec6f19b1d42f81435b16455c61898aa001be5591dcab9e17c313b06b388f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 174,
+      "line": 370,
+      "sha256": "781b4a4d06ca4e130822e9334e64cf01fbd224b812de6bc15c611affc9613320",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 175,
+      "line": 370,
+      "sha256": "6f67d4fc816dd632d71f45435c41e856e5e79c9b2b3b05fb6141202056655aa5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 176,
+      "line": 370,
+      "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 177,
+      "line": 370,
+      "sha256": "62c66a7a5dd70c3146618063c344e531e6d4b59e379808443ce962b3abd63c5a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 178,
+      "line": 370,
+      "sha256": "62c66a7a5dd70c3146618063c344e531e6d4b59e379808443ce962b3abd63c5a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 179,
+      "line": 370,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 180,
+      "line": 372,
+      "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 181,
+      "line": 372,
+      "sha256": "454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 182,
+      "line": 384,
+      "sha256": "4f218032237abba50592349cc0145e62746d83d0269a8b8567c2c81a3cf579e2",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 183,
+      "line": 384,
+      "sha256": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 184,
+      "line": 384,
+      "sha256": "bb82ab64f48ac519d37e8f053a0b2a2c228ec276c5812d67c9f86cbfac048dae",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 185,
+      "line": 384,
+      "sha256": "0ba9223f2aeda8f6f6cb571c4c97d7b214ca4e69431fba3e9f7153893920ba1e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 186,
+      "line": 384,
+      "sha256": "044ead1e508e6943a02ec567a205fd950d7682c87143bb60d2c4490c3b2292f3",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 187,
+      "line": 384,
+      "sha256": "8ce86a6ae65d3692e7305e2c58ac62eebd97d3d943e093f577da25c36988246b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 188,
+      "line": 384,
+      "sha256": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 189,
+      "line": 384,
+      "sha256": "e77f9eceea598e09740def25c224ecf0eaeb5299199ce0adc791daa10fccd022",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 190,
+      "line": 384,
+      "sha256": "3e0534ff9dda7eeb6b8a005df494be13ac9596c7c065bb632156fc12c8805e63",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 191,
+      "line": 386,
+      "sha256": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 192,
+      "line": 388,
+      "sha256": "651a326d250efcf190bda642a28aa7c08017c0a3039adceb6e1278ca39678694",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 193,
+      "line": 392,
+      "sha256": "540f08d9a7fe38785e33fb32d6c891fff4d96dd5eb3d1539827b972317ba15df",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 194,
+      "line": 397,
+      "sha256": "acb0e93fde928e55200ba40dc10e5985995341341c808c86bb78403cca4e0809",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 195,
+      "line": 397,
+      "sha256": "072f167c90cf59d94a62416988ffd737e6357d4b92bba46827ecae4835cda343",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 196,
+      "line": 399,
+      "sha256": "1d400411837cabb7c1b08ccd0489ff2b6e2b66ea1af8e6b4be0977fa6453a7a8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 197,
+      "line": 401,
+      "sha256": "ec84613b712fe298ab201ef439c561a99be471f2bc284379e063c8a9123786eb",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 198,
+      "line": 401,
+      "sha256": "418c7d38cfa0c1406cb91318d754382487a68c53d93c48abc0ed7dccf9574d89",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 199,
+      "line": 401,
+      "sha256": "ab514a53cc954aa2c135f15fc3b8717ba96b307145237a2314deb11fed3cd169",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 200,
+      "line": 401,
+      "sha256": "5129a7449919c2a27d8c95e1cc8ea07e2be1c562ef8d66c796a102dfbf541549",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 201,
+      "line": 403,
+      "sha256": "a307fd0e2c669165a8123889a8ad66eaf7cf000be53f1cfcffb5e3883c1038b7",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 202,
+      "line": 405,
+      "sha256": "189f40034be7a199f1fa9891668ee3ab6049f82d38c68be70f596eab2e1857b7",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 203,
+      "line": 405,
+      "sha256": "fa50b9fc6d1128679b8b19b8f1f25cc4aaab21ce89ce7bb90ee27587d1ffa965",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 204,
+      "line": 405,
+      "sha256": "aab9db6e286302fce09f7601593a6cad14bb51913fd64e0a1e0bca1290b20f71",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 205,
+      "line": 405,
+      "sha256": "10406ff0f8d39bbc0e5967649eb3a2602cea3691c0f967d40c9cf7d03f1c4bd1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 206,
+      "line": 405,
+      "sha256": "17290963abfef267810532c4b731f4528cf43f2ac4c521a7b8f533a77d4977a3",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 207,
+      "line": 407,
+      "sha256": "ccd19be58383d4f4e0c4589bf43ab07fa803105168a75625949b761dd2baf751",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 208,
+      "line": 415,
+      "sha256": "f3447bba535bb3a78a873d10348bb896e1d118cd0ee6cc884a056f4e8a7217a6",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 209,
+      "line": 415,
+      "sha256": "949146bfeae6215745d1331d1136aafbcd4d93d474b6dd165992d0cf1ea4a985",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 210,
+      "line": 415,
+      "sha256": "b84dee5aa838bf00056835023cc607d6ffb00dfe3487ded3ea109f170ce7a527",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 211,
+      "line": 417,
+      "sha256": "657096921c4acadd01d24f044e0e9bc76430c566997222e885bd342ea7232278",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 212,
+      "line": 417,
+      "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 213,
+      "line": 417,
+      "sha256": "5db71bbeffc2c099fa58fa962b2f7940069cb309dfe5a5d5d8926ed77bb12d3d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 214,
+      "line": 417,
+      "sha256": "2639178bfd09377564dfa9a778ccc2e7ff600c8d21686023d601007bf7cd3a1d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 215,
+      "line": 421,
+      "sha256": "9f2435486e8bdb2333f3a922064a5a894fe19c6ddc463774e1868f58c4830058",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 216,
+      "line": 424,
+      "sha256": "8fc28549e71af3c06c80e6bec41cdb46ae5b0db826d3467e51acf9d720caec65",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 217,
+      "line": 424,
+      "sha256": "e7f4739099149eaa3f457cf94bfa968968625fb8d56d5a5a48ca3020e3a12f9d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 218,
+      "line": 424,
+      "sha256": "ace7c93ba6e4cbba4f8d5c993101879740d1622537387d57ea108eadca8f210a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 219,
+      "line": 424,
+      "sha256": "f37b447768a96deff9279a71ab088a7f48212b72702fd83366b7c9e85791d9e8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 220,
+      "line": 424,
+      "sha256": "249723d2bf477f9224c88cd5e5089cf62f31509e4e12e3e6030c77d46c37e9fa",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 221,
+      "line": 424,
+      "sha256": "67bad659e38592f5d11d245364920f6209f70f26489251f9e36d109277fb42bd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 222,
+      "line": 424,
+      "sha256": "cf3bae39dd692048a8bf961182e6a34dfd323eeb0748e162eaf055107f1cb873",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 223,
+      "line": 428,
+      "sha256": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 224,
+      "line": 428,
+      "sha256": "a717968c751b46468bc8803c64f03e2127ec38cd46413ce4436eeb8ebfd4e3ab",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 225,
+      "line": 428,
+      "sha256": "53277cef66815b3631ea31e0e6e4aa039d9102bac2856b1fdf4c401270c707ff",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 226,
+      "line": 428,
+      "sha256": "d9b1567a52bb6c4288bb7f6675dbb7c06c5641fdb9310727e5539899f9b994f5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 227,
+      "line": 428,
+      "sha256": "ace7c93ba6e4cbba4f8d5c993101879740d1622537387d57ea108eadca8f210a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 228,
+      "line": 428,
+      "sha256": "67bad659e38592f5d11d245364920f6209f70f26489251f9e36d109277fb42bd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 229,
+      "line": 428,
+      "sha256": "ca7008ae447ee9dc6a236357267ec25c65415a9942eacc8c9334b84288b73301",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 230,
+      "line": 428,
+      "sha256": "98391915cbb7346b4f239cd62725d6edf9d4f937e0579a4beaa87abfb71ef4dc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 231,
+      "line": 428,
+      "sha256": "ace7c93ba6e4cbba4f8d5c993101879740d1622537387d57ea108eadca8f210a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 232,
+      "line": 430,
+      "sha256": "134f1c50f630c94b5b249febf4b4efac6dbe097878cd6f42ea043bc1d0f05383",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 233,
+      "line": 430,
+      "sha256": "f13202a2a35326b458e56c042ec42822542c2278176edc02390ec7e5846d91ee",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 234,
+      "line": 431,
+      "sha256": "51bf079e69ad03a8bf4e8f60a176753fe234b50c4a36a5a752e4eaa30ef7e795",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 235,
+      "line": 431,
+      "sha256": "67bad659e38592f5d11d245364920f6209f70f26489251f9e36d109277fb42bd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 236,
+      "line": 431,
+      "sha256": "f37b447768a96deff9279a71ab088a7f48212b72702fd83366b7c9e85791d9e8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 237,
+      "line": 431,
+      "sha256": "67bad659e38592f5d11d245364920f6209f70f26489251f9e36d109277fb42bd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 238,
+      "line": 432,
+      "sha256": "4066b33475772dd4bc2f297b4c941f2e2b52a73d56c86da2e8d183caab0f7a3f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 239,
+      "line": 432,
+      "sha256": "ca7008ae447ee9dc6a236357267ec25c65415a9942eacc8c9334b84288b73301",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 240,
+      "line": 433,
+      "sha256": "db292ccb616dcd071628127a76e2d464d765468a2a985be25c1ca363d80857c9",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 241,
+      "line": 433,
+      "sha256": "98391915cbb7346b4f239cd62725d6edf9d4f937e0579a4beaa87abfb71ef4dc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 242,
+      "line": 433,
+      "sha256": "249723d2bf477f9224c88cd5e5089cf62f31509e4e12e3e6030c77d46c37e9fa",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 243,
+      "line": 434,
+      "sha256": "10845de283abdc8adae34a89630bd229bd0ff0a20410f6c6455aa957606479e8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 244,
+      "line": 435,
+      "sha256": "6ed0d29ab6079a3b14a64bd2f2ed23ed53addaaa63ecc19cb6fa59912b8ad201",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 245,
+      "line": 435,
+      "sha256": "ace7c93ba6e4cbba4f8d5c993101879740d1622537387d57ea108eadca8f210a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 246,
+      "line": 437,
+      "sha256": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 247,
+      "line": 437,
+      "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 248,
+      "line": 437,
+      "sha256": "a717968c751b46468bc8803c64f03e2127ec38cd46413ce4436eeb8ebfd4e3ab",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 249,
+      "line": 437,
+      "sha256": "53277cef66815b3631ea31e0e6e4aa039d9102bac2856b1fdf4c401270c707ff",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 250,
+      "line": 437,
+      "sha256": "2639178bfd09377564dfa9a778ccc2e7ff600c8d21686023d601007bf7cd3a1d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 251,
+      "line": 437,
+      "sha256": "611ab81d6c095731290aca624784aeca4472ac78549001b3e42b2273f08e697e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 252,
+      "line": 439,
+      "sha256": "f2a3f222970c41b70a986442f6d134706fceabf0be761b00fc55f04101bb0f0c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 253,
+      "line": 439,
+      "sha256": "a0e179bfce19a5c29e5ef51023102122e9fef2d2b0aacdd9010c474bdba9c5fe",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 254,
+      "line": 439,
+      "sha256": "f3447bba535bb3a78a873d10348bb896e1d118cd0ee6cc884a056f4e8a7217a6",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 255,
+      "line": 439,
+      "sha256": "bdbcaed33ae75d0a8c18b0c836e1c1ea60db01d2d5110cfec5c1190b99d6ad76",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 256,
+      "line": 439,
+      "sha256": "fdb45267f9bd2dddd3138af4458a03be060aa09b813315de65f5c5c91d937b13",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 257,
+      "line": 443,
+      "sha256": "aad4276b565b84f148354cd3f663ac654f8414efb550c162f9995105880c1265",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 258,
+      "line": 443,
+      "sha256": "1bad6b8cf97131fceab8543e81f7757195fbb1d36b376ee994ad1cf17699c464",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 259,
+      "line": 443,
+      "sha256": "51bf079e69ad03a8bf4e8f60a176753fe234b50c4a36a5a752e4eaa30ef7e795",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 260,
+      "line": 443,
+      "sha256": "53277cef66815b3631ea31e0e6e4aa039d9102bac2856b1fdf4c401270c707ff",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 261,
+      "line": 443,
+      "sha256": "cf3bae39dd692048a8bf961182e6a34dfd323eeb0748e162eaf055107f1cb873",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 262,
+      "line": 445,
+      "sha256": "10845de283abdc8adae34a89630bd229bd0ff0a20410f6c6455aa957606479e8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 263,
+      "line": 445,
+      "sha256": "6ed0d29ab6079a3b14a64bd2f2ed23ed53addaaa63ecc19cb6fa59912b8ad201",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 264,
+      "line": 445,
+      "sha256": "ace7c93ba6e4cbba4f8d5c993101879740d1622537387d57ea108eadca8f210a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 265,
+      "line": 449,
+      "sha256": "ace7c93ba6e4cbba4f8d5c993101879740d1622537387d57ea108eadca8f210a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 266,
+      "line": 449,
+      "sha256": "67bad659e38592f5d11d245364920f6209f70f26489251f9e36d109277fb42bd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 267,
+      "line": 449,
+      "sha256": "89c8d388234770a3683d31cf038aafc4aaff95959fd3fc29ce6fd3d1bfe9288e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 268,
+      "line": 451,
+      "sha256": "0b66cbeb49177e392334da782db3bc0eae6bd919a03f00035fd55deb423e9050",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 269,
+      "line": 453,
+      "sha256": "4eb97ebc35181c6670252988ad424194641418012d794cab15fe05e73f290827",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 270,
+      "line": 453,
+      "sha256": "e6ea5727cef92377c638250143a0e08524a79367665581391f2e443f71fdfb03",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 271,
+      "line": 453,
+      "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 272,
+      "line": 455,
+      "sha256": "75c61d70e549e6c06b2d2037047353c762e245b4c78111f0b5913db54331dba8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 273,
+      "line": 459,
+      "sha256": "883dcd503907051c8e5b6033aff8baf7d7f35213b0542b5d1675ffe8394cfe01",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 274,
+      "line": 461,
+      "sha256": "73ec8038e3175b44cd44a2e813a3bbdf63e5b5cd0aae9211f0c7868b8a07947b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 275,
+      "line": 461,
+      "sha256": "8ce86a6ae65d3692e7305e2c58ac62eebd97d3d943e093f577da25c36988246b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 276,
+      "line": 461,
+      "sha256": "ae4a4fbc63c9c1980a2a8651634e9f52ea0bba1bf4749bb6ed202439cf682db5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 277,
+      "line": 461,
+      "sha256": "37f3a9466e8de2d6e29d3d91c93665ba00f5c4dff71e86026670f20dc200b5f0",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 278,
+      "line": 461,
+      "sha256": "856984eb6758918fb5f278e34217bb64330610e3e2cceb5c40930f2f3784c8ad",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 279,
+      "line": 461,
+      "sha256": "cf3bae39dd692048a8bf961182e6a34dfd323eeb0748e162eaf055107f1cb873",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 280,
+      "line": 465,
+      "sha256": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 281,
+      "line": 465,
+      "sha256": "a717968c751b46468bc8803c64f03e2127ec38cd46413ce4436eeb8ebfd4e3ab",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 282,
+      "line": 465,
+      "sha256": "53277cef66815b3631ea31e0e6e4aa039d9102bac2856b1fdf4c401270c707ff",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 283,
+      "line": 465,
+      "sha256": "d9b1567a52bb6c4288bb7f6675dbb7c06c5641fdb9310727e5539899f9b994f5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 284,
+      "line": 465,
+      "sha256": "ace7c93ba6e4cbba4f8d5c993101879740d1622537387d57ea108eadca8f210a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 285,
+      "line": 465,
+      "sha256": "67bad659e38592f5d11d245364920f6209f70f26489251f9e36d109277fb42bd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 286,
+      "line": 465,
+      "sha256": "ca7008ae447ee9dc6a236357267ec25c65415a9942eacc8c9334b84288b73301",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 287,
+      "line": 465,
+      "sha256": "98391915cbb7346b4f239cd62725d6edf9d4f937e0579a4beaa87abfb71ef4dc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 288,
+      "line": 465,
+      "sha256": "d9b1567a52bb6c4288bb7f6675dbb7c06c5641fdb9310727e5539899f9b994f5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 289,
+      "line": 467,
+      "sha256": "134f1c50f630c94b5b249febf4b4efac6dbe097878cd6f42ea043bc1d0f05383",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 290,
+      "line": 467,
+      "sha256": "3d108b252d3395f4cd2f20ee5e687ffe4bfb6dd770e4b4eaf9bf9f015c5f2379",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 291,
+      "line": 468,
+      "sha256": "51bf079e69ad03a8bf4e8f60a176753fe234b50c4a36a5a752e4eaa30ef7e795",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 292,
+      "line": 468,
+      "sha256": "ace7c93ba6e4cbba4f8d5c993101879740d1622537387d57ea108eadca8f210a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 293,
+      "line": 469,
+      "sha256": "c92b9af02bb416cdd7236c3a3dda5c5f805253718facda4e5615bf7f2041c39a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 294,
+      "line": 469,
+      "sha256": "ca7008ae447ee9dc6a236357267ec25c65415a9942eacc8c9334b84288b73301",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 295,
+      "line": 470,
+      "sha256": "09f352f7178bd46cabf35562db18733512f8ab84cbe6e4641f281747f96c02db",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 296,
+      "line": 470,
+      "sha256": "98391915cbb7346b4f239cd62725d6edf9d4f937e0579a4beaa87abfb71ef4dc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 297,
+      "line": 470,
+      "sha256": "865bec7a952f904dc99e7bb28b6430976c3c1bc7ffece5631dca7ecb2a6fa584",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 298,
+      "line": 470,
+      "sha256": "98391915cbb7346b4f239cd62725d6edf9d4f937e0579a4beaa87abfb71ef4dc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 299,
+      "line": 471,
+      "sha256": "10845de283abdc8adae34a89630bd229bd0ff0a20410f6c6455aa957606479e8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 300,
+      "line": 472,
+      "sha256": "6ed0d29ab6079a3b14a64bd2f2ed23ed53addaaa63ecc19cb6fa59912b8ad201",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 301,
+      "line": 472,
+      "sha256": "d9b1567a52bb6c4288bb7f6675dbb7c06c5641fdb9310727e5539899f9b994f5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 302,
+      "line": 474,
+      "sha256": "d9b1567a52bb6c4288bb7f6675dbb7c06c5641fdb9310727e5539899f9b994f5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 303,
+      "line": 474,
+      "sha256": "865bec7a952f904dc99e7bb28b6430976c3c1bc7ffece5631dca7ecb2a6fa584",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 304,
+      "line": 474,
+      "sha256": "98391915cbb7346b4f239cd62725d6edf9d4f937e0579a4beaa87abfb71ef4dc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 305,
+      "line": 474,
+      "sha256": "0d913baa9489891a83f58502df66333d2dd7e536230070c45635c28382a7cd85",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 306,
+      "line": 474,
+      "sha256": "da0327897337133e7a060ebdc9b07303c20d350b2fdce5b02de3a27aa2e4cb9b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 307,
+      "line": 476,
+      "sha256": "25a09ca0937bbce68650a702993fb17290daf4c264888e9a3d39e061ebf1c0f2",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 308,
+      "line": 484,
+      "sha256": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 309,
+      "line": 484,
+      "sha256": "a717968c751b46468bc8803c64f03e2127ec38cd46413ce4436eeb8ebfd4e3ab",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 310,
+      "line": 484,
+      "sha256": "53277cef66815b3631ea31e0e6e4aa039d9102bac2856b1fdf4c401270c707ff",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 311,
+      "line": 484,
+      "sha256": "d9b1567a52bb6c4288bb7f6675dbb7c06c5641fdb9310727e5539899f9b994f5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 312,
+      "line": 484,
+      "sha256": "ace7c93ba6e4cbba4f8d5c993101879740d1622537387d57ea108eadca8f210a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 313,
+      "line": 484,
+      "sha256": "67bad659e38592f5d11d245364920f6209f70f26489251f9e36d109277fb42bd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 314,
+      "line": 484,
+      "sha256": "ca7008ae447ee9dc6a236357267ec25c65415a9942eacc8c9334b84288b73301",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 315,
+      "line": 484,
+      "sha256": "98391915cbb7346b4f239cd62725d6edf9d4f937e0579a4beaa87abfb71ef4dc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 316,
+      "line": 486,
+      "sha256": "134f1c50f630c94b5b249febf4b4efac6dbe097878cd6f42ea043bc1d0f05383",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 317,
+      "line": 486,
+      "sha256": "18bdb8078f9ea548e3d6922d25b6dc0024a86fce1778243978ea727387e64ce8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 318,
+      "line": 487,
+      "sha256": "70908de09cfba247fea854cd67d31a4525f826e982710c05d74af6cb292b1e4d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 319,
+      "line": 487,
+      "sha256": "ace7c93ba6e4cbba4f8d5c993101879740d1622537387d57ea108eadca8f210a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 320,
+      "line": 487,
+      "sha256": "0d7f0e336166042f8cc9e4c20ae427ba367c279d6e3dfd1bd7247b0fbce61d50",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 321,
+      "line": 487,
+      "sha256": "484aa6ccd17c9fe96eb955b9b56ed0c883b275301479deec1b817afe2abdaf72",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 322,
+      "line": 488,
+      "sha256": "d54d97021ac8723a576f9c632d42751e65bb4901def35ec96aab0b9a170e8d84",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 323,
+      "line": 488,
+      "sha256": "ca7008ae447ee9dc6a236357267ec25c65415a9942eacc8c9334b84288b73301",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 324,
+      "line": 489,
+      "sha256": "023978dadea2b04d2664e00c68c10e998a88694e5bb982c1016d442fa9649367",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 325,
+      "line": 489,
+      "sha256": "d9b1567a52bb6c4288bb7f6675dbb7c06c5641fdb9310727e5539899f9b994f5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 326,
+      "line": 489,
+      "sha256": "702c7c3aed27f9669e7f9cfdcc7f0f4b8bc4fe1fd326fcdb4d1cc4019aa2ec35",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 327,
+      "line": 489,
+      "sha256": "0d7f0e336166042f8cc9e4c20ae427ba367c279d6e3dfd1bd7247b0fbce61d50",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 328,
+      "line": 490,
+      "sha256": "10845de283abdc8adae34a89630bd229bd0ff0a20410f6c6455aa957606479e8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 329,
+      "line": 490,
+      "sha256": "527a7f0844472f3cc7360c10db36011507264f496f7e8f147317b11256624805",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 330,
+      "line": 490,
+      "sha256": "702c7c3aed27f9669e7f9cfdcc7f0f4b8bc4fe1fd326fcdb4d1cc4019aa2ec35",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 331,
+      "line": 491,
+      "sha256": "6ed0d29ab6079a3b14a64bd2f2ed23ed53addaaa63ecc19cb6fa59912b8ad201",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 332,
+      "line": 491,
+      "sha256": "527a7f0844472f3cc7360c10db36011507264f496f7e8f147317b11256624805",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 333,
+      "line": 491,
+      "sha256": "702c7c3aed27f9669e7f9cfdcc7f0f4b8bc4fe1fd326fcdb4d1cc4019aa2ec35",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 334,
+      "line": 493,
+      "sha256": "6b4ec3723b489c60c976f67e081663f1371e873c19f7469aa8010430c5619508",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 335,
+      "line": 493,
+      "sha256": "18bdb8078f9ea548e3d6922d25b6dc0024a86fce1778243978ea727387e64ce8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 336,
+      "line": 506,
+      "sha256": "08f271887ce94707da822d5263bae19d5519cb3614e0daedc4c7ce5dab7473f1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 337,
+      "line": 508,
+      "sha256": "87e026682b1104ed1d9dd1fc1ff39a6b7aea9bd7ea65dd20563a7c570c81fcd6",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 338,
+      "line": 509,
+      "sha256": "5d581e510678f7fc583b8af3137156d257daf6d18ab8f528aa7d12628ea141ba",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 339,
+      "line": 509,
+      "sha256": "08f271887ce94707da822d5263bae19d5519cb3614e0daedc4c7ce5dab7473f1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 340,
+      "line": 510,
+      "sha256": "08f271887ce94707da822d5263bae19d5519cb3614e0daedc4c7ce5dab7473f1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 341,
+      "line": 510,
+      "sha256": "08f271887ce94707da822d5263bae19d5519cb3614e0daedc4c7ce5dab7473f1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 342,
+      "line": 516,
+      "sha256": "08f271887ce94707da822d5263bae19d5519cb3614e0daedc4c7ce5dab7473f1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 343,
+      "line": 522,
+      "sha256": "f197d94b1922f0858f22f6350428fd6a813c1b5aa24b8df4bddc28bd43b3c959",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 344,
+      "line": 529,
+      "sha256": "036e4d6e2c2df4593fc19d05724508d44fea7c2f02bf6861b18a406a8d1437e1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 345,
+      "line": 529,
+      "sha256": "4b0b6f8a1b03fa01a630e36a86ee437f5cbfc5f196d5ec1e571ad1a8cad598af",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 346,
+      "line": 529,
+      "sha256": "dc4e666ddaf1e33105d2b58d1ce06834089b525bd95c8f5d27d1788b08d21dc3",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 347,
+      "line": 535,
+      "sha256": "9420c38523407ce9ab978e35f2df631b5db4ec59e44db681915b76ed9517b25f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 348,
+      "line": 542,
+      "sha256": "75ee621745bbccb49be5d14bb23c39d4de5ff5ea7c4eff7d486eece55f62685e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 349,
+      "line": 542,
+      "sha256": "7351b058a0a1fdfc587384d4d28747fef936e181c28d2966be89b6d66146e321",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 350,
+      "line": 542,
+      "sha256": "c776bbd937fbf8d8a1598b4e5c03ed103a66a756ac0fc6e93f4aadfdb22d34a1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 351,
+      "line": 544,
+      "sha256": "ace7c93ba6e4cbba4f8d5c993101879740d1622537387d57ea108eadca8f210a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 352,
+      "line": 544,
+      "sha256": "b2628625a576de5ca47e759067394677b0643f3ed9fa560c91a26590d632b7dc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 353,
+      "line": 544,
+      "sha256": "970530eaa229cec18bd2e176677fec261d7417cf66889c9b7028fff3a4278845",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 354,
+      "line": 546,
+      "sha256": "85e3df6f161c2754dcee873bef01a3c04817d5d80f8bf7742b5157b0aa59e96b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 355,
+      "line": 556,
+      "sha256": "10f530b3e309f76804f0ca974e19f3be3dd940a540831e0bcb6d618b408fdb59",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 356,
+      "line": 585,
+      "sha256": "7e93d2bcbb675a0a59d69f1bb5cac6383713133d92b2e6044afcd3b9bbe7ed74",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 357,
+      "line": 585,
+      "sha256": "d58fbe03cfe5548744b3c1e208d6d47a2196ff6cce8c867fbfe7c91f2bddd8c9",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 358,
+      "line": 585,
+      "sha256": "246f6cb901d8d0892abe5753736edd8e27a6dfdf865eb79cfa4b891d7a24ca7d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 359,
+      "line": 603,
+      "sha256": "3519cb0aa13573624f998590d06f22264fac3c8d1f4d36825ef1803ca47a1782",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 360,
+      "line": 603,
+      "sha256": "f52a751d2afd7f194cbab0b2f08f9ce95ec57a230412c5b3565a0f90c7620da7",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 361,
+      "line": 603,
+      "sha256": "6853ef20ce5ae30dcc980dbd0f44a89e89a2a53333c24ec52926c908ee35da62",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 362,
+      "line": 603,
+      "sha256": "1b16b1df538ba12dc3f97edbb85caa7050d46c148134290feba80f8236c83db9",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 363,
+      "line": 609,
+      "sha256": "40b66118fac5b4c2936395f68af174e2c72c016728b5875c4fcadc644d91d426",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 364,
+      "line": 610,
+      "sha256": "b9ec8a8647a7cde73ef381e75f8f050989c15ae4c64fc94572583e8c566a907d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 365,
+      "line": 611,
+      "sha256": "18dc7ed0e7fce4f7755bba22cc1074cfaf907aaabe5602b2a135b26afd112aff",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 366,
+      "line": 611,
+      "sha256": "18ac3e7343f016890c510e93f935261169d9e3f565436429830faf0934f4f8e4",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 367,
+      "line": 612,
+      "sha256": "e89f273151187e2e7d8131e5390c0510a5066fda00b615ebd4544d74067b615c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 368,
+      "line": 612,
+      "sha256": "18ac3e7343f016890c510e93f935261169d9e3f565436429830faf0934f4f8e4",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 369,
+      "line": 613,
+      "sha256": "daa8202c59d350844f05845a47e47e4ec0aca43cb4cd64e0d8c4811f1add8a31",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 370,
+      "line": 614,
+      "sha256": "5866f49fb7d74981a54c61dac6f6da3281c6bb3adce549b4c9046d580cf42a0d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 371,
+      "line": 616,
+      "sha256": "72f98b83ab703c52acf1e3fac5abd89891dcd133694f4df1b74eba07356b9a40",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 372,
+      "line": 616,
+      "sha256": "43b1047cf0bca392420e9bb7dbebd2b074716761323693eb7311cc3bb0fb2c8a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 373,
+      "line": 618,
+      "sha256": "e3b98a4da31a127d4bde6e43033f66ba274cab0eb7eb1c70ec41402bf6273dd8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 374,
+      "line": 618,
+      "sha256": "7cd2e81795b97f4d593d0150f2882d884095719e4f612093a853d72747ebdba0",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 375,
+      "line": 622,
+      "sha256": "e3b98a4da31a127d4bde6e43033f66ba274cab0eb7eb1c70ec41402bf6273dd8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 376,
+      "line": 622,
+      "sha256": "8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 377,
+      "line": 622,
+      "sha256": "8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 378,
+      "line": 622,
+      "sha256": "d197440d42185004599653f698412df1a18fcbe2aff2a79a9318eb5875461205",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 379,
+      "line": 630,
+      "sha256": "8530fa25bff27aaf51c1eaf87895da3e18e21a646a9ba1562f54274772e88860",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 380,
+      "line": 632,
+      "sha256": "ddb2b50614e982b26777b5719b3ac4e41ef89363e95c0dfb9c9c7af19e23fc2f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 381,
+      "line": 643,
+      "sha256": "00e447918959b9d3b4b6db656ba9bb857b5778d5a08e0d9bbc437e2e25a16c2d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 382,
+      "line": 645,
+      "sha256": "a414c95d5ed9b9ed152f14b13c1de3c20e341b942d7dd119171fd6f1f9fca71d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 383,
+      "line": 652,
+      "sha256": "8aa2546f939d8db4edc405dbae74d60216ff754f94f4c995c1186c91d77e731b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 384,
+      "line": 652,
+      "sha256": "43a1e2618afd65843216056d21a83ef6a3264566cc14e7282595466b003d3dcf",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 385,
+      "line": 652,
+      "sha256": "7437dd86b2b1f5bdfc10606b910d4cea9920fd12c8ded9c0f846fc316108757d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 386,
+      "line": 652,
+      "sha256": "81b125646c521e0b774805de1c4b1ed965b75465513107a2eee02cf901d7c89d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 387,
+      "line": 654,
+      "sha256": "51cbba0990eba2003fba4c4b08d41e084a8b3cb75b7d921bafe3008351b3f05e",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 388,
+      "line": 659,
+      "sha256": "8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 389,
+      "line": 661,
+      "sha256": "49fa2b807931275a10e2027cac441fc783635c068b0fd1e4e7a57be1a35c8876",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 390,
+      "line": 664,
+      "sha256": "a1fce4363854ff888cff4b8e7875d600c2682390412a8cf79b37d0b11148b0fa",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 391,
+      "line": 664,
+      "sha256": "2c07c745dd3499c81c823f83cb967369bde255c6f825d5eaea211e74456d1d92",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 392,
+      "line": 664,
+      "sha256": "a1fce4363854ff888cff4b8e7875d600c2682390412a8cf79b37d0b11148b0fa",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 393,
+      "line": 668,
+      "sha256": "2e7d2c03a9507ae265ecf5b5356885a53393a2029d241394997265a1a25aefc6",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 394,
+      "line": 668,
+      "sha256": "3f79bb7b435b05321651daefd374cdc681dc06faa65e374e38337b88ca046dea",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 395,
+      "line": 668,
+      "sha256": "e3b98a4da31a127d4bde6e43033f66ba274cab0eb7eb1c70ec41402bf6273dd8",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 396,
+      "line": 668,
+      "sha256": "8e35c2cd3bf6641bdb0e2050b76932cbb2e6034a0ddacc1d9bea82a6ba57f7cf",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 397,
+      "line": 670,
+      "sha256": "1340762f3764db68ceb4dd0167435b293247112757b0f3e78fecdc2b79d73b09",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 398,
+      "line": 672,
+      "sha256": "1cfe261333d0b5d78ac81ee97b10d26ebcc6c7c62c9c5272846160fe4165dde6",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 399,
+      "line": 674,
+      "sha256": "61b87b285659c2329db541b2756ddbf5b1ad267f5ed13284e9527b7119cbf331",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 400,
+      "line": 676,
+      "sha256": "c51fd795b19a77b363890c598faa6a7848c277cdead5ec472176dc3baff1a4d7",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 401,
+      "line": 678,
+      "sha256": "aa02909fd27663e7e12655d8713a899f08c5a5838b067749a3f624710fa900ed",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 402,
+      "line": 684,
+      "sha256": "acc2746aeebd41c6878d03a2bfefaf8a74aeea51e5c405e43143aa2695fd315b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 403,
+      "line": 693,
+      "sha256": "47076ca15683416c58ba68119b950c8b46368dd7604bbe9839094409ff1e8bb9",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 404,
+      "line": 693,
+      "sha256": "37598eb620d2f0b5650fa29682f2bf9e37a820a97be1ad54b910980c6809b68f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 405,
+      "line": 693,
+      "sha256": "d5ad633fd576f466b74d74ba3cd7f5bd5c52a016170eb17eb3f31ed028df752a",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 406,
+      "line": 694,
+      "sha256": "0cdc6dcf385c2b81cdff79b4c892e0f82c01dbe6a7bf4a32786a47050424ef95",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 407,
+      "line": 696,
+      "sha256": "28064ee61a75a22ac2714babc323abb33ab99de7e4797cd8c22e3db98b2ef296",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 408,
+      "line": 703,
+      "sha256": "c708fbc58d21731c7aa7414ec9d27026c652c6303e4ac1d5a1f1ef9bf5d34b49",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 409,
+      "line": 708,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 410,
+      "line": 708,
+      "sha256": "b74f62c467a208ca071c641a83ad7fb24e3366d8883a56e9bdde43ad6cfa5522",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 411,
+      "line": 709,
+      "sha256": "89663aa108b9db0fc7f6a22cb600cdf6dec6ae1072e2f753c989775b9be32d8f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 412,
+      "line": 709,
+      "sha256": "8de0b3c47f112c59745f717a626932264c422a7563954872e237b223af4ad643",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 413,
+      "line": 709,
+      "sha256": "e632b7095b0bf32c260fa4c539e9fd7b852d0de454e9be26f24d0d6f91d069d3",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 414,
+      "line": 734,
+      "sha256": "30a587a044d1d114f819bb70a0ab25f3b06100014c6ff05d8414bed3b710cdff",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 415,
+      "line": 734,
+      "sha256": "d38f53421f824a97eaf66f09988fc5389726e25ebda4a121ff6d6586c505f7f5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 416,
+      "line": 734,
+      "sha256": "1fb17be39daaa2233429a35c0bb737dc618b0e88a9bfef8f40ff5369c1dbe306",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 417,
+      "line": 736,
+      "sha256": "00a7fb45dab5e366038b40f5c7134e0ea309c0d963031a0c46924d2f42e47eeb",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 418,
+      "line": 742,
+      "sha256": "5c97245a0b3088caf48848453072feeaf29591d24bade11666d96b94c60756ac",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 419,
+      "line": 742,
+      "sha256": "918242f8e43ca8f1f62ec1e5e1a0b02aa6dbded47c75c3f1cbafba7ade32bbd7",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 420,
+      "line": 744,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 421,
+      "line": 744,
+      "sha256": "d939926f05444b0f4495fb9629ecbfa80d99a8ec1a20d06800ca5a3d5f4fd276",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 422,
+      "line": 744,
+      "sha256": "d939926f05444b0f4495fb9629ecbfa80d99a8ec1a20d06800ca5a3d5f4fd276",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 423,
+      "line": 745,
+      "sha256": "a1fce4363854ff888cff4b8e7875d600c2682390412a8cf79b37d0b11148b0fa",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 424,
+      "line": 745,
+      "sha256": "348be5d7ad06601460048f7f7162d298f72cc79c121cc856069a90b22928ac4b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 425,
+      "line": 745,
+      "sha256": "d939926f05444b0f4495fb9629ecbfa80d99a8ec1a20d06800ca5a3d5f4fd276",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 426,
+      "line": 746,
+      "sha256": "594e519ae499312b29433b7dd8a97ff068defcba9755b6d5d00e84c524d67b06",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 427,
+      "line": 746,
+      "sha256": "348be5d7ad06601460048f7f7162d298f72cc79c121cc856069a90b22928ac4b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 428,
+      "line": 746,
+      "sha256": "348be5d7ad06601460048f7f7162d298f72cc79c121cc856069a90b22928ac4b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 429,
+      "line": 748,
+      "sha256": "d38f53421f824a97eaf66f09988fc5389726e25ebda4a121ff6d6586c505f7f5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 430,
+      "line": 750,
+      "sha256": "30a587a044d1d114f819bb70a0ab25f3b06100014c6ff05d8414bed3b710cdff",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 431,
+      "line": 750,
+      "sha256": "fc1b65a037b4eb4a78a54754612d6494107d00f07ec5ee490f78d52972336976",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 432,
+      "line": 752,
+      "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 433,
+      "line": 752,
+      "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 434,
+      "line": 752,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 435,
+      "line": 752,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 436,
+      "line": 752,
+      "sha256": "cf3bae39dd692048a8bf961182e6a34dfd323eeb0748e162eaf055107f1cb873",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 437,
+      "line": 754,
+      "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 438,
+      "line": 754,
+      "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 439,
+      "line": 754,
+      "sha256": "594e519ae499312b29433b7dd8a97ff068defcba9755b6d5d00e84c524d67b06",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 440,
+      "line": 754,
+      "sha256": "594e519ae499312b29433b7dd8a97ff068defcba9755b6d5d00e84c524d67b06",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 441,
+      "line": 754,
+      "sha256": "fc1b65a037b4eb4a78a54754612d6494107d00f07ec5ee490f78d52972336976",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 442,
+      "line": 754,
+      "sha256": "cf3bae39dd692048a8bf961182e6a34dfd323eeb0748e162eaf055107f1cb873",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 443,
+      "line": 754,
+      "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 444,
+      "line": 754,
+      "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 445,
+      "line": 760,
+      "sha256": "d38f53421f824a97eaf66f09988fc5389726e25ebda4a121ff6d6586c505f7f5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 446,
+      "line": 760,
+      "sha256": "2c19a27fdc176df741d05221069682955c8b65382d59e7737fd8523b887e2d4b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 447,
+      "line": 760,
+      "sha256": "1fb17be39daaa2233429a35c0bb737dc618b0e88a9bfef8f40ff5369c1dbe306",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 448,
+      "line": 764,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 449,
+      "line": 764,
+      "sha256": "28b566412e3053e55a913e6e3c670028f0938b1b446bcef38dad63da410c4be3",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 450,
+      "line": 766,
+      "sha256": "d61c661f2bc731f2501589afe1f065f71d581811d5645f7edb553877eefa1fc5",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 451,
+      "line": 767,
+      "sha256": "a1fce4363854ff888cff4b8e7875d600c2682390412a8cf79b37d0b11148b0fa",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 452,
+      "line": 768,
+      "sha256": "594e519ae499312b29433b7dd8a97ff068defcba9755b6d5d00e84c524d67b06",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 453,
+      "line": 769,
+      "sha256": "896d3bbddcddd55d9ef80eb64578edde66006c51ad3c16842e4d5f1849e1818d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 454,
+      "line": 771,
+      "sha256": "20d9203aee3399c138014b4335aff358449fe06c9963198caed78a96dd0cb87c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 455,
+      "line": 771,
+      "sha256": "79209e8ba7c0bec720a4e703a3c7bdd860b6c17e1ef1099da2452ce7c8cfde7f",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 456,
+      "line": 771,
+      "sha256": "7babd1ed4b4854b7fead5d0d44447380f4a8ce86b02f5c15f4225ae9675b40fc",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 457,
+      "line": 771,
+      "sha256": "d9e994395cf6fa7224ea94f7c37eba6a73a5d771a9608d54338735cf35ce5044",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 458,
+      "line": 771,
+      "sha256": "8623c04c5b84dce1a65bc80a61d337a31ffd6a0961a9148cfb89d510e7c1113d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 459,
+      "line": 771,
+      "sha256": "88d13a7fd002f593a10e19ab9a75be67101e35921b75726acadabb10595dd2b3",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 460,
+      "line": 773,
+      "sha256": "ff22eb1888090e98449d038a51ecfdbe8099eccbdadccd63c4e6c0fc7900d89d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 461,
+      "line": 773,
+      "sha256": "953a947a0a53b228142b57831935a639b7fb7deae9d3192750598cd54f5cad24",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 462,
+      "line": 773,
+      "sha256": "5c2c4641d10638d7d9c61361870fdd05c7aec26d7f6f84b68f575a4dc7c22197",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 463,
+      "line": 773,
+      "sha256": "85f76fbd2a7d927a69112f88e1a46f0cfc5125aadfb6fa5b20d6cbf91819cc24",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 464,
+      "line": 773,
+      "sha256": "6ba139b1d6039294e9bbba25317c19e1060d94879f30ae570c8f12cbed833356",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 465,
+      "line": 773,
+      "sha256": "3593f785211a7f6c263fa87a3ec46e3c4eadf9e4f78e5057cb9ca7a5ceeb40e4",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 466,
+      "line": 773,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 467,
+      "line": 773,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 468,
+      "line": 797,
+      "sha256": "0400bea20eef67f6b7e4a1e7f4c38510816497cc8cdec60521fdd7e4b1d8f07b",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 469,
+      "line": 797,
+      "sha256": "fa68d23e68bee9fa485d2fc3d13e2a19aa834b985b176dff43a5a3cc8d27cb6c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 470,
+      "line": 798,
+      "sha256": "08f271887ce94707da822d5263bae19d5519cb3614e0daedc4c7ce5dab7473f1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 471,
+      "line": 798,
+      "sha256": "08f271887ce94707da822d5263bae19d5519cb3614e0daedc4c7ce5dab7473f1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 472,
+      "line": 810,
+      "sha256": "4ecc88b315080d4543efc22ead02e4a15b798b53005b2c7863ddc02335e1b223",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 473,
+      "line": 810,
+      "sha256": "3f79bb7b435b05321651daefd374cdc681dc06faa65e374e38337b88ca046dea",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 474,
+      "line": 810,
+      "sha256": "17be29a8a74e899495ca5b35ae16f9810c721e4745dd6d6cc1e1bb42f71d87e9",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 475,
+      "line": 810,
+      "sha256": "e4feca0e1141509fd879826e8705d112bd6cb7d874879866b3d6629db9b617dd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 476,
+      "line": 810,
+      "sha256": "17be29a8a74e899495ca5b35ae16f9810c721e4745dd6d6cc1e1bb42f71d87e9",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 477,
+      "line": 810,
+      "sha256": "e4feca0e1141509fd879826e8705d112bd6cb7d874879866b3d6629db9b617dd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 478,
+      "line": 810,
+      "sha256": "e4feca0e1141509fd879826e8705d112bd6cb7d874879866b3d6629db9b617dd",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 479,
+      "line": 816,
+      "sha256": "08f271887ce94707da822d5263bae19d5519cb3614e0daedc4c7ce5dab7473f1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 480,
+      "line": 816,
+      "sha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 481,
+      "line": 816,
+      "sha256": "6630c7acfff958953a66335d9a265b518373407a4e57cc18b02e57935a1316f9",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 482,
+      "line": 816,
+      "sha256": "08f271887ce94707da822d5263bae19d5519cb3614e0daedc4c7ce5dab7473f1",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 483,
+      "line": 816,
+      "sha256": "91551e478c5af7c2de801d48ab159e0e4e0a0a06964172d594ffdfdad95b406c",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 484,
+      "line": 816,
+      "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 485,
+      "line": 816,
+      "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d",
+      "status": "PASS"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "index": 486,
+      "line": 816,
+      "sha256": "08f271887ce94707da822d5263bae19d5519cb3614e0daedc4c7ce5dab7473f1",
+      "status": "PASS"
+    }
+  ],
+  "katexVersion": "0.16.22",
+  "status": "DONE 486 formulas; 0 failures"
+}

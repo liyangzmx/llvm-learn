@@ -1,0 +1,23 @@
+{
+  "diagrams": [
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch14.md 图 1",
+      "viewBox": "-35 -0.3046875 115.34818267822266 260.171875",
+      "mermaid_code_sha256": "ae725dca343d7d3fc930a89430579543f77e9fef98f4a7f733e113409c6381f8"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch15.md 图 1",
+      "viewBox": "0 0 674.69140625 694",
+      "mermaid_code_sha256": "b2dbc3454bd235546c1f67e21ed0c4ede599075a20a15638c70c0f59e1dbff56"
+    }
+  ],
+  "mermaidVersion": "11.12.0",
+  "status": "DONE 2 diagrams; 0 failures",
+  "source_files_sha256": {
+    "insider-compiler-ch14.md": "596db3ec11c627c49ea9fea0d7cf6f9114fe9bc65158d747c0663d528cb53732",
+    "insider-compiler-ch15.md": "e5e874bc7407eceeee90cf0f5271b4dc9b4de486e3c94d99b88443b54128cd36"
+  },
+  "visual_review": "Both new Mermaid diagrams viewed in browser. Chapter 14 arrows compared with scan PDF21; chapter 15 seven-node tree and inherited branch conditions checked."
+}

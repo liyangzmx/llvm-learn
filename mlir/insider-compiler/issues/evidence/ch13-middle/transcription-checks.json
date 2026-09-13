@@ -1,0 +1,158 @@
+{
+  "scope": "Text integrity, not Triton parsing/execution or SSA dominance/type verification",
+  "document_source": "/opt/coding/mlir-toy/mlir/insider-compiler/insider-compiler-ch13.md",
+  "pages_with_markers": [
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118
+  ],
+  "starts_in_page_92": true,
+  "listings": [
+    {
+      "listing": 39,
+      "ssa_names": 33,
+      "numeric_definitions": 0,
+      "all_names_defined_somewhere": true,
+      "brackets_balanced": true
+    },
+    {
+      "listing": 41,
+      "ssa_names": 36,
+      "numeric_definitions": 20,
+      "all_names_defined_somewhere": true,
+      "brackets_balanced": true
+    },
+    {
+      "listing": 42,
+      "ssa_names": 60,
+      "numeric_definitions": 36,
+      "all_names_defined_somewhere": true,
+      "brackets_balanced": true
+    },
+    {
+      "listing": 45,
+      "ssa_names": 61,
+      "numeric_definitions": 37,
+      "all_names_defined_somewhere": true,
+      "brackets_balanced": true
+    },
+    {
+      "listing": 46,
+      "ssa_names": 108,
+      "numeric_definitions": 80,
+      "all_names_defined_somewhere": true,
+      "brackets_balanced": true
+    },
+    {
+      "listing": 47,
+      "ssa_names": 90,
+      "numeric_definitions": 65,
+      "all_names_defined_somewhere": true,
+      "brackets_balanced": true
+    }
+  ],
+  "merged_listing_checks": [
+    {
+      "listing": 37,
+      "code_fragments": 1,
+      "tokens": 22,
+      "matches_evidence": true
+    },
+    {
+      "listing": 38,
+      "code_fragments": 1,
+      "tokens": 67,
+      "matches_evidence": true
+    },
+    {
+      "listing": 39,
+      "code_fragments": 2,
+      "tokens": 849,
+      "matches_evidence": true
+    },
+    {
+      "listing": 40,
+      "code_fragments": 2,
+      "tokens": 283,
+      "matches_evidence": true
+    },
+    {
+      "listing": 41,
+      "code_fragments": 3,
+      "tokens": 2310,
+      "matches_evidence": true
+    },
+    {
+      "listing": 42,
+      "code_fragments": 5,
+      "tokens": 3117,
+      "matches_evidence": true
+    },
+    {
+      "listing": 43,
+      "code_fragments": 1,
+      "tokens": 615,
+      "matches_evidence": true
+    },
+    {
+      "listing": 44,
+      "code_fragments": 2,
+      "tokens": 1295,
+      "matches_evidence": true
+    },
+    {
+      "listing": 45,
+      "code_fragments": 4,
+      "tokens": 3214,
+      "matches_evidence": true
+    },
+    {
+      "listing": 46,
+      "code_fragments": 7,
+      "tokens": 4955,
+      "matches_evidence": true
+    },
+    {
+      "listing": 47,
+      "code_fragments": 6,
+      "tokens": 4824,
+      "matches_evidence": true
+    }
+  ],
+  "visually_inspected_pdf_pages": [
+    93,
+    94,
+    95,
+    99,
+    101,
+    105,
+    110,
+    111,
+    116,
+    117,
+    118
+  ]
+}

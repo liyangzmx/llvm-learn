@@ -1,0 +1,4 @@
+invalid-indirect-call.mlir:3:8: error: 'func.call_indirect' op failed to verify that callee input types match argument types
+  %r = "func.call_indirect"(%callee, %value) : ((i32) -> i32, f32) -> i32
+       ^
+invalid-indirect-call.mlir:3:8: note: see current operation: %0 = "func.call_indirect"(%arg0, %arg1) : ((i32) -> i32, f32) -> i32

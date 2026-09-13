@@ -1,0 +1,13 @@
+{
+  "block": [
+    16,
+    16
+  ],
+  "grid": [
+    8,
+    32
+  ],
+  "expected_outputs": 65536,
+  "corrected_covered_once": 65536,
+  "original_covered": 256
+}

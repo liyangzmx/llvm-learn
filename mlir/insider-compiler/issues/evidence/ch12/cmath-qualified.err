@@ -1,0 +1,4 @@
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-qualified.mlir:12:10: error: @cmath::@complex does not refer to any existing symbol
+    %3 = irdl.parametric @cmath::@complex<%2>
+         ^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-qualified.mlir:12:10: note: see current operation: %3 = "irdl.parametric"(%2) <{base_type = @cmath::@complex}> : (!irdl.attribute) -> !irdl.attribute

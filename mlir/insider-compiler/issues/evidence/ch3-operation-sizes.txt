@@ -1,0 +1,5 @@
+maxInlineResults=6
+sizeof(Operation)=64 alignof(Operation)=8
+sizeof(AddIOp)=8 sizeof(Operation*)=8
+InlineOpResult=16 OutOfLineOpResult=24
+OperandStorage=16 OpProperties=1 BlockOperand=32 Region=24 OpOperand=32

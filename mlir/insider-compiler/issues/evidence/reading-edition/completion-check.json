@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "corrected_reading_files": [
+    "insider-compiler-ch1.md",
+    "insider-compiler-ch15.md",
+    "insider-compiler-ch10.md",
+    "insider-compiler-appendix.md"
+  ],
+  "source_pages": 416,
+  "chapters": 15,
+  "supplements": 4,
+  "structure_and_links": "PASS",
+  "mermaid_code_blocks_unchanged": 63,
+  "current_math_formulas_checked": 547,
+  "ch1_commands_passed": 13,
+  "ch1_native": "PASS: 80 inputs x 10 outputs match zero-initialized, bias-last f32 reference; 39 outputs distinguish the historical bias-first reference.",
+  "ocr_files_unchanged": 840,
+  "other_reading_files_unchanged": 15,
+  "scope": "Targeted reading-edition corrections. Earlier source/visual/runtime validation limits remain documented; this is not a new full-book semantic proof."
+}

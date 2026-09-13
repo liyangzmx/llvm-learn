@@ -1,0 +1,55 @@
+
+//===-------------------------------------------===//
+Processing operation : 'func.return'(0x142e5bf10) {
+  "func.return"() : () -> ()
+
+} -> failure : pattern failed to match
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'arith.addi'(0x142e5bd40) {
+  %2 = "arith.addi"(%1, %1) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+
+  ** Erase   : 'arith.addi'(0x142e5bd40)
+} -> success : operation is trivially dead
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'scf.yield'(0x142e5bb40) {
+  "scf.yield"(%0) : (i32) -> ()
+
+} -> failure : pattern failed to match
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'scf.if'(0x142e5bbc0) {
+  ** Erase   : 'scf.yield'(0x142e5bb40)
+  ** Erase   : 'scf.yield'(0x142e5ba80)
+  ** Erase   : 'scf.if'(0x142e5bbc0)
+} -> success : operation is trivially dead
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'func.func'(0x142e5bf60) {
+} -> failure : pattern failed to match
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'arith.constant'(0x142e5a2c0) {
+  %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32
+
+  ** Erase   : 'arith.constant'(0x142e5a2c0)
+} -> success : operation is trivially dead
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'func.func'(0x142e5bf60) {
+} -> failure : pattern failed to match
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'func.return'(0x142e5bf10) {
+  "func.return"() : () -> ()
+
+} -> failure : pattern failed to match
+//===-------------------------------------------===//

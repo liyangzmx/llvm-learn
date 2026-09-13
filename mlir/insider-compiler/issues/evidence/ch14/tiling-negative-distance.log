@@ -1,0 +1,15 @@
+Checking whether tiling legality violated for dependence at depth: 1 between:
+affine.store %1, %arg0[%arg1, %arg2] : memref<5x5xi32>
+%0 = affine.load %arg0[%arg1 - 1, %arg2 + 1] : memref<5x5xi32>
+mlir/insider-compiler/issues/evidence/ch14/tiling-negative-distance.mlir:4:3: remark: using tile sizes [2 2 ]
+
+  affine.for %i = 1 to 5 {
+  ^
+mlir/insider-compiler/issues/evidence/ch14/tiling-negative-distance.mlir:4:3: note: see current operation: 
+affine.for %arg1 = 1 to 5 {
+  affine.for %arg2 = 0 to 4 {
+    %0 = affine.load %arg0[%arg1 - 1, %arg2 + 1] : memref<5x5xi32>
+    %1 = arith.addi %0, %c1_i32 : i32
+    affine.store %1, %arg0[%arg1, %arg2] : memref<5x5xi32>
+  }
+}

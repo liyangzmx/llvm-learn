@@ -1,0 +1,26 @@
+[
+  {
+    "test": "book tile_sizes syntax",
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "mlir/insider-compiler/issues/evidence/ch9-tail/transform-original-syntax.mlir",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 1,
+    "expected": "parse failure"
+  },
+  {
+    "test": "full vector lowering",
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "mlir/insider-compiler/issues/evidence/ch9-tail/vector-broadcast.mlir",
+      "--convert-vector-to-llvm",
+      "--convert-to-llvm",
+      "--reconcile-unrealized-casts",
+      "-o",
+      "mlir/insider-compiler/issues/evidence/ch9-tail/vector-broadcast-full.out.mlir"
+    ],
+    "returncode": 0
+  }
+]

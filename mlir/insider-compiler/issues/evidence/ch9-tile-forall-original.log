@@ -1,0 +1,3 @@
+mlir/insider-compiler/issues/evidence/ch9-tile-forall.mlir:13:14: error: expected attribute value
+      mapping = [#gpu.block<y>, #gpu.block<x>]
+             ^

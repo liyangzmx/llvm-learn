@@ -1,0 +1,99 @@
+$ /opt/llvm-project/build/bin/mlir-opt --version
+exit: 0
+LLVM (http://llvm.org/):
+  LLVM version 18.1.8
+  DEBUG build with assertions.
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch8/matmul-local.mlir '--pass-pipeline=builtin.module(func.func(tosa-to-linalg-named))'
+exit: 0
+module {
+  func.func @matmul(%arg0: tensor<1x5x3xf32>, %arg1: tensor<1x3x6xf32>) -> tensor<1x5x6xf32> {
+    %0 = "tosa.const"() <{value = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %1 = "tosa.const"() <{value = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %cst = arith.constant 0.000000e+00 : f32
+    %2 = tensor.empty() : tensor<1x5x6xf32>
+    %3 = linalg.fill ins(%cst : f32) outs(%2 : tensor<1x5x6xf32>) -> tensor<1x5x6xf32>
+    %4 = linalg.batch_matmul ins(%arg0, %arg1 : tensor<1x5x3xf32>, tensor<1x3x6xf32>) outs(%3 : tensor<1x5x6xf32>) -> tensor<1x5x6xf32>
+    return %4 : tensor<1x5x6xf32>
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch8/matmul-local.mlir '--pass-pipeline=builtin.module(func.func(tosa-to-linalg-named,cse))'
+exit: 0
+module {
+  func.func @matmul(%arg0: tensor<1x5x3xf32>, %arg1: tensor<1x3x6xf32>) -> tensor<1x5x6xf32> {
+    %cst = arith.constant 0.000000e+00 : f32
+    %0 = tensor.empty() : tensor<1x5x6xf32>
+    %1 = linalg.fill ins(%cst : f32) outs(%0 : tensor<1x5x6xf32>) -> tensor<1x5x6xf32>
+    %2 = linalg.batch_matmul ins(%arg0, %arg1 : tensor<1x5x3xf32>, tensor<1x3x6xf32>) outs(%1 : tensor<1x5x6xf32>) -> tensor<1x5x6xf32>
+    return %2 : tensor<1x5x6xf32>
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch8/matmul-quantized.mlir '--pass-pipeline=builtin.module(func.func(tosa-to-linalg-named))'
+exit: 0
+module {
+  func.func @matmul_quantized(%arg0: tensor<1x5x3xi8>, %arg1: tensor<1x3x6xi8>) -> tensor<1x5x6xi32> {
+    %c0_i32 = arith.constant 0 : i32
+    %0 = tensor.empty() : tensor<1x5x6xi32>
+    %1 = linalg.fill ins(%c0_i32 : i32) outs(%0 : tensor<1x5x6xi32>) -> tensor<1x5x6xi32>
+    %c0_i32_0 = arith.constant 0 : i32
+    %c0_i32_1 = arith.constant 0 : i32
+    %2 = linalg.quantized_batch_matmul ins(%arg0, %arg1, %c0_i32_0, %c0_i32_1 : tensor<1x5x3xi8>, tensor<1x3x6xi8>, i32, i32) outs(%1 : tensor<1x5x6xi32>) -> tensor<1x5x6xi32>
+    return %2 : tensor<1x5x6xi32>
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch8/broadcast.mlir '--pass-pipeline=builtin.module(func.func(tosa-make-broadcastable))'
+exit: 0
+module {
+  func.func @broadcast(%arg0: tensor<4xf32>, %arg1: tensor<2x4xf32>) -> tensor<2x4xf32> {
+    %0 = tosa.reshape %arg0 {new_shape = array<i64: 1, 4>} : (tensor<4xf32>) -> tensor<1x4xf32>
+    %1 = tosa.add %0, %arg1 : (tensor<1x4xf32>, tensor<2x4xf32>) -> tensor<2x4xf32>
+    return %1 : tensor<2x4xf32>
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch8/book-8-1.mlir
+exit: 1
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch8/book-8-1.mlir:3:11: error: invalid properties {values = dense<0.000000e+00> : tensor<1xf32>} for op tosa.const: expected key entry for value in DictionaryAttr to set Properties.
+  %a_zp = "tosa.const"() <{values = dense<0.0> : tensor<1xf32>}> : () -> tensor<1xf32>
+          ^
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch8/book-four-operands.mlir
+exit: 1
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch8/book-four-operands.mlir:5:8: error: 'tosa.matmul' op expected 2 operands, but found 4
+  %0 = tosa.matmul %arg0, %arg1, %a_zp, %b_zp : (tensor<1x5x3xf32>, tensor<1x3x6xf32>, tensor<1xf32>, tensor<1xf32>) -> tensor<1x5x6xf32>
+       ^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch8/book-four-operands.mlir:5:8: note: see current operation: %2 = "tosa.matmul"(%arg0, %arg1, %0, %1) : (tensor<1x5x3xf32>, tensor<1x3x6xf32>, tensor<1xf32>, tensor<1xf32>) -> tensor<1x5x6xf32>
+
+
+$ /opt/llvm-project/build/bin/mlir-opt mlir/insider-compiler/issues/evidence/ch8/matmul-f16.mlir '--pass-pipeline=builtin.module(func.func(tosa-to-linalg-named))' -o mlir/insider-compiler/issues/evidence/ch8/matmul-f16.out
+exit: 0
+module {
+  func.func @f16_result(%arg0: tensor<1x5x3xf16>, %arg1: tensor<1x3x6xf16>) -> tensor<1x5x6xf16> {
+    %cst = arith.constant 0.000000e+00 : f16
+    %0 = tensor.empty() : tensor<1x5x6xf16>
+    %1 = linalg.fill ins(%cst : f16) outs(%0 : tensor<1x5x6xf16>) -> tensor<1x5x6xf16>
+    %2 = linalg.batch_matmul ins(%arg0, %arg1 : tensor<1x5x3xf16>, tensor<1x3x6xf16>) outs(%1 : tensor<1x5x6xf16>) -> tensor<1x5x6xf16>
+    return %2 : tensor<1x5x6xf16>
+  }
+  func.func @f32_result(%arg0: tensor<1x5x3xf16>, %arg1: tensor<1x3x6xf16>) -> tensor<1x5x6xf32> {
+    %cst = arith.constant 0.000000e+00 : f32
+    %0 = tensor.empty() : tensor<1x5x6xf32>
+    %1 = linalg.fill ins(%cst : f32) outs(%0 : tensor<1x5x6xf32>) -> tensor<1x5x6xf32>
+    %2 = linalg.batch_matmul ins(%arg0, %arg1 : tensor<1x5x3xf16>, tensor<1x3x6xf16>) outs(%1 : tensor<1x5x6xf32>) -> tensor<1x5x6xf32>
+    return %2 : tensor<1x5x6xf32>
+  }
+}
+

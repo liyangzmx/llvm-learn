@@ -1,0 +1,3 @@
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll:6:20: warning: operation result types are marked to be inferred, but `arith.constant` is unknown. Ensure that `arith.constant` supports zero results or implements `InferTypeOpInterface`. Include the ODS definition of this operation to remove this warning.
+    let newConst = op<arith.constant> {value = attr<"11 : i32">};
+                   ^

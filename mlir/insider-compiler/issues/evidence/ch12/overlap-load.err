@@ -1,0 +1,13 @@
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/overlap.mlir:0:0: error: any_of constraints are not in the correct form
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/overlap.mlir:0:0: note: see current operation: 
+"builtin.module"() ({
+  "irdl.dialect"() <{sym_name = "overlap"}> ({
+    "irdl.operation"() <{sym_name = "test"}> ({
+      %0 = "irdl.any"() : () -> !irdl.attribute
+      %1 = "irdl.base"() <{base_name = "!builtin.vector"}> : () -> !irdl.attribute
+      %2 = "irdl.any_of"(%0, %1) : (!irdl.attribute, !irdl.attribute) -> !irdl.attribute
+      "irdl.operands"(%2) <{variadicity = #irdl<variadicity_array[ single]>}> : (!irdl.attribute) -> ()
+      "irdl.results"(%0) <{variadicity = #irdl<variadicity_array[ single]>}> : (!irdl.attribute) -> ()
+    }) : () -> ()
+  }) : () -> ()
+}) : () -> ()

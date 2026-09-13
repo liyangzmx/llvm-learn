@@ -1,0 +1,23 @@
+[[[ IR printer: ]]]
+func.func @f() {
+  return
+}
+[[[ IR printer: ]]]
+func.func @f() {
+  return
+}
+module {
+  func.func @f() {
+    return
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op) {
+      %0 = transform.structured.match ops{["func.func"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.cast %0 : !transform.any_op to !transform.any_op
+      transform.print %0 : !transform.any_op
+      transform.print %1 : !transform.any_op
+      transform.yield 
+    }
+  }
+}
+

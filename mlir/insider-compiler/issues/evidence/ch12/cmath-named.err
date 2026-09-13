@@ -1,0 +1,3 @@
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-named.mlir:6:21: error: expected ')'
+    irdl.parameters(elem: %2)
+                    ^

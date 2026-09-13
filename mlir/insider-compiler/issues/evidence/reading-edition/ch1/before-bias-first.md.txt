@@ -1,0 +1,148 @@
+# 第1章阅读版校订前的 bias-first 示例
+
+以下为历史差异存档，不能作为当前正文的正确降级示例。原文件 SHA256：`d619ad9b05b731d7b4e7d2220750cfcfb87eef3f660dee42ff22ac2977a5e01f`。
+
+### 1.3.3 使用线性代数描述代码
+
+MLIR 社区提供 linalg 方言，即线性代数方言（参见9.1节）。它包含命名操作和通用操作，能够承接高层代码转换，支持相关优化，并继续降低到更接近执行方式的表示。代码清单 1-4 展示一种用 linalg 表达本例计算的方法。
+
+**浮点语义校订**：原书把偏置直接作为归约的初值。它与“先完成矩阵乘法、最后加偏置”在实数运算下等价，但 f32 的舍入顺序不同，不能保证逐位相同。本次保留这个教学实现，并明确该限制；LLVM 18 的 TOSA 转换实际会先用零初始化矩阵乘结果，再单独处理加偏置，并不会无条件生成清单 1-4。详见[归约次序校订](issues/ch1.md#ch1-numerics)。
+
+**代码清单 1-4** 从 tosa 计算结构改写为 linalg 方言（偏置作为归约初值的示例）
+
+```mlir
+#map0 = affine_map<(d0, d1, d2) -> (d0, d2)>
+#map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
+#map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
+func.func @forward(%arg0: tensor<1x16xf32>) -> tensor<1x10xf32> {
+```
+
+<!-- source: insider-compiler-ch1.pdf, PDF p. 9 -->
+
+代码清单 1-4（续；与上段连续）：
+
+```mlir
+  %cst = arith.constant dense<"0xA270..."> : tensor<1x10xf32>
+  %cst_0 = arith.constant dense<"0xC44B..."> : tensor<16x10xf32>
+  %0 = linalg.generic {
+      indexing_maps = [#map0, #map1, #map2],
+      iterator_types = ["parallel", "parallel", "reduction"]
+    } ins(%arg0, %cst_0 : tensor<1x16xf32>, tensor<16x10xf32>)
+      outs(%cst : tensor<1x10xf32>) {
+  ^bb0(%arg1: f32, %arg2: f32, %arg3: f32):
+    %1 = arith.mulf %arg1, %arg2 : f32
+    %2 = arith.addf %arg3, %1 : f32
+    linalg.yield %2 : f32
+  } -> tensor<1x10xf32>
+  return %0 : tensor<1x10xf32>
+}
+```
+
+代码清单 1-4 中有两类需要说明的表示：`affine_map` 和 `linalg.generic`。`#map0 = affine_map<(d0, d1, d2) -> (d0, d2)>` 定义一个从三个维度坐标到两个结果表达式的仿射映射。在本例中，三个映射把同一迭代坐标分别映射到输入、权重和输出的下标；它们本身不独立给出循环的全部取值范围，迭代范围还与操作数的形状等信息有关。
+
+`linalg.generic` 描述结构化的逐元素或归约计算。它使用仿射索引映射、迭代种类、输入与输出初值，并在内嵌区域中定义单次迭代执行的标量计算。这里两个 parallel 维度对应输出坐标，reduction 维度对应矩阵乘的累加方向。
+
+对代码清单 1-4 加以注释后，如代码清单 1-5 所示。
+
+**代码清单 1-5** 对代码清单 1-4 进行注释解读
+
+```mlir
+// 三个仿射映射将同一迭代坐标映射到输入与输出的元素下标。
+#map0 = affine_map<(d0, d1, d2) -> (d0, d2)>
+#map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
+#map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
+func.func @forward(%arg0: tensor<1x16xf32>) -> tensor<1x10xf32> {
+  %cst = arith.constant dense<"0xA270..."> : tensor<1x10xf32>
+  %cst_0 = arith.constant dense<"0xC44B..."> : tensor<16x10xf32>
+  // indexing_maps 和 iterator_types 是属性；ins 是输入，outs 提供初始累加张量。
+  %0 = linalg.generic {
+      indexing_maps = [#map0, #map1, #map2],
+      iterator_types = ["parallel", "parallel", "reduction"]
+    } ins(%arg0, %cst_0 : tensor<1x16xf32>, tensor<16x10xf32>)
+      outs(%cst : tensor<1x10xf32>) {
+  // 区域中的块参数分别表示本次迭代的两个输入元素与当前输出累加值；它们仍是 SSA 值。
+  ^bb0(%arg1: f32, %arg2: f32, %arg3: f32):
+  // 将两个输入元素相乘，再与当前累加值相加。
+    %1 = arith.mulf %arg1, %arg2 : f32
+    %2 = arith.addf %arg3, %1 : f32
+  // 终结本区域的一次标量计算，把更新后的元素交回 linalg.generic。
+    linalg.yield %2 : f32
+  } -> tensor<1x10xf32>
+  return %0 : tensor<1x10xf32>
+}
+```
+
+清单 1-5 只展示一种实现形式：乘法与加法位于同一个 `linalg.generic` 区域的基本块中。
+
+<!-- source: insider-compiler-ch1.pdf, PDF p. 10 -->
+
+也可以先用一个结构化操作计算矩阵乘积，再用另一个操作加偏置；这不是在同一个 linalg.generic 中任意添加第二个基本块，因为它的区域受单块结构等约束。具体如何降级和融合，需要考虑数值语义、优化目标及硬件，后续章节将进一步介绍。在前述实数计算与浮点限制下，这些表示表达的是同一个线性层计算意图。
+
+### 1.3.4 使用仿射描述代码
+
+linalg.generic 已经规定索引、迭代种类和标量计算，但尚未决定完整的循环调度、存储分配或目标指令实现。可以继续采用 affine 方言（仿射，参见9.2节）显式描述循环与访问。代码清单 1-6 给出一种由清单 1-4 进一步形成的 affine 表示。
+
+此处还有一个重要步骤：原来的 tensor 值已通过**缓冲化**变成 memref；返回张量改成调用者传入的输出缓冲区。只有处理了缓冲区分配、初值复制、参数约定及生存期等问题，才能从张量形式得到这种接口，不能只把方言名称替换掉。
+
+**代码清单 1-6** 从 linalg 计算结构降级为 affine 方言（常量数据省略）
+
+```mlir
+memref.global "private" constant @__constant_16x10xf32 : memref<16x10xf32> = dense<"0xC44B...">
+memref.global "private" constant @__constant_1x10xf32 : memref<1x10xf32> = dense<"0xA270...">
+func.func @forward(%arg0: memref<1x16xf32>, %arg1: memref<1x10xf32>) {
+  %0 = memref.get_global @__constant_1x10xf32 : memref<1x10xf32>
+  %1 = memref.get_global @__constant_16x10xf32 : memref<16x10xf32>
+  memref.copy %0, %arg1 : memref<1x10xf32> to memref<1x10xf32>
+  affine.for %arg2 = 0 to 10 {
+    affine.for %arg3 = 0 to 16 {
+      %2 = affine.load %arg0[0, %arg3] : memref<1x16xf32>
+      %3 = affine.load %1[%arg3, %arg2] : memref<16x10xf32>
+      %4 = affine.load %arg1[0, %arg2] : memref<1x10xf32>
+      %5 = arith.mulf %2, %3 : f32
+      %6 = arith.addf %4, %5 : f32
+      affine.store %6, %arg1[0, %arg2] : memref<1x10xf32>
+    }
+  }
+  return
+}
+```
+
+清单 1-6 比高层张量操作更接近具体执行过程，但仍保留结构化循环和多维内存访问，并不是传统汇编。memref 类型描述带有形状、布局及内存空间信息的缓冲区引用，`affine.for` 表示循环，`affine.load` 和 `affine.store` 分别按仿射下标加载和存储数据。
+
+对代码清单 1-6 加上注释后，得到代码清单 1-7。
+
+**代码清单 1-7** 对代码清单 1-6 进行注释解读
+
+```mlir
+// memref.global 定义两个只读全局缓冲区并提供初始数据。
+memref.global "private" constant @__constant_16x10xf32 : memref<16x10xf32> = dense<"0xC44B...">
+memref.global "private" constant @__constant_1x10xf32 : memref<1x10xf32> = dense<"0xA270...">
+func.func @forward(%arg0: memref<1x16xf32>, %arg1: memref<1x10xf32>) {
+  %0 = memref.get_global @__constant_1x10xf32 : memref<1x10xf32>
+  %1 = memref.get_global @__constant_16x10xf32 : memref<16x10xf32>
+```
+
+<!-- source: insider-compiler-ch1.pdf, PDF p. 11 -->
+
+代码清单 1-7（续；与上段连续）：
+
+```mlir
+  // 把偏置复制到输出缓冲区 arg1，作为循环的初始累加值。
+  memref.copy %0, %arg1 : memref<1x10xf32> to memref<1x10xf32>
+  // 外层遍历输出列，下界 0、上界 10（不含），默认步长 1。
+  affine.for %arg2 = 0 to 10 {
+  // 内层遍历归约维，下界 0、上界 16（不含），默认步长 1。
+    affine.for %arg3 = 0 to 16 {
+  // 按仿射下标加载输入、权重和累加值，进行乘加，再存回输出。
+      %2 = affine.load %arg0[0, %arg3] : memref<1x16xf32>
+      %3 = affine.load %1[%arg3, %arg2] : memref<16x10xf32>
+      %4 = affine.load %arg1[0, %arg2] : memref<1x10xf32>
+      %5 = arith.mulf %2, %3 : f32
+      %6 = arith.addf %4, %5 : f32
+      affine.store %6, %arg1[0, %arg2] : memref<1x10xf32>
+    }
+  }
+  return
+}
+```
+

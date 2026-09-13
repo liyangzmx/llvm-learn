@@ -1,0 +1,128 @@
+{
+  "llvm_commit": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff",
+  "checks": [
+    {
+      "name": "version",
+      "command": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "--version"
+      ],
+      "cwd": "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/appendix",
+      "returncode": 0,
+      "expected_returncode": 0
+    },
+    {
+      "name": "dlti-18",
+      "command": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "dlti-18.mlir"
+      ],
+      "cwd": "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/appendix",
+      "returncode": 0,
+      "expected_returncode": 0
+    },
+    {
+      "name": "dlti-newer",
+      "command": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "dlti-newer.mlir"
+      ],
+      "cwd": "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/appendix",
+      "returncode": 1,
+      "expected_returncode": 1
+    },
+    {
+      "name": "ub-to-llvm",
+      "command": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "ub.mlir",
+        "--convert-ub-to-llvm"
+      ],
+      "cwd": "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/appendix",
+      "returncode": 0,
+      "expected_returncode": 0
+    },
+    {
+      "name": "quant-canonicalize",
+      "command": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "quant.mlir",
+        "--canonicalize"
+      ],
+      "cwd": "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/appendix",
+      "returncode": 0,
+      "expected_returncode": 0
+    },
+    {
+      "name": "mesh-propagation",
+      "command": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "mesh.mlir",
+        "--sharding-propagation"
+      ],
+      "cwd": "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/appendix",
+      "returncode": 0,
+      "expected_returncode": 0
+    },
+    {
+      "name": "available",
+      "command": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "--help"
+      ],
+      "cwd": "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/appendix",
+      "returncode": 0,
+      "expected_returncode": 0
+    }
+  ],
+  "available_dialects": [
+    "acc",
+    "affine",
+    "amdgpu",
+    "amx",
+    "arith",
+    "arm_neon",
+    "arm_sme",
+    "arm_sve",
+    "async",
+    "bufferization",
+    "builtin",
+    "cf",
+    "complex",
+    "dlti",
+    "emitc",
+    "func",
+    "gpu",
+    "index",
+    "irdl",
+    "linalg",
+    "llvm",
+    "math",
+    "memref",
+    "mesh",
+    "ml_program",
+    "nvgpu",
+    "nvvm",
+    "omp",
+    "pdl",
+    "pdl_interp",
+    "quant",
+    "rocdl",
+    "scf",
+    "shape",
+    "sparse_tensor",
+    "spirv",
+    "tensor",
+    "test",
+    "test_dyn",
+    "tosa",
+    "transform",
+    "ub",
+    "vector",
+    "x86vector"
+  ],
+  "limitations": [
+    "No newer LLVM build; missing dialects are version boundaries.",
+    "No JIT, distributed execution, async runtime execution, or numerical quantization test."
+  ]
+}

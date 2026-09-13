@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.20)
+project(insider_ch1_evidence LANGUAGES C CXX)
+find_package(MLIR REQUIRED CONFIG)
+add_executable(ch1-translate translate.cpp)
+target_compile_features(ch1-translate PRIVATE cxx_std_17)
+target_include_directories(ch1-translate PRIVATE ${MLIR_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
+target_compile_definitions(ch1-translate PRIVATE ${LLVM_DEFINITIONS})
+target_link_libraries(ch1-translate PRIVATE MLIRLLVMToLLVMIRTranslation MLIRBuiltinToLLVMIRTranslation MLIRParser)

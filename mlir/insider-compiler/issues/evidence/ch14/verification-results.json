@@ -1,0 +1,213 @@
+{
+  "llvm_commit": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff",
+  "commands": [
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "--version"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-4.mlir"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-5.mlir"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-6.mlir"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-7.mlir"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-8.mlir"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-9.mlir"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-10.mlir"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-12.mlir"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-2.wrapped.mlir"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-3.wrapped.mlir"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-4.mlir",
+        "--affine-parallelize"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-4.transformed.mlir",
+        "-o",
+        "/dev/null"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-6.mlir",
+        "--affine-loop-fusion"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-6.transformed.mlir",
+        "-o",
+        "/dev/null"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-8.mlir",
+        "--affine-loop-fusion"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/listing-14-8.transformed.mlir",
+        "-o",
+        "/dev/null"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/private/tmp/insider-ch14-build/ch14-analysis",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/access.mlir"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/private/tmp/insider-ch14-build/ch14-analysis",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch14/parallel.mlir"
+      ],
+      "returncode": 0,
+      "stderr": ""
+    }
+  ],
+  "checks": [
+    "24 source pages exactly 2..25",
+    "13 complete numbered listings",
+    "one numbered figure and Mermaid",
+    "five footnotes",
+    "13 source notices",
+    "table14-1 exact coefficients",
+    "table14-2 exact coefficients",
+    "table14-3 exact coefficients",
+    "table14-4 exact coefficients",
+    "table14-5 exact coefficients",
+    "table14-6 exact coefficients",
+    "table14-7 exact coefficients",
+    "table14-8 exact coefficients",
+    "table14-9 exact coefficients",
+    "table10 contains all four nodes",
+    "nine coefficient tables extracted",
+    "729 finite-domain cases: relation composition and ordered dependencies",
+    "domain boundaries include4095 exclude4096 and negative indices",
+    "actual pass listing14-4 equals final listing14-5",
+    "actual pass listing14-6 equals final listing14-7",
+    "actual pass listing14-8 equals final listing14-12",
+    "actual access relations match tables1 and2",
+    "actual dependence relation matches table9",
+    "local parallel analysis is true,true,false",
+    "actual dependence at depths1,2,3 is No,No,Has",
+    "complete integer sampler finds innermost relation nonempty",
+    "actual fusion log additional compute fraction",
+    "actual fusion log storage reduction factor",
+    "actual fusion log fused nest cost",
+    "actual fusion log src write region size",
+    "actual fusion log slice write region size",
+    "fusion arithmetic and dynamic writes"
+  ],
+  "finite_domain_counts": {
+    "combined": 81,
+    "outer": 0,
+    "middle": 0,
+    "inner": 27
+  },
+  "limitations": [
+    "C listings1 and13 visually/source checked as fragments, not compiled here",
+    "4096^3 example parsed/analyzed/transformed, not numerically executed",
+    "snippets2 and3 require caller bounds/initialization; no numerical execution",
+    "listings9 and10 are illustrative stages, not claimed actual pass outputs",
+    "tiling runtime and math reviews independently saved by root; not rerun by this verifier"
+  ]
+}

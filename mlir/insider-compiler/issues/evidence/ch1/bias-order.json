@@ -1,0 +1,58 @@
+{
+  "scope": "Two explicit sequential binary32 evaluation orders; no PyTorch, TOSA runtime, GPU, or performance measurement.",
+  "shape": {
+    "x": [
+      1,
+      16
+    ],
+    "weights": [
+      16,
+      10
+    ],
+    "bias": [
+      1,
+      10
+    ]
+  },
+  "construction": "Use the same weights column and bias for all 10 output columns.",
+  "x": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "weights_column": [
+    16777216.0,
+    -16777216.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "bias": 1.0,
+  "zero_initialized_sum_then_bias": 1.0,
+  "bias_initialized_sum": 0.0,
+  "bitwise_equivalent": false
+}

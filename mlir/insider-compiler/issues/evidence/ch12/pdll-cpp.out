@@ -1,0 +1,27 @@
+namespace {
+
+struct ReplaceTenWithEleven : ::mlir::PDLPatternModule {
+  template <typename... ConfigsT>
+  ReplaceTenWithEleven(::mlir::MLIRContext *context, ConfigsT &&...configs)
+    : ::mlir::PDLPatternModule(::mlir::parseSourceString<::mlir::ModuleOp>(
+R"mlir(pdl.pattern @ReplaceTenWithEleven : benefit(0) {
+  %0 = operands loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":3:18)
+  %1 = attribute = 10 : i32 loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":3:46)
+  %2 = types loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":3:18)
+  %3 = operation "arith.constant"(%0 : !pdl.range<value>)  {"value" = %1} -> (%2 : !pdl.range<type>) loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":3:18)
+  rewrite %3 {
+    %4 = attribute = 11 : i32 loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":6:48)
+    %5 = operation "arith.constant"  {"value" = %4} loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":6:20)
+    replace %3 with %5 loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":7:5)
+  } loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":5:3)
+} loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/replace.pdll":1:1)
+    )mlir", context), std::forward<ConfigsT>(configs)...) {
+  }
+};
+
+} // end namespace
+
+template <typename... ConfigsT>
+static void LLVM_ATTRIBUTE_UNUSED populateGeneratedPDLLPatterns(::mlir::RewritePatternSet &patterns, ConfigsT &&...configs) {
+  patterns.add<ReplaceTenWithEleven>(patterns.getContext(), configs...);
+}

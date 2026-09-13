@@ -1,0 +1,7 @@
+module {
+  func.func @mul(%arg0: !cmath.complex<f32>, %arg1: !cmath.complex<f32>) -> !cmath.complex<f32> {
+    %0 = "cmath.mul"(%arg0, %arg1) : (!cmath.complex<f32>, !cmath.complex<f32>) -> !cmath.complex<f32>
+    return %0 : !cmath.complex<f32>
+  }
+}
+

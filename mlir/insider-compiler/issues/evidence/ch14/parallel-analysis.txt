@@ -1,0 +1,29 @@
+FUNCTION max_nested_1
+LOOP 1 parallel=1
+LOOP 2 parallel=1
+LOOP 3 parallel=0
+DEPENDENCE depth=1 result=1
+DEPENDENCE depth=2 result=1
+DEPENDENCE depth=3 result=0
+Domain: 0, Range: 6, Symbols: 0, Locals: 0
+17 constraints
+(Value	Value	Value	Value	Value	Value	const)
+ -1	0	0	1	0	0	0	= 0
+ 0	-1	0	0	1	0	0	= 0
+ -1	0	0	1	0	0	0	= 0
+ 0	-1	0	0	1	0	0	= 0
+ 1	0	0	0	0	0	0	>= 0
+ -1	0	0	0	0	0	4095	>= 0
+ 0	1	0	0	0	0	0	>= 0
+ 0	-1	0	0	0	0	4095	>= 0
+ 0	0	1	0	0	0	0	>= 0
+ 0	0	-1	0	0	0	4095	>= 0
+ 0	0	0	1	0	0	0	>= 0
+ 0	0	0	-1	0	0	4095	>= 0
+ 0	0	0	0	1	0	0	>= 0
+ 0	0	0	0	-1	0	4095	>= 0
+ 0	0	0	0	0	1	0	>= 0
+ 0	0	0	0	0	-1	4095	>= 0
+ 0	0	-1	0	0	1	-1	>= 0
+
+integerEmpty=0

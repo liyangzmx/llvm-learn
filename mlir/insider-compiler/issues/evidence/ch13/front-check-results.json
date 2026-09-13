@@ -1,0 +1,358 @@
+{
+  "python": "3.14.3",
+  "scope": "Listings 1-36. No Triton compilation, parser/verifier, PTX or GPU execution.",
+  "listings": [
+    {
+      "listing": 1,
+      "language": "python",
+      "parts": 1,
+      "check": "Python AST and compile() syntax PASS; not imported or executed"
+    },
+    {
+      "listing": 2,
+      "language": "python",
+      "parts": 1,
+      "check": "Python AST and compile() syntax PASS; not imported or executed"
+    },
+    {
+      "listing": 3,
+      "language": "mlir",
+      "parts": 3,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 75
+      }
+    },
+    {
+      "listing": 4,
+      "language": "mlir",
+      "parts": 2,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 12
+      }
+    },
+    {
+      "listing": 5,
+      "language": "mlir",
+      "parts": 2,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 17
+      }
+    },
+    {
+      "listing": 6,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 6
+      }
+    },
+    {
+      "listing": 7,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 4
+      }
+    },
+    {
+      "listing": 8,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 7
+      }
+    },
+    {
+      "listing": 9,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 9
+      }
+    },
+    {
+      "listing": 10,
+      "language": "mlir",
+      "parts": 2,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 7
+      }
+    },
+    {
+      "listing": 11,
+      "language": "text",
+      "parts": 1,
+      "check": "Abstract layout mapping extracted"
+    },
+    {
+      "listing": 12,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "Not checked: operation fragment with external inputs"
+      }
+    },
+    {
+      "listing": 13,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "Not checked: operation fragment with external inputs"
+      }
+    },
+    {
+      "listing": 14,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "Not checked: operation fragment with external inputs"
+      }
+    },
+    {
+      "listing": 15,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "Not checked: operation fragment with external inputs"
+      }
+    },
+    {
+      "listing": 16,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "Not checked: operation fragment with external inputs"
+      }
+    },
+    {
+      "listing": 17,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "Not checked: operation fragment with external inputs"
+      }
+    },
+    {
+      "listing": 18,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "Not checked: operation fragment with external inputs"
+      }
+    },
+    {
+      "listing": 19,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "Not checked: operation fragment with external inputs"
+      }
+    },
+    {
+      "listing": 20,
+      "language": "mlir",
+      "parts": 2,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 4
+      }
+    },
+    {
+      "listing": 21,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 7
+      }
+    },
+    {
+      "listing": 22,
+      "language": "mlir",
+      "parts": 2,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 23
+      }
+    },
+    {
+      "listing": 23,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "Not checked: operation fragment with external inputs"
+      }
+    },
+    {
+      "listing": 24,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "Not checked: operation fragment with external inputs"
+      }
+    },
+    {
+      "listing": 25,
+      "language": "mlir",
+      "parts": 2,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 32
+      }
+    },
+    {
+      "listing": 26,
+      "language": "mlir",
+      "parts": 2,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 9
+      }
+    },
+    {
+      "listing": 27,
+      "language": "mlir",
+      "parts": 2,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 11
+      }
+    },
+    {
+      "listing": 28,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 2
+      }
+    },
+    {
+      "listing": 29,
+      "language": "mlir",
+      "parts": 1,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 1
+      }
+    },
+    {
+      "listing": 30,
+      "language": "mlir",
+      "parts": 2,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 27
+      }
+    },
+    {
+      "listing": 31,
+      "language": "mlir",
+      "parts": 2,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 29
+      }
+    },
+    {
+      "listing": 32,
+      "language": "mlir",
+      "parts": 2,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 7
+      }
+    },
+    {
+      "listing": 33,
+      "language": "mlir",
+      "parts": 2,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 11
+      }
+    },
+    {
+      "listing": 34,
+      "language": "mlir",
+      "parts": 2,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 35
+      }
+    },
+    {
+      "listing": 35,
+      "language": "mlir",
+      "parts": 3,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 44
+      }
+    },
+    {
+      "listing": 36,
+      "language": "mlir",
+      "parts": 3,
+      "check": "Lexical delimiter balance PASS; no Triton parser/verifier run",
+      "ssa_name_coverage": {
+        "status": "PASS",
+        "names": 39
+      }
+    }
+  ],
+  "blocked": {
+    "status": "PASS",
+    "elements": 256,
+    "printed_cells": 96,
+    "threads": 64,
+    "elements_per_thread": 4
+  },
+  "swizzle": {
+    "status": "PASS",
+    "elements": 256,
+    "printed_cells": 55,
+    "rows_bijective": 16,
+    "old_formula_distinct_columns_per_row": 8
+  }
+}

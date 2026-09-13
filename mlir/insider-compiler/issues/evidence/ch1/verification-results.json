@@ -1,0 +1,292 @@
+{
+  "llvm": "LLVM (http://llvm.org/):\n  LLVM version 18.1.8\n  DEBUG build with assertions.",
+  "structure": {
+    "pages": 14,
+    "listings": 8,
+    "figures": 4,
+    "footnotes": 12,
+    "notice_boxes": 1,
+    "markdown_matches_permanent_listings": "PASS"
+  },
+  "python": "AST and compile syntax PASS; torch/torch_mlir compile not executed",
+  "python_modules_present": {
+    "torch": false,
+    "torch_mlir": false
+  },
+  "constant_boundary": "Original data truncated; complete instances use validation-data.json",
+  "snippet_boundary": "Supplied operands and entry only establish parser/export validity; not full vectorization of the book model",
+  "native": "PASS: 40 inputs x 10 outputs; generated LLVM18 scalar kernel matches bias-first f32 reference.",
+  "commands": [
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "--version"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "LLVM (http://llvm.org/):\n  LLVM version 18.1.8\n  DEBUG build with assertions.\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/complete-1-2.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/parsed-2.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/complete-1-3.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/parsed-3.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/complete-1-4.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/parsed-4.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/complete-1-5.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/parsed-5.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/complete-1-6.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/parsed-6.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/complete-1-7.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/parsed-7.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/complete-1-2.mlir",
+        "--tosa-validate=profile=mi",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/tosa-mi.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/complete-1-2.mlir",
+        "--tosa-to-linalg-pipeline",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/default.mlir"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/complete-1-2.mlir",
+        "--pass-pipeline=builtin.module(func.func(tosa-to-linalg-named,tosa-to-linalg,tosa-to-arith,tosa-to-tensor),canonicalize)",
+        "-o",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/tosa-to-linalg-explicit.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/complete-1-4.mlir",
+        "--one-shot-bufferize=bufferize-function-boundaries",
+        "--convert-linalg-to-affine-loops",
+        "--canonicalize",
+        "-o",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/linalg-to-affine.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/complete-1-6.mlir",
+        "--lower-affine",
+        "--convert-scf-to-cf",
+        "--convert-arith-to-llvm",
+        "--finalize-memref-to-llvm",
+        "--convert-func-to-llvm",
+        "--convert-cf-to-llvm",
+        "--reconcile-unrealized-casts",
+        "-o",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/affine-to-llvm.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/snippet-fixture.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/snippet-parsed.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/tosa-to-linalg-explicit.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/tosa-to-linalg-explicit.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/linalg-to-affine.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/linalg-to-affine.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/affine-to-llvm.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/affine-to-llvm.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/private/tmp/insider-ch11-build/ch11-translate",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/affine-to-llvm.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "(saved to affine.ll)",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-as",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/affine.ll",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/affine.ll.bc"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/private/tmp/insider-ch11-build/ch11-translate",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/snippet-fixture.mlir"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "(saved to snippet-fixture.ll)",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-as",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/snippet-fixture.ll",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/snippet-fixture.ll.bc"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/clang",
+        "-O0",
+        "-ffp-contract=off",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/affine.ll",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch1/run-forward.c",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/forward"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "",
+      "stderr": "warning: overriding the module target triple with arm64-apple-macosx15.0.0 [-Woverride-module]\n1 warning generated.\n"
+    },
+    {
+      "argv": [
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-verify-nsjv4xa9/forward"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "PASS: 40 inputs x 10 outputs; generated LLVM18 scalar kernel matches bias-first f32 reference.\n",
+      "stderr": ""
+    }
+  ]
+}

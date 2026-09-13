@@ -1,0 +1,9 @@
+# Keep source scans and raw OCR locally, outside Git history.
+/pdf/
+/ocr/*
+!/ocr/README.md
+!/ocr/manifest.json
+
+# Local OCR executable and Python caches.
+tools/vision-ocr
+tools/__pycache__/

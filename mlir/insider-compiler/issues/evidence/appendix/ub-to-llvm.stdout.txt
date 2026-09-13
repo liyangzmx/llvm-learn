@@ -1,0 +1,7 @@
+module {
+  func.func @poison() -> i32 {
+    %0 = llvm.mlir.poison : i32
+    return %0 : i32
+  }
+}
+

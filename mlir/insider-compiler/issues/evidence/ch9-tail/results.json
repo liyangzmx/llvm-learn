@@ -1,0 +1,38 @@
+[
+  {
+    "name": "tiled",
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch9-tail/tiled.mlir",
+      "--transform-interpreter"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "vectorized",
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch9-tail/vectorized.mlir",
+      "--transform-interpreter"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "vector-broadcast",
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch9-tail/vector-broadcast.mlir",
+      "--convert-vector-to-llvm"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "clone",
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch9-tail/clone.mlir",
+      "--convert-bufferization-to-memref"
+    ],
+    "returncode": 0
+  }
+]

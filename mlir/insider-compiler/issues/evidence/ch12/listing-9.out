@@ -1,0 +1,14 @@
+module {
+  pdl.pattern @ReplaceTenWithEleven : benefit(0) {
+    %0 = operands
+    %1 = attribute = 10 : i32
+    %2 = types
+    %3 = operation "arith.constant"(%0 : !pdl.range<value>)  {"value" = %1} -> (%2 : !pdl.range<type>)
+    rewrite %3 {
+      %4 = attribute = 11 : i32
+      %5 = operation "arith.constant"  {"value" = %4}
+      replace %3 with %5
+    }
+  }
+}
+

@@ -1,0 +1,173 @@
+{
+  "llvm": "LLVM (http://llvm.org/):\n  LLVM version 18.1.8\n  DEBUG build with assertions.",
+  "markdown_sha256": "2c04a9a245af0f0954cd743849db7a5531e9f918be89d2062b47916d0bfcff9b",
+  "scope": "Current reading edition listings 1-4 to 1-7 only",
+  "structure": {
+    "pages": 14,
+    "listings": 8,
+    "figures": 4,
+    "footnotes": 12,
+    "annotated_versions_match_unannotated": true
+  },
+  "historical_evidence_files_unchanged": 34,
+  "historical_readme_exception": "Old README may gain a current-batch pointer; original hash remains in the snapshot",
+  "data": "Exact copy of historical explicit validation-data.json; not recovered book constants",
+  "native": "PASS: 80 inputs x 10 outputs match zero-initialized, bias-last f32 reference; 39 outputs distinguish the historical bias-first reference.",
+  "boundaries": [
+    "No Python/PyTorch/torch-mlir execution",
+    "No proof across all floating-point inputs or reduction schedules",
+    "No FMA contraction or reassociation was enabled for the host reference",
+    "No reconstruction of the original vectorized listing 1-8"
+  ],
+  "commands": [
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "--version"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": "LLVM (http://llvm.org/):\n  LLVM version 18.1.8\n  DEBUG build with assertions.\n"
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/complete-1-4.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-reading-s9le0t44/parsed-4.mlir"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/complete-1-5.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-reading-s9le0t44/parsed-5.mlir"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/complete-1-6.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-reading-s9le0t44/parsed-6.mlir"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/complete-1-7.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-reading-s9le0t44/parsed-7.mlir"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/complete-1-4.mlir",
+        "--one-shot-bufferize=bufferize-function-boundaries",
+        "--convert-linalg-to-affine-loops",
+        "--canonicalize",
+        "-o",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/linalg-to-affine.mlir"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/complete-1-6.mlir",
+        "--lower-affine",
+        "--convert-scf-to-cf",
+        "--convert-arith-to-llvm",
+        "--finalize-memref-to-llvm",
+        "--convert-func-to-llvm",
+        "--convert-cf-to-llvm",
+        "--reconcile-unrealized-casts",
+        "-o",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/affine-to-llvm.mlir"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/linalg-to-affine.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-reading-s9le0t44/linalg-to-affine.mlir"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/affine-to-llvm.mlir",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-reading-s9le0t44/affine-to-llvm.mlir"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/private/tmp/insider-ch11-build/ch11-translate",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/affine-to-llvm.mlir"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": "(saved to affine.ll)"
+    },
+    {
+      "argv": [
+        "/opt/llvm-project/build/bin/llvm-as",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/affine.ll",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-reading-s9le0t44/affine.bc"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/clang",
+        "-O0",
+        "-ffp-contract=off",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/affine.ll",
+        "/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/reading-edition/ch1/run-forward.c",
+        "-o",
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-reading-s9le0t44/forward"
+      ],
+      "exit": 0,
+      "stderr": "warning: overriding the module target triple with arm64-apple-macosx15.0.0 [-Woverride-module]\n1 warning generated.\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/var/folders/4x/l8vhv5h91712hfcj_zrbx4b80000gn/T/ch1-reading-s9le0t44/forward"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "stdout": "PASS: 80 inputs x 10 outputs match zero-initialized, bias-last f32 reference; 39 outputs distinguish the historical bias-first reference.\n"
+    }
+  ]
+}

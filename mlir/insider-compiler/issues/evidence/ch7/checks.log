@@ -1,0 +1,39 @@
+LLVM (http://llvm.org/):
+  LLVM version 18.1.8
+  DEBUG build with assertions.
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/sort.mlir --test-commutativity-utils --allow-unregistered-dialect
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/canonicalize.mlir --canonicalize
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/sink.mlir --control-flow-sink
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/cse.mlir --cse
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/cse-unknown.mlir --cse --allow-unregistered-dialect
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/licm.mlir --loop-invariant-code-motion
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/mem2reg.mlir --mem2reg
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/sroa.mlir --sroa
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/sort-topological.mlir --topological-sort
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/inline.mlir --inline
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/inline-public.mlir --inline
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/sccp.mlir --sccp
+exit=0

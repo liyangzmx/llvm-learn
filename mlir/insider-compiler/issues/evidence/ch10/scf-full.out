@@ -1,0 +1,15 @@
+module {
+  llvm.func @simple_std_for_loop(%arg0: i64, %arg1: i64, %arg2: i64) {
+    llvm.br ^bb1(%arg0 : i64)
+  ^bb1(%0: i64):  // 2 preds: ^bb0, ^bb2
+    %1 = llvm.icmp "slt" %0, %arg1 : i64
+    llvm.cond_br %1, ^bb2, ^bb3
+  ^bb2:  // pred: ^bb1
+    %2 = llvm.mlir.constant(1 : index) : i64
+    %3 = llvm.add %0, %arg2  : i64
+    llvm.br ^bb1(%3 : i64)
+  ^bb3:  // pred: ^bb1
+    llvm.return
+  }
+}
+

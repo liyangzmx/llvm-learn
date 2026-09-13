@@ -1,0 +1,7 @@
+module {
+  func.func @trivial_ops(%arg0: index, %arg1: index) {
+    %0 = index.add %arg0, %arg1
+    return
+  }
+}
+

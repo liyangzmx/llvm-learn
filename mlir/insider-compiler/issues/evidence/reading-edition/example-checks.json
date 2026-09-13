@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "integer_projection_cases": 9409,
+  "parameter_range": {
+    "w": [
+      -48,
+      48
+    ],
+    "z": [
+      -48,
+      48
+    ]
+  },
+  "scope": "Finite-grid check for transcription errors; the general equivalence proof is in chapter 15.",
+  "appendix_A1": "Identical to the previously parser/verifier-checked dlti-18.mlir input.",
+  "appendix_A1_sha256": "8856a31def4ba87cbf6ad868e075ed30c9559fb6128e0cca8f0350314da0b415",
+  "previous_dlti_validation": "../appendix/results.json"
+}

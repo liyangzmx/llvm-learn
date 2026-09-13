@@ -1,0 +1,32 @@
+{
+  "status": "PASS",
+  "baseline": "before-sha256.json",
+  "checked_files": 859,
+  "changed_chapter_files": [
+    {
+      "file": "insider-compiler-ch1.md",
+      "before_sha256": "d619ad9b05b731d7b4e7d2220750cfcfb87eef3f660dee42ff22ac2977a5e01f",
+      "after_sha256": "2c04a9a245af0f0954cd743849db7a5531e9f918be89d2062b47916d0bfcff9b"
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "before_sha256": "e5e874bc7407eceeee90cf0f5271b4dc9b4de486e3c94d99b88443b54128cd36",
+      "after_sha256": "76868b7f3a72f04d78d653a81d3ff240d49faef5ef6707e4ca1cebde67a4b4cf"
+    },
+    {
+      "file": "insider-compiler-ch10.md",
+      "before_sha256": "801650d103b9f86d261d4fcdff91c63865b68fc3b914df50f93e870c1c9170dc",
+      "after_sha256": "62bbad09ca35005867cfbe059c10754dc08f12ce8833e183a51d77e06c035d57"
+    },
+    {
+      "file": "insider-compiler-appendix.md",
+      "before_sha256": "d7aa8aec90e8fa8000024d63cc7eb4a573ab64f7f505ab7858e65affa03633c9",
+      "after_sha256": "2c652ce76f81c47851111deebd897f708f62b1324fc533d18050b983368b6c2d"
+    }
+  ],
+  "unchanged_files": 855,
+  "unchanged_ocr_text_json_manifest_files": 840,
+  "unchanged_other_reading_files": 15,
+  "source_pdf_validation": "assemble_ocr.py verified the 7 source PDF hashes against ocr/manifest.json and the 416 source pages.",
+  "scope": "19 chapter/part/appendix Markdown files and 840 OCR TXT/JSON/aggregate/manifest files. This baseline does not include OCR PNG caches or issue metadata."
+}

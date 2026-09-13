@@ -1,0 +1,28 @@
+{
+  "arithmetic": "fractions.Fraction and exact integers",
+  "bounded_gcd_test": {
+    "passes_gcd": true,
+    "bounded_solution_exists": false
+  },
+  "nonconvex_integer_set": {
+    "endpoints": [
+      1,
+      2
+    ],
+    "midpoint": "3/2"
+  },
+  "convex_domain_nonconvex_objective": {
+    "f(0)": "0",
+    "f(2)": "-4",
+    "nearby_samples": {
+      "-1/2": "3/8",
+      "-1/10": "11/1000",
+      "1/10": "9/1000",
+      "1/2": "1/8"
+    },
+    "local_minimum_proof": "x^2 > 0 and 1-x > 0 for 0 < abs(x) < 1"
+  },
+  "negative_weight_convexity_counterexample": "passed",
+  "affine_restriction_counterexample": "f(x,y)=x^2-y^2; f(t,0)=t^2",
+  "status": "passed"
+}

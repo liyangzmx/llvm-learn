@@ -1,0 +1,638 @@
+$ /opt/llvm-project/build/bin/mlir-opt --version
+exit: 0
+LLVM (http://llvm.org/):
+  LLVM version 18.1.8
+  DEBUG build with assertions.
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/func.mlir --convert-func-to-llvm
+exit: 0
+module {
+  llvm.func @my() {
+    llvm.return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/scf.mlir --convert-scf-to-cf
+exit: 0
+module {
+  func.func @simple_std_for_loop(%arg0: index, %arg1: index, %arg2: index) {
+    cf.br ^bb1(%arg0 : index)
+  ^bb1(%0: index):  // 2 preds: ^bb0, ^bb2
+    %1 = arith.cmpi slt, %0, %arg1 : index
+    cf.cond_br %1, ^bb2, ^bb3
+  ^bb2:  // pred: ^bb1
+    %c1 = arith.constant 1 : index
+    %2 = arith.addi %0, %arg2 : index
+    cf.br ^bb1(%2 : index)
+  ^bb3:  // pred: ^bb1
+    return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/arith.mlir --convert-arith-to-llvm
+exit: 0
+module {
+  func.func @test_scalar_bf16(%arg0: bf16, %arg1: bf16) -> bf16 {
+    %0 = llvm.fadd %arg0, %arg1  : bf16
+    return %0 : bf16
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/index.mlir --convert-index-to-llvm
+exit: 0
+module {
+  func.func @trivial_ops(%arg0: index, %arg1: index) {
+    %0 = builtin.unrealized_conversion_cast %arg0 : index to i64
+    %1 = builtin.unrealized_conversion_cast %arg1 : index to i64
+    %2 = llvm.add %0, %1  : i64
+    return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/complex.mlir --convert-complex-to-llvm
+exit: 0
+module {
+  func.func @complex_mul(%arg0: complex<f32>, %arg1: complex<f32>) -> complex<f32> {
+    %0 = builtin.unrealized_conversion_cast %arg0 : complex<f32> to !llvm.struct<(f32, f32)>
+    %1 = builtin.unrealized_conversion_cast %arg1 : complex<f32> to !llvm.struct<(f32, f32)>
+    %2 = llvm.extractvalue %0[0] : !llvm.struct<(f32, f32)> 
+    %3 = llvm.extractvalue %0[1] : !llvm.struct<(f32, f32)> 
+    %4 = llvm.extractvalue %1[0] : !llvm.struct<(f32, f32)> 
+    %5 = llvm.extractvalue %1[1] : !llvm.struct<(f32, f32)> 
+    %6 = llvm.mlir.undef : !llvm.struct<(f32, f32)>
+    %7 = llvm.fmul %4, %2  : f32
+    %8 = llvm.fmul %5, %3  : f32
+    %9 = llvm.fsub %7, %8  : f32
+    %10 = llvm.fmul %3, %4  : f32
+    %11 = llvm.fmul %2, %5  : f32
+    %12 = llvm.fadd %10, %11  : f32
+    %13 = llvm.insertvalue %9, %6[0] : !llvm.struct<(f32, f32)> 
+    %14 = llvm.insertvalue %12, %13[1] : !llvm.struct<(f32, f32)> 
+    %15 = builtin.unrealized_conversion_cast %14 : !llvm.struct<(f32, f32)> to complex<f32>
+    return %15 : complex<f32>
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/alloc.mlir --finalize-memref-to-llvm
+exit: 0
+module {
+  llvm.func @malloc(i64) -> !llvm.ptr
+  func.func @mixed_alloc(%arg0: index, %arg1: index) -> memref<?x42x?xf32> {
+    %0 = builtin.unrealized_conversion_cast %arg0 : index to i64
+    %1 = builtin.unrealized_conversion_cast %arg1 : index to i64
+    %2 = llvm.mlir.constant(42 : index) : i64
+    %3 = llvm.mlir.constant(1 : index) : i64
+    %4 = llvm.mul %1, %2  : i64
+    %5 = llvm.mul %4, %0  : i64
+    %6 = llvm.mlir.zero : !llvm.ptr
+    %7 = llvm.getelementptr %6[%5] : (!llvm.ptr, i64) -> !llvm.ptr, f32
+    %8 = llvm.ptrtoint %7 : !llvm.ptr to i64
+    %9 = llvm.call @malloc(%8) : (i64) -> !llvm.ptr
+    %10 = llvm.mlir.undef : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)>
+    %11 = llvm.insertvalue %9, %10[0] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %12 = llvm.insertvalue %9, %11[1] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %13 = llvm.mlir.constant(0 : index) : i64
+    %14 = llvm.insertvalue %13, %12[2] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %15 = llvm.insertvalue %0, %14[3, 0] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %16 = llvm.insertvalue %2, %15[3, 1] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %17 = llvm.insertvalue %1, %16[3, 2] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %18 = llvm.insertvalue %4, %17[4, 0] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %19 = llvm.insertvalue %1, %18[4, 1] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %20 = llvm.insertvalue %3, %19[4, 2] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %21 = builtin.unrealized_conversion_cast %20 : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> to memref<?x42x?xf32>
+    return %21 : memref<?x42x?xf32>
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/shape.mlir --convert-shape-to-std
+exit: 0
+module {
+  func.func @binary_ops(%arg0: index, %arg1: index) {
+    %0 = arith.addi %arg0, %arg1 : index
+    %1 = arith.muli %arg0, %arg1 : index
+    return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/math.mlir --convert-math-to-libm
+exit: 0
+module {
+  func.func private @log1pf(f32) -> f32 attributes {llvm.readnone}
+  func.func @log1p(%arg0: f32) -> f32 {
+    %0 = call @log1pf(%arg0) : (f32) -> f32
+    return %0 : f32
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/scf.out --convert-cf-to-llvm
+exit: 0
+module {
+  func.func @simple_std_for_loop(%arg0: index, %arg1: index, %arg2: index) {
+    cf.br ^bb1(%arg0 : index)
+  ^bb1(%0: index):  // 2 preds: ^bb0, ^bb2
+    %1 = arith.cmpi slt, %0, %arg1 : index
+    llvm.cond_br %1, ^bb2, ^bb3
+  ^bb2:  // pred: ^bb1
+    %c1 = arith.constant 1 : index
+    %2 = arith.addi %0, %arg2 : index
+    cf.br ^bb1(%2 : index)
+  ^bb3:  // pred: ^bb1
+    return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/extract.mlir --one-shot-bufferize
+exit: 0
+module {
+  func.func @tensor.extract(%arg0: tensor<?xf32>, %arg1: index) -> f32 {
+    %0 = bufferization.to_memref %arg0 : memref<?xf32, strided<[?], offset: ?>>
+    %1 = memref.load %0[%arg1] : memref<?xf32, strided<[?], offset: ?>>
+    return %1 : f32
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/extract.mlir --one-shot-bufferize=allow-unknown-ops
+exit: 0
+module {
+  func.func @tensor.extract(%arg0: tensor<?xf32>, %arg1: index) -> f32 {
+    %0 = bufferization.to_memref %arg0 : memref<?xf32, strided<[?], offset: ?>>
+    %1 = memref.load %0[%arg1] : memref<?xf32, strided<[?], offset: ?>>
+    return %1 : f32
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/math.mlir --convert-math-to-llvm
+exit: 0
+module {
+  func.func @log1p(%arg0: f32) -> f32 {
+    %0 = llvm.mlir.constant(1.000000e+00 : f32) : f32
+    %1 = llvm.fadd %0, %arg0  : f32
+    %2 = llvm.intr.log(%1)  : (f32) -> f32
+    return %2 : f32
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/func-call.mlir --convert-func-to-llvm
+exit: 0
+module {
+  llvm.func @my() {
+    llvm.return
+  }
+  llvm.call @my() : () -> ()
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/unranked.mlir
+exit: 0
+module {
+  func.func @unranked_rank(%arg0: memref<*xf32>) -> index {
+    %0 = memref.rank %arg0 : memref<*xf32>
+    return %0 : index
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/fma.mlir --math-uplift-to-fma
+exit: 0
+module {
+  func.func @muladd(%arg0: f32, %arg1: f32, %arg2: f32) -> f32 {
+    %0 = arith.mulf %arg0, %arg1 : f32
+    %1 = arith.addf %0, %arg2 : f32
+    return %1 : f32
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/fma-contract.mlir --math-uplift-to-fma
+exit: 0
+module {
+  func.func @muladd(%arg0: f32, %arg1: f32, %arg2: f32) -> f32 {
+    %0 = math.fma %arg0, %arg1, %arg2 fastmath<contract> : f32
+    return %0 : f32
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/scf.mlir --convert-scf-to-cf --convert-cf-to-llvm --convert-arith-to-llvm --convert-func-to-llvm --reconcile-unrealized-casts
+exit: 0
+module {
+  llvm.func @simple_std_for_loop(%arg0: i64, %arg1: i64, %arg2: i64) {
+    llvm.br ^bb1(%arg0 : i64)
+  ^bb1(%0: i64):  // 2 preds: ^bb0, ^bb2
+    %1 = llvm.icmp "slt" %0, %arg1 : i64
+    llvm.cond_br %1, ^bb2, ^bb3
+  ^bb2:  // pred: ^bb1
+    %2 = llvm.mlir.constant(1 : index) : i64
+    %3 = llvm.add %0, %arg2  : i64
+    llvm.br ^bb1(%3 : i64)
+  ^bb3:  // pred: ^bb1
+    llvm.return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/index.out --reconcile-unrealized-casts
+exit: 1
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/index.out:3:10: error: failed to legalize operation 'builtin.unrealized_conversion_cast' that was explicitly marked illegal
+    %0 = builtin.unrealized_conversion_cast %arg0 : index to i64
+         ^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/index.out:3:10: note: see current operation: %0 = "builtin.unrealized_conversion_cast"(%arg0) : (index) -> i64
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/index.mlir --convert-index-to-llvm=index-bitwidth=32
+exit: 0
+module {
+  func.func @trivial_ops(%arg0: index, %arg1: index) {
+    %0 = builtin.unrealized_conversion_cast %arg0 : index to i32
+    %1 = builtin.unrealized_conversion_cast %arg1 : index to i32
+    %2 = llvm.add %0, %1  : i32
+    return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/func-caller.mlir --convert-func-to-llvm
+exit: 0
+module {
+  llvm.func @my() {
+    llvm.return
+  }
+  llvm.func @caller() {
+    llvm.call @my() : () -> ()
+    llvm.return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/shape-constraint.mlir --remove-shape-constraints
+exit: 0
+module {
+  func.func @constraints(%arg0: tensor<1xindex>, %arg1: tensor<1xindex>, %arg2: i1) -> (!shape.witness, !shape.witness) {
+    %0 = shape.const_witness true
+    %1 = shape.cstr_require %arg2, "required condition"
+    return %0, %1 : !shape.witness, !shape.witness
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/math.mlir --convert-math-to-llvm=approximate-log1p=false
+exit: 0
+module {
+  func.func @log1p(%arg0: f32) -> f32 {
+    %0 = math.log1p %arg0 : f32
+    return %0 : f32
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/scf.out --lift-cf-to-scf
+exit: 0
+module {
+  func.func @simple_std_for_loop(%arg0: index, %arg1: index, %arg2: index) {
+    %0 = ub.poison : index
+    %c1_i32 = arith.constant 1 : i32
+    %c0_i32 = arith.constant 0 : i32
+    %1 = scf.while (%arg3 = %arg0) : (index) -> index {
+      %2 = arith.cmpi slt, %arg3, %arg1 : index
+      %3:3 = scf.if %2 -> (index, i32, i32) {
+        %c1 = arith.constant 1 : index
+        %5 = arith.addi %arg3, %arg2 : index
+        scf.yield %5, %c0_i32, %c1_i32 : index, i32, i32
+      } else {
+        scf.yield %0, %c1_i32, %c0_i32 : index, i32, i32
+      }
+      %4 = arith.trunci %3#2 : i32 to i1
+      scf.condition(%4) %3#0 : index
+    } do {
+    ^bb0(%arg3: index):
+      scf.yield %arg3 : index
+    }
+    return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-01.mlir
+exit: 0
+module {
+  func.func @my() {
+    return
+  }
+  func.call @my() : () -> ()
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-02.mlir
+exit: 0
+module {
+  llvm.func @my() {
+    llvm.return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-03.mlir
+exit: 0
+module {
+  func.func @simple_std_for_loop(%arg0: index, %arg1: index, %arg2: index) {
+    scf.for %arg3 = %arg0 to %arg1 step %arg2 {
+      %c1 = arith.constant 1 : index
+    }
+    return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-04.mlir
+exit: 0
+module {
+  func.func @simple_std_for_loop(%arg0: index, %arg1: index, %arg2: index) {
+    cf.br ^bb1(%arg0 : index)
+  ^bb1(%0: index):  // 2 preds: ^bb0, ^bb2
+    %1 = arith.cmpi slt, %0, %arg1 : index
+    cf.cond_br %1, ^bb2, ^bb3
+  ^bb2:  // pred: ^bb1
+    %c1 = arith.constant 1 : index
+    %2 = arith.addi %0, %arg2 : index
+    cf.br ^bb1(%2 : index)
+  ^bb3:  // pred: ^bb1
+    return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-05.mlir
+exit: 0
+module {
+  func.func @simple_std_for_loop(%arg0: index, %arg1: index, %arg2: index) {
+    cf.br ^bb1(%arg0 : index)
+  ^bb1(%0: index):  // 2 preds: ^bb0, ^bb2
+    %1 = arith.cmpi slt, %0, %arg1 : index
+    llvm.cond_br %1, ^bb2, ^bb3
+  ^bb2:  // pred: ^bb1
+    %c1 = arith.constant 1 : index
+    %2 = arith.addi %0, %arg2 : index
+    cf.br ^bb1(%2 : index)
+  ^bb3:  // pred: ^bb1
+    return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-06.mlir
+exit: 0
+module {
+  func.func @test_scalar_bf16(%arg0: bf16, %arg1: bf16) -> bf16 {
+    %0 = arith.addf %arg0, %arg1 : bf16
+    return %0 : bf16
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-07.mlir
+exit: 0
+module {
+  func.func @test_scalar_bf16(%arg0: bf16, %arg1: bf16) -> bf16 {
+    %0 = llvm.fadd %arg0, %arg1  : bf16
+    return %0 : bf16
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-08.mlir
+exit: 0
+module {
+  func.func @trivial_ops(%arg0: index, %arg1: index) {
+    %0 = index.add %arg0, %arg1
+    return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-09.mlir
+exit: 0
+module {
+  func.func @trivial_ops(%arg0: index, %arg1: index) {
+    %0 = builtin.unrealized_conversion_cast %arg0 : index to i64
+    %1 = builtin.unrealized_conversion_cast %arg1 : index to i64
+    %2 = llvm.add %0, %1  : i64
+    return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-10.mlir
+exit: 0
+module {
+  func.func @complex_mul(%arg0: complex<f32>, %arg1: complex<f32>) -> complex<f32> {
+    %0 = complex.mul %arg0, %arg1 : complex<f32>
+    return %0 : complex<f32>
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-11.mlir
+exit: 0
+module {
+  func.func @complex_mul(%arg0: complex<f32>, %arg1: complex<f32>) -> complex<f32> {
+    %0 = builtin.unrealized_conversion_cast %arg0 : complex<f32> to !llvm.struct<(f32, f32)>
+    %1 = builtin.unrealized_conversion_cast %arg1 : complex<f32> to !llvm.struct<(f32, f32)>
+    %2 = llvm.extractvalue %0[0] : !llvm.struct<(f32, f32)> 
+    %3 = llvm.extractvalue %0[1] : !llvm.struct<(f32, f32)> 
+    %4 = llvm.extractvalue %1[0] : !llvm.struct<(f32, f32)> 
+    %5 = llvm.extractvalue %1[1] : !llvm.struct<(f32, f32)> 
+    %6 = llvm.mlir.undef : !llvm.struct<(f32, f32)>
+    %7 = llvm.fmul %4, %2  : f32
+    %8 = llvm.fmul %5, %3  : f32
+    %9 = llvm.fsub %7, %8  : f32
+    %10 = llvm.fmul %3, %4  : f32
+    %11 = llvm.fmul %2, %5  : f32
+    %12 = llvm.fadd %10, %11  : f32
+    %13 = llvm.insertvalue %9, %6[0] : !llvm.struct<(f32, f32)> 
+    %14 = llvm.insertvalue %12, %13[1] : !llvm.struct<(f32, f32)> 
+    %15 = builtin.unrealized_conversion_cast %14 : !llvm.struct<(f32, f32)> to complex<f32>
+    return %15 : complex<f32>
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-12.mlir
+exit: 0
+module {
+  func.func @tensor.extract(%arg0: tensor<?xf32>, %arg1: index) -> f32 {
+    %extracted = tensor.extract %arg0[%arg1] : tensor<?xf32>
+    return %extracted : f32
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-13.mlir
+exit: 0
+module {
+  func.func @tensor.extract(%arg0: tensor<?xf32>, %arg1: index) -> f32 {
+    %0 = bufferization.to_memref %arg0 : memref<?xf32, strided<[?], offset: ?>>
+    %1 = memref.load %0[%arg1] : memref<?xf32, strided<[?], offset: ?>>
+    return %1 : f32
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-14.mlir
+exit: 0
+module {
+  func.func @mixed_alloc(%arg0: index, %arg1: index) -> memref<?x42x?xf32> {
+    %alloc = memref.alloc(%arg0, %arg1) : memref<?x42x?xf32>
+    return %alloc : memref<?x42x?xf32>
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-15.mlir
+exit: 0
+module {
+  llvm.func @malloc(i64) -> !llvm.ptr
+  func.func @mixed_alloc(%arg0: index, %arg1: index) -> memref<?x42x?xf32> {
+    %0 = builtin.unrealized_conversion_cast %arg0 : index to i64
+    %1 = builtin.unrealized_conversion_cast %arg1 : index to i64
+    %2 = llvm.mlir.constant(42 : index) : i64
+    %3 = llvm.mlir.constant(1 : index) : i64
+    %4 = llvm.mul %1, %2  : i64
+    %5 = llvm.mul %4, %0  : i64
+    %6 = llvm.mlir.zero : !llvm.ptr
+    %7 = llvm.getelementptr %6[%5] : (!llvm.ptr, i64) -> !llvm.ptr, f32
+    %8 = llvm.ptrtoint %7 : !llvm.ptr to i64
+    %9 = llvm.call @malloc(%8) : (i64) -> !llvm.ptr
+    %10 = llvm.mlir.undef : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)>
+    %11 = llvm.insertvalue %9, %10[0] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %12 = llvm.insertvalue %9, %11[1] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %13 = llvm.mlir.constant(0 : index) : i64
+    %14 = llvm.insertvalue %13, %12[2] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %15 = llvm.insertvalue %0, %14[3, 0] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %16 = llvm.insertvalue %2, %15[3, 1] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %17 = llvm.insertvalue %1, %16[3, 2] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %18 = llvm.insertvalue %4, %17[4, 0] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %19 = llvm.insertvalue %1, %18[4, 1] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %20 = llvm.insertvalue %3, %19[4, 2] : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> 
+    %21 = builtin.unrealized_conversion_cast %20 : !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> to memref<?x42x?xf32>
+    return %21 : memref<?x42x?xf32>
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-16.mlir
+exit: 0
+module {
+  func.func @binary_ops(%arg0: index, %arg1: index) {
+    %0 = shape.add %arg0, %arg1 : index, index -> index
+    %1 = shape.mul %arg0, %arg1 : index, index -> index
+    return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-17.mlir
+exit: 0
+module {
+  func.func @binary_ops(%arg0: index, %arg1: index) {
+    %0 = arith.addi %arg0, %arg1 : index
+    %1 = arith.muli %arg0, %arg1 : index
+    return
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-18.mlir
+exit: 0
+module {
+  func.func @log1p(%arg0: f32) -> f32 {
+    %0 = math.log1p %arg0 : f32
+    return %0 : f32
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-19.mlir
+exit: 0
+module {
+  func.func private @log1pf(f32) -> f32 attributes {llvm.readnone}
+  func.func @log1p(%arg0: f32) -> f32 {
+    %0 = call @log1pf(%arg0) : (f32) -> f32
+    return %0 : f32
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/listing-20.mlir
+exit: 0
+module {
+  func.func @log1p(%arg0: f32) -> f32 {
+    %0 = llvm.mlir.constant(1.000000e+00 : f32) : f32
+    %1 = llvm.fadd %0, %arg0  : f32
+    %2 = llvm.intr.log(%1)  : (f32) -> f32
+    return %2 : f32
+  }
+}
+
+
+
+$ cc -std=c11 -O0 /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch10/log1p-accuracy.c -lm -o /private/tmp/insider-ch10-log1p
+exit: 0
+
+
+$ /private/tmp/insider-ch10-log1p
+exit: 0
+x=9.99999994e-09 log1pf(x)=9.99999994e-09 logf(1+x)=0

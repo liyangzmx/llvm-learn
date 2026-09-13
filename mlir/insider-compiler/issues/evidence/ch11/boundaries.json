@@ -1,0 +1,24 @@
+[
+  {
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "mlir/insider-compiler/issues/evidence/ch11/listing-11-5.mlir",
+      "--allow-unregistered-dialect",
+      "--pass-pipeline=builtin.module(func.func(convert-arm-sme-to-llvm,cse,canonicalize))",
+      "-o",
+      "/dev/null"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "mlir/insider-compiler/issues/evidence/ch11/listing-11-5.mlir:4:18: error: 'arm_sme.load_tile_slice' op expected tile ID to be allocated before conversion to LLVM\n  %tile_update = arm_sme.load_tile_slice %src[%c0], %mask, %tile, %tile_slice_index : memref<?x?xf16>, vector<[8]xi1>, vector<[8]x[8]xf16>\n                 ^\nmlir/insider-compiler/issues/evidence/ch11/listing-11-5.mlir:4:18: note: see current operation: %6 = \"arm_sme.load_tile_slice\"(%arg0, %arg1, %5, %2, %arg2) <{layout = #arm_sme.layout<horizontal>}> : (memref<?x?xf16>, vector<[8]xi1>, vector<[8]x[8]xf16>, index, index) -> vector<[8]x[8]xf16>\nmlir/insider-compiler/issues/evidence/ch11/listing-11-5.mlir:4:18: error: failed to legalize operation 'arm_sme.load_tile_slice' that was explicitly marked illegal\n  %tile_update = arm_sme.load_tile_slice %src[%c0], %mask, %tile, %tile_slice_index : memref<?x?xf16>, vector<[8]xi1>, vector<[8]x[8]xf16>\n                 ^\nmlir/insider-compiler/issues/evidence/ch11/listing-11-5.mlir:4:18: note: see current operation: %3 = \"arm_sme.load_tile_slice\"(%arg0, %arg1, %2, %0, %arg2) <{layout = #arm_sme.layout<horizontal>}> : (memref<?x?xf16>, vector<[8]xi1>, vector<[8]x[8]xf16>, index, index) -> vector<[8]x[8]xf16>\n"
+  },
+  {
+    "command": [
+      "/opt/llvm-project/build/bin/llc",
+      "--version"
+    ],
+    "returncode": 0,
+    "stdout": "LLVM (http://llvm.org/):\n  LLVM version 18.1.8\n  DEBUG build with assertions.\n  Default target: \n  Host CPU: apple-m1\n\n  Registered Targets:\n    bpf   - BPF (host endian)\n    bpfeb - BPF (big endian)\n    bpfel - BPF (little endian)\n",
+    "stderr": ""
+  }
+]

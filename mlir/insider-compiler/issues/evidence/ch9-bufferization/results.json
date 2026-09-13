@@ -1,0 +1,47 @@
+[
+  {
+    "case": "one-shot",
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "analysis.mlir",
+      "--one-shot-bufferize=bufferize-function-boundaries"
+    ],
+    "exit_code": 0,
+    "expected_success": true,
+    "passed": true
+  },
+  {
+    "case": "deallocated",
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "one-shot.mlir",
+      "--pass-pipeline=builtin.module(buffer-deallocation-pipeline)"
+    ],
+    "exit_code": 0,
+    "expected_success": true,
+    "passed": true
+  },
+  {
+    "case": "pipeline",
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "analysis.mlir",
+      "--pass-pipeline=builtin.module(buffer-deallocation-pipeline)",
+      "--dump-pass-pipeline"
+    ],
+    "exit_code": 0,
+    "expected_success": true,
+    "passed": true
+  },
+  {
+    "case": "unsupported-order",
+    "command": [
+      "/opt/llvm-project/build/bin/mlir-opt",
+      "analysis.mlir",
+      "--one-shot-bufferize=analysis-heuristic=bottom-up-from-terminators"
+    ],
+    "exit_code": -6,
+    "expected_success": false,
+    "passed": true
+  }
+]

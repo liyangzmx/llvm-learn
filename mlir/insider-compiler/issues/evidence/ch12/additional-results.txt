@@ -1,0 +1,57 @@
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/handle-read.mlir --transform-interpreter
+exit: 0
+[[[ IR printer: ]]]
+func.func @f() {
+  return
+}
+[[[ IR printer: ]]]
+func.func @f() {
+  return
+}
+module {
+  func.func @f() {
+    return
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op) {
+      %0 = transform.structured.match ops{["func.func"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.cast %0 : !transform.any_op to !transform.any_op
+      transform.print %0 : !transform.any_op
+      transform.print %1 : !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/handle-consumed.mlir --transform-interpreter
+exit: 1
+[[[ IR printer: ]]]
+func.func @f() {
+  return
+}
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/handle-consumed.mlir:8:5: error: op uses a handle invalidated by a previously executed transform op
+    transform.print %alias : !transform.any_op
+    ^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/handle-consumed.mlir:5:14: note: handle to invalidated ops
+    %alias = transform.cast %func : !transform.any_op to !transform.any_op
+             ^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/handle-consumed.mlir:7:12: note: invalidated by this transform op that consumes its operand #0 and invalidates all handles to payload IR entities associated with this operand and entities nested in them
+    %new = transform.apply_registered_pass "canonicalize" to %func : (!transform.any_op) -> !transform.any_op
+           ^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/handle-consumed.mlir:1:1: note: ancestor payload op
+func.func @f() { return }
+^
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/handle-consumed.mlir:1:1: note: nested payload op
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-named.mlir
+exit: 1
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/cmath-named.mlir:6:21: error: expected ')'
+    irdl.parameters(elem: %2)
+                    ^
+
+
+$ clang++ -std=c++17 -fsyntax-only -I/opt/llvm-project/mlir/include -I/opt/llvm-project/llvm/include -I/opt/llvm-project/build/tools/mlir/include -I/opt/llvm-project/build/include /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/pdll-generated-check.cpp
+exit: 0

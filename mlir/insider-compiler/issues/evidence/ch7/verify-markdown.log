@@ -1,0 +1,46 @@
+listing-7-1: text, explicitly non-standalone; source checked
+listing-7-2: cpp, explicitly non-standalone; source checked
+$ /opt/llvm-project/build/bin/mlir-tblgen /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-3.td -I /opt/llvm-project/mlir/include -I /opt/llvm-project/build/tools/mlir/include -gen-rewriters -o /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-3.inc
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-4.mlir -o /dev/null
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-5.mlir -o /dev/null
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-6.mlir -o /dev/null
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-7.mlir -o /dev/null
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-8.mlir -o /dev/null
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-9.mlir -o /dev/null
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-10.mlir -o /dev/null
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-11.mlir -o /dev/null
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-12.mlir -o /dev/null
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-13.mlir -o /dev/null
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-14.mlir -o /dev/null
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-15.mlir -o /dev/null
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-16.mlir -o /dev/null
+exit=0
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch7/listing-7-17.mlir -o /dev/null
+exit=0

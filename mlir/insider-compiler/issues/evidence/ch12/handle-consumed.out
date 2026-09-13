@@ -1,0 +1,4 @@
+[[[ IR printer: ]]]
+func.func @f() {
+  return
+}

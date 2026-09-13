@@ -1,0 +1,139 @@
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-1.mlir
+exit: 0
+module {
+  func.func @basic_cast_and_call() {
+    "test.foo"() : () -> ()
+    return
+  }
+  func.func @second() {
+    "test.bar"() : () -> ()
+    return
+  }
+  func.func private @third()
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op) {
+      %0 = transform.structured.match ops{["func.func"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1:3 = transform.split_handle %0 : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+      %2 = transform.structured.match ops{["test.foo"]} in %1#0 : (!transform.any_op) -> !transform.any_op
+      %3 = transform.func.cast_and_call @second before %2 : (!transform.any_op) -> !transform.any_op
+      %4 = transform.func.cast_and_call %1#2 after %2 : (!transform.any_op, !transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-2.mlir
+exit: 0
+module {
+  func.func @basic_cast_and_call() {
+    call @second() : () -> ()
+    "test.foo"() : () -> ()
+    call @third() : () -> ()
+    return
+  }
+  func.func @second() {
+    "test.bar"() : () -> ()
+    return
+  }
+  func.func private @third()
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op) {
+      %0 = transform.structured.match ops{["func.func"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1:3 = transform.split_handle %0 : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+      %2 = transform.structured.match ops{["test.foo"]} in %1#0 : (!transform.any_op) -> !transform.any_op
+      %3 = transform.func.cast_and_call @second before %2 : (!transform.any_op) -> !transform.any_op
+      %4 = transform.func.cast_and_call %1#2 after %2 : (!transform.any_op, !transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-7.mlir
+exit: 0
+module {
+  pdl.pattern : benefit(1) {
+    %0 = type
+    %1 = operand : %0
+    %2 = operation "foo.op"(%1 : !pdl.value)  -> (%0 : !pdl.type)
+    rewrite %2 {
+      replace %2 with(%1 : !pdl.value)
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-9.mlir
+exit: 0
+module {
+  pdl.pattern @ReplaceTenWithEleven : benefit(0) {
+    %0 = operands
+    %1 = attribute = 10 : i32
+    %2 = types
+    %3 = operation "arith.constant"(%0 : !pdl.range<value>)  {"value" = %1} -> (%2 : !pdl.range<type>)
+    rewrite %3 {
+      %4 = attribute = 11 : i32
+      %5 = operation "arith.constant"  {"value" = %4}
+      replace %3 with %5
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-opt /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-11.mlir
+exit: 0
+module {
+  irdl.dialect @cmath {
+    irdl.type @complex {
+      %0 = irdl.is f32 
+      %1 = irdl.is f64 
+      %2 = irdl.any_of(%0, %1) 
+      irdl.parameters(%2)
+    }
+    irdl.operation @mul {
+      %0 = irdl.is f32 
+      %1 = irdl.is f64 
+      %2 = irdl.any_of(%0, %1) 
+      %3 = irdl.parametric @complex<%2> 
+      irdl.operands(%3, %3)
+      irdl.results(%3)
+    }
+  }
+}
+
+
+
+$ /opt/llvm-project/build/bin/mlir-pdll -x=mlir /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-8.pdll
+exit: 0
+module {
+  pdl.pattern @ReplaceTenWithEleven : benefit(0) {
+    %0 = operands loc(#loc1)
+    %1 = attribute = 10 : i32 loc(#loc2)
+    %2 = types loc(#loc1)
+    %3 = operation "arith.constant"(%0 : !pdl.range<value>)  {"value" = %1} -> (%2 : !pdl.range<type>) loc(#loc1)
+    rewrite %3 {
+      %4 = attribute = 11 : i32 loc(#loc4)
+      %5 = operation "arith.constant"  {"value" = %4} loc(#loc5)
+      replace %3 with %5 loc(#loc6)
+    } loc(#loc3)
+  } loc(#loc)
+} loc(#loc)
+#loc = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-8.pdll":1:1)
+#loc1 = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-8.pdll":3:18)
+#loc2 = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-8.pdll":3:46)
+#loc3 = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-8.pdll":6:3)
+#loc4 = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-8.pdll":7:48)
+#loc5 = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-8.pdll":7:20)
+#loc6 = loc("/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-8.pdll":8:5)
+/opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-12-8.pdll:7:20: warning: operation result types are marked to be inferred, but `arith.constant` is unknown. Ensure that `arith.constant` supports zero results or implements `InferTypeOpInterface`. Include the ODS definition of this operation to remove this warning.
+    let newConst = op<arith.constant> {value = attr<"11 : i32">};
+                   ^
+
+
+$ clang++ -std=c++17 -fsyntax-only -I/opt/llvm-project/mlir/include -I/opt/llvm-project/llvm/include -I/opt/llvm-project/build/tools/mlir/include -I/opt/llvm-project/build/include /opt/coding/mlir-toy/mlir/insider-compiler/issues/evidence/ch12/listing-10-check.cpp
+exit: 0

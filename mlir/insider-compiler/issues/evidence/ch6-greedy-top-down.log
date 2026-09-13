@@ -1,0 +1,81 @@
+
+//===-------------------------------------------===//
+Processing operation : 'func.func'(0x150633320) {
+} -> failure : pattern failed to match
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'arith.constant'(0x1518283e0) {
+  %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32
+
+} -> failure : pattern failed to match
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'scf.if'(0x151829bf0) {
+} -> failure : pattern failed to match
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'scf.yield'(0x1506338c0) {
+  "scf.yield"(%0) : (i32) -> ()
+
+} -> failure : pattern failed to match
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'scf.yield'(0x151829b70) {
+  "scf.yield"(%0) : (i32) -> ()
+
+} -> failure : pattern failed to match
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'arith.addi'(0x151829ca0) {
+  %2 = "arith.addi"(%1, %1) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+
+  ** Erase   : 'arith.addi'(0x151829ca0)
+} -> success : operation is trivially dead
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'func.return'(0x151829e50) {
+  "func.return"() : () -> ()
+
+} -> failure : pattern failed to match
+//===-------------------------------------------===//
+** Erase   : 'scf.yield'(0x151829b70)
+** Erase   : 'scf.yield'(0x1506338c0)
+** Erase   : 'scf.if'(0x151829bf0)
+
+//===-------------------------------------------===//
+Processing operation : 'func.func'(0x150633320) {
+} -> failure : pattern failed to match
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'arith.constant'(0x1518283e0) {
+  %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32
+
+  ** Erase   : 'arith.constant'(0x1518283e0)
+} -> success : operation is trivially dead
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'func.return'(0x151829e50) {
+  "func.return"() : () -> ()
+
+} -> failure : pattern failed to match
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'func.func'(0x150633320) {
+} -> failure : pattern failed to match
+//===-------------------------------------------===//
+
+//===-------------------------------------------===//
+Processing operation : 'func.return'(0x151829e50) {
+  "func.return"() : () -> ()
+
+} -> failure : pattern failed to match
+//===-------------------------------------------===//

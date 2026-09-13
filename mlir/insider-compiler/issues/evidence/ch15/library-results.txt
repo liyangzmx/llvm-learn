@@ -1,0 +1,9 @@
+PASS book LP minimum = -3
+PASS 2*x = 1 is rational feasible
+PASS 2*x = 1 has no integer sample
+PASS x>=2 implies x>=0
+PASS x>=0 does not imply x>=2
+PASS rational lexmin = 1/2
+PASS integer lexmin = 1 (cut path)
+PASS MPInt exact multiplication beyond int64
+square=21267647932558653966460912964485513216

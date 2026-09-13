@@ -1,0 +1,12 @@
+module {
+  func.func @casts(%arg0: tensor<4xf32>) -> tensor<4xf32> {
+    %0 = "quant.qcast"(%arg0) : (tensor<4xf32>) -> tensor<4x!quant.uniform<i8:f32, 5.000000e-01>>
+    %1 = "quant.dcast"(%0) : (tensor<4x!quant.uniform<i8:f32, 5.000000e-01>>) -> tensor<4xf32>
+    return %1 : tensor<4xf32>
+  }
+  func.func @per_axis(%arg0: tensor<2x3xf32>) -> tensor<2x3x!quant.uniform<i8:f32:1, {5.000000e-01,2.500000e-01,1.250000e-01}>> {
+    %0 = "quant.qcast"(%arg0) : (tensor<2x3xf32>) -> tensor<2x3x!quant.uniform<i8:f32:1, {5.000000e-01,2.500000e-01,1.250000e-01}>>
+    return %0 : tensor<2x3x!quant.uniform<i8:f32:1, {5.000000e-01,2.500000e-01,1.250000e-01}>>
+  }
+}
+

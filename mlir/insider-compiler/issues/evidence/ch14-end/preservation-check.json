@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "scope": "Previous chapter and part Markdown, aggregate OCR and per-page TXT/JSON; previous PDF hashes checked separately. Ignored rendering-cache PNGs are outside this hash baseline.",
+  "files_checked": 749,
+  "source_pdfs_checked": 6,
+  "changed_or_missing_files": [],
+  "changed_source_pdfs": []
+}

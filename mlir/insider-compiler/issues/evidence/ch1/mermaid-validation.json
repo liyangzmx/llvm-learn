@@ -1,0 +1,33 @@
+{
+  "mermaidVersion": "11.12.0",
+  "status": "DONE 4 diagrams; 0 failures",
+  "diagrams": [
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch1.md 图 1",
+      "viewBox": "0 0 845.53125 510",
+      "mermaid_code_sha256": "763733b89fe0133701ad86581575ea7012ca8e4b63d8c68f93c1942da4a36f35"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch1.md 图 2",
+      "viewBox": "0 0 594.0078125 590",
+      "mermaid_code_sha256": "9c8e3ff1563c533cd58676c8f5f781cd95460c187bd39d9a2613a49962c5901a"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch1.md 图 3",
+      "viewBox": "0 0 547.47265625 1034",
+      "mermaid_code_sha256": "8eeecff7d9f4b2befa15e88e57206d334dc68361bf6de8d351367e0c4f232987"
+    },
+    {
+      "status": "PASS",
+      "title": "insider-compiler-ch1.md 图 4",
+      "viewBox": "0 0 931.3359375 519.6749877929688",
+      "mermaid_code_sha256": "d7af2a6be54286fb4250d293526931b8399e90dc349c35ab58d4266774196387"
+    }
+  ],
+  "source_files_sha256": {
+    "insider-compiler-ch1.md": "d619ad9b05b731d7b4e7d2220750cfcfb87eef3f660dee42ff22ac2977a5e01f"
+  }
+}

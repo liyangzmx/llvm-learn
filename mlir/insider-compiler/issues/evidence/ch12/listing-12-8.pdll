@@ -1,0 +1,10 @@
+Pattern ReplaceTenWithEleven {
+  // 匹配规则。
+  let constant = op<arith.constant> {value = attr<"10 : i32">};
+  // 如果有必要，还可以添加约束关系；本例没有额外约束。
+  // 重写规则。
+  rewrite constant with {
+    let newConst = op<arith.constant> {value = attr<"11 : i32">};
+    replace constant with newConst;
+  };
+}

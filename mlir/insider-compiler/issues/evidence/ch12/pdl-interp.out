@@ -1,0 +1,30 @@
+module {
+  pdl_interp.func @matcher(%arg0: !pdl.operation) {
+    pdl_interp.check_operation_name of %arg0 is "foo.op" -> ^bb2, ^bb1
+  ^bb1:  // 7 preds: ^bb0, ^bb2, ^bb3, ^bb4, ^bb5, ^bb6, ^bb7
+    pdl_interp.finalize
+  ^bb2:  // pred: ^bb0
+    pdl_interp.check_operand_count of %arg0 is 1 -> ^bb3, ^bb1
+  ^bb3:  // pred: ^bb2
+    pdl_interp.check_result_count of %arg0 is 1 -> ^bb4, ^bb1
+  ^bb4:  // pred: ^bb3
+    %0 = pdl_interp.get_operand 0 of %arg0
+    pdl_interp.is_not_null %0 : !pdl.value -> ^bb5, ^bb1
+  ^bb5:  // pred: ^bb4
+    %1 = pdl_interp.get_result 0 of %arg0
+    pdl_interp.is_not_null %1 : !pdl.value -> ^bb6, ^bb1
+  ^bb6:  // pred: ^bb5
+    %2 = pdl_interp.get_value_type of %0 : !pdl.type
+    %3 = pdl_interp.get_value_type of %1 : !pdl.type
+    pdl_interp.are_equal %2, %3 : !pdl.type -> ^bb7, ^bb1
+  ^bb7:  // pred: ^bb6
+    pdl_interp.record_match @rewriters::@pdl_generated_rewriter(%0, %arg0 : !pdl.value, !pdl.operation) : benefit(1), loc([%arg0]), root("foo.op") -> ^bb1
+  }
+  module @rewriters {
+    pdl_interp.func @pdl_generated_rewriter(%arg0: !pdl.value, %arg1: !pdl.operation) {
+      pdl_interp.replace %arg1 with (%arg0 : !pdl.value)
+      pdl_interp.finalize
+    }
+  }
+}
+

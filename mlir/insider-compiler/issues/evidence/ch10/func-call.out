@@ -1,0 +1,7 @@
+module {
+  llvm.func @my() {
+    llvm.return
+  }
+  llvm.call @my() : () -> ()
+}
+

@@ -1,0 +1,8 @@
+module {
+  func.func @constraints(%arg0: tensor<1xindex>, %arg1: tensor<1xindex>, %arg2: i1) -> (!shape.witness, !shape.witness) {
+    %0 = shape.const_witness true
+    %1 = shape.cstr_require %arg2, "required condition"
+    return %0, %1 : !shape.witness, !shape.witness
+  }
+}
+
