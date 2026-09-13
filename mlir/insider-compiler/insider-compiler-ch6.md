@@ -102,13 +102,6 @@ class MyPattern : public RewritePattern {
 public:
   // 定义 MyPattern 的构造方式，模式匹配的操作为 MyOp。
   MyPattern(PatternBenefit benefit, MLIRContext *context)
-```
-
-<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 20 -->
-
-代码清单 6-1（续）：
-
-```cpp
       : RewritePattern(MyOp::getOperationName(), benefit, context) {}
 
   /* 除定义匹配锚点操作的模式外，也可定义匹配任意操作的模式。
@@ -131,6 +124,8 @@ public:
   //                              PatternRewriter &rewriter) const override;
 };
 ```
+
+<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 20 -->
 
 > 校订注：本地任意操作构造器的参数顺序是标签、收益、上下文；原书缺上下文且顺序错误。`rewrite` 与 `matchAndRewrite` 的重载必须带 `const`，本清单显式添加 `override` 以便编译器检查。[校订依据](issues/ch6.md#ch6-pattern-api)
 
@@ -189,13 +184,6 @@ classDiagram
 /* 在 test 方言中定义操作 OpN，该操作继承自 TEST_Op 记录，
    包含两个 I32 类型的操作数，输出为 I32 类型。 */
 def OpN : TEST_Op<"op_n"> {
-```
-
-<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 22 -->
-
-代码清单 6-2（续）：
-
-```tablegen
   let arguments = (ins I32, I32);
   let results = (outs I32);
 }
@@ -212,6 +200,8 @@ def TestNestedOpEqualArgsPattern :
     Pat<(OpN $b, (OpP $a, $b, $c, $d, $e, $f)),
         (replaceWithValue $b)>;
 ```
+
+<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 22 -->
 
 通过 `mlir-tblgen` 工具将代码清单 6-2 编译为 C++ 代码，如代码清单 6-3 所示。
 
@@ -259,13 +249,6 @@ struct TestNestedOpEqualArgsPattern : public ::mlir::RewritePattern {
         });
       }
       a = castedOp1.getODSOperands(0);
-```
-
-<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 23 -->
-
-代码清单 6-3（续）：
-
-```cpp
       b0 = castedOp1.getODSOperands(1);
       c = castedOp1.getODSOperands(2);
       d = castedOp1.getODSOperands(3);
@@ -293,6 +276,8 @@ struct TestNestedOpEqualArgsPattern : public ::mlir::RewritePattern {
 };
 ```
 
+<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 23 -->
+
 > 校订注：以上按本地生成结果补全原书省略的捕获变量及空定义检查。原书 `b` / `b0` 的命名顺序与本地生成结果相反，但要求两个 SSA 值相等并以 b 替换 OpN 的语义一致，属于生成细节差异。[校订依据](issues/ch6.md#ch6-drr)
 
 使用 TD 方式与开发者直接编写自定义 C++ 代码的方式在本质上具有一致性，但两者在灵活性及功能完备性方面存在差别。生成的模式和手写 C++ 模式最终可以进入同一应用框架，下面进一步介绍。
@@ -315,13 +300,6 @@ struct TestNestedOpEqualArgsPattern : public ::mlir::RewritePattern {
 // 定义匹配模式 MyPattern，用于匹配 MyOp。
 class MyPattern : public RewritePattern {
 public:
-```
-
-<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 24 -->
-
-代码清单 6-4（续）：
-
-```cpp
   MyPattern(PatternBenefit benefit, MLIRContext *context)
       : RewritePattern(MyOp::getOperationName(), benefit, context) {}
   // 假设开发者实现了 match() 和 rewrite() 函数，此处忽略具体定义。
@@ -362,6 +340,8 @@ void applyMyPatternDriver(Operation *op,
   // 若模式匹配和重写成功，也可输出必要的信息并返回。
 }
 ```
+
+<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 24 -->
 
 借助应用将匹配与重写机制加以组合，能够更为便捷地实现针对操作的匹配和重写。
 
@@ -513,13 +493,6 @@ Processing operation : 'arith.constant'(0x555567e08e70) {
 Processing operation : 'func.return'(0x555567e08fc0) {
   "func.return"() : () -> ()
 } -> failure : pattern failed to match
-```
-
-<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 28 -->
-
-代码清单 6-6（续）：
-
-```text
 // 第二轮结束，IR 结构变化，开始第三轮。
 The initial op to be processed at 3 times
 // 此时只剩下两个操作。
@@ -536,6 +509,8 @@ module {
   }
 }
 ```
+
+<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 28 -->
 
 为方便读者理解模式匹配过程中自底向上的效果，现使用如下命令对代码清单 6-5 执行贪婪匹配，运行后得到的日志片段如代码清单 6-7 所示。
 
@@ -576,18 +551,13 @@ Processing operation : 'scf.if'(0x555567e0b9d0) {
 } -> success : operation is trivially dead
 ...
 // 第一轮结束，IR 结构变化，开始第二轮，此时只剩两个操作。
-```
-
-<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 29 -->
-
-代码清单 6-7（续）：
-
-```text
 The initial op to be processed at 2 times
 func.return, func.func,
 ...
 // 第二轮匹配代码未发生变化，因此终止匹配。
 ```
+
+<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 29 -->
 
 从本示例可以看出，自底向上的匹配在迭代次数方面更具优势。相较于自顶向下匹配，自底向上仅需两轮便可完成。此外需要指出的是，尽管本示例中自底向上与自顶向下的匹配结果一致，但在其他场景下，二者的结果未必完全相同。自底向上可能匹配到更大的模式，不能据此推断所有场景中优化结果或总运行速度都更好。
 
@@ -750,15 +720,6 @@ struct ConvertToyToArithPass
     auto checkValid = [&](Operation *op) {
       return converter.isLegal(op);
     };
-```
-
-[^ch6-toy]: 具体代码可以参考原书所引 [mlir-tutorial 历史版本](https://github.com/KEKE046/mlir-tutorial/tree/833cd57278d92ba1bb0b627db7cf4ebacc669144)。原书注明“2024 年 9 月访问”。本次核对的是本地 LLVM API，不保证该外部项目可直接在本地版本构建。
-
-<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 33 -->
-
-代码清单 6-12（续）：
-
-```cpp
     // ReturnOp、CallOp、FuncOp 指原示例选定的具体操作类型。
     target.addDynamicallyLegalOp<ReturnOp, CallOp>(checkValid);
 
@@ -798,6 +759,10 @@ struct ConvertToyToArithPass
   }
 };
 ```
+
+[^ch6-toy]: 具体代码可以参考原书所引 [mlir-tutorial 历史版本](https://github.com/KEKE046/mlir-tutorial/tree/833cd57278d92ba1bb0b627db7cf4ebacc669144)。原书注明“2024 年 9 月访问”。本次核对的是本地 LLVM API，不保证该外部项目可直接在本地版本构建。
+
+<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 33 -->
 
 > 校订注：此处没有给出全部 Toy 操作定义及其他模式，因而无法验证它们的签名、源/目标方言对应关系和完整可转换性。若保留的消费者需要源类型，或块参数转换需要特定物化，还须注册相应的 source / argument materialization；`UnrealizedConversionCastOp` 只是类型连接占位，需要后续消解或降低。不能把添加目标物化理解为已经完成所有类型转换。[校订依据及边界](issues/ch6.md#ch6-conversion-example)
 
@@ -851,13 +816,6 @@ RewriterState ConversionPatternRewriterImpl::getCurrentState() {
 
 ```cpp
 void ConversionPatternRewriter::notifyOperationInserted(Operation *op) {
-```
-
-<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 35 -->
-
-代码清单 6-14（续，本地 LLVM 18.1.8）：
-
-```cpp
   LLVM_DEBUG({
     impl->logger.startLine()
         << "** Insert  : '" << op->getName() << "'(" << op << ")\n";
@@ -865,6 +823,8 @@ void ConversionPatternRewriter::notifyOperationInserted(Operation *op) {
   impl->createdOps.push_back(op);
 }
 ```
+
+<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 35 -->
 
 原书此处的函数位于 `ConversionPatternRewriterImpl`，还接收 `OpBuilder::InsertPoint previous`，以区分创建与移动，分别追加 `CreateOperationRewrite` 和 `MoveOperationRewrite`。本地没有这个签名，不能仅通过修正 OCR 来适配；原书完整代码及差异说明见 [版本差异记录](issues/ch6.md#ch6-transaction-version)。
 

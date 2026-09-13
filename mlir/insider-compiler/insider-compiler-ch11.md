@@ -736,8 +736,6 @@ mlir-opt listing-11-7.mlir \
 
 **代码清单 11-8** 降级为 nvvm 和 llvm 操作后的结果
 
-为对应扫描跨页，以下三个代码块连续组成同一个清单，需拼接后解析。
-
 ```mlir
 module {
   gpu.module @matmul_kernel {
@@ -766,11 +764,6 @@ module {
       %21 = llvm.insertvalue %arg19, %20[4, 0] : !llvm.struct<(ptr, ptr, i64, array<2 x i64>, array<2 x i64>)> 
       %22 = llvm.insertvalue %arg18, %21[3, 1] : !llvm.struct<(ptr, ptr, i64, array<2 x i64>, array<2 x i64>)> 
       %23 = llvm.insertvalue %arg20, %22[4, 1] : !llvm.struct<(ptr, ptr, i64, array<2 x i64>, array<2 x i64>)> 
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 22 -->
-
-```mlir
       %24 = llvm.mlir.constant(0.000000e+00 : f32) : f32
       %25 = llvm.mlir.constant(0 : index) : i64
       %26 = builtin.unrealized_conversion_cast %25 : i64 to index
@@ -803,11 +796,6 @@ module {
         %52 = scf.for %arg21 = %26 to %31 step %28 iter_args(%arg22 = %24) -> (f32) {
           %58 = builtin.unrealized_conversion_cast %arg21 : index to i64
           %59 = llvm.extractvalue %7[1] : !llvm.struct<(ptr, ptr, i64, array<2 x i64>, array<2 x i64>)> 
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 23 -->
-
-```mlir
           %60 = llvm.mlir.constant(256 : index) : i64
           %61 = llvm.mul %46, %60  : i64
           %62 = llvm.add %61, %58  : i64
@@ -835,6 +823,10 @@ module {
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 22 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 23 -->
 
 清单中 `gpu.thread_id`、`gpu.block_id` 和 `gpu.block_dim` 已变成读取 PTX 特殊寄存器的操作，`memref` 参数则展开为描述符字段。输出仍保留 `scf.if`、`scf.for` 和转换桥接，所以这一步是部分降级，尚不是可直接导出 LLVM IR 的最终模块。完整流程还需要处理 SCF、剩余函数和转换桥接，以及设备模块的翻译和目标配置。
 

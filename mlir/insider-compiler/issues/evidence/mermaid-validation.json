@@ -405,19 +405,19 @@
     }
   ],
   "source_files_sha256": {
-    "insider-compiler-ch1.md": "2c04a9a245af0f0954cd743849db7a5531e9f918be89d2062b47916d0bfcff9b",
+    "insider-compiler-ch1.md": "3124878ba0178e067c8eb6173d6e9368a9fbf4c71c2802e2b2c60fa88aeb7563",
     "insider-compiler-ch10.md": "62bbad09ca35005867cfbe059c10754dc08f12ce8833e183a51d77e06c035d57",
-    "insider-compiler-ch11.md": "131ded920cdaaf0fb588cc8778c769630a444da2a3204f218e3dc43621d0824e",
+    "insider-compiler-ch11.md": "1b0f1db72c19647b5bcc3375ee0ef49d4c8b80d5da08f5a5764dbfe242ed09ad",
     "insider-compiler-ch12.md": "169c26e0e88d5171fdac10ea443fe578906e7a5c4c592c74cea43c2c9bfbdca6",
-    "insider-compiler-ch13.md": "58779a33cecee9baff5f6775813d13bb10509f1ff8d436a2726c9b35575226de",
+    "insider-compiler-ch13.md": "18fd6dec0848ebc78eefc42290d89c85fa2e23f783d19ad09431107d2ec2f05e",
     "insider-compiler-ch2.md": "c82228b0a5155b4ded952d30f2521676db3570f6bbcee1a430525a59046fcf06",
     "insider-compiler-ch3.md": "33858c15cfa8b26e416b93447185c56eadaf29e730a7abc3216054b59c414480",
-    "insider-compiler-ch4.md": "b3617f0fb3184ffd2d48562fc73dda6a12475a1fcc8b6a27bb87406e3733f2ed",
-    "insider-compiler-ch5.md": "8ea98eed462e2e8995045441d29c2ccad80ee75b4ea8f0a9ff91427f1571a17a",
-    "insider-compiler-ch6.md": "c9a3a9f65fc5fe6e28051c9dbcbf2fec786af1fc24b94fe107556a855e89ff27",
+    "insider-compiler-ch4.md": "82e360847b9249b711a1dce723ae78bdd1ee777a4945ddc4ba1856b04b22008a",
+    "insider-compiler-ch5.md": "123b1c22bd095728d43f70a1020b132dd687381030b534c3c8c002ae719007d1",
+    "insider-compiler-ch6.md": "a9ce18d1162f93e14a4b1e3d5fffbd4a06a594d11a93c7301b9cd2dc1ad3b70a",
     "insider-compiler-ch7.md": "ab4e85daf44b29b265e8e44f5cd65727ff2fbda5b60d4da914ebdcda7c570fb7",
     "insider-compiler-ch8.md": "0be7323757c9f68cb496c2a380e04bc5622167d729f8dc27e3aee718fed62706",
-    "insider-compiler-ch9.md": "b05631b1a73235b3b98fbf395a4ab81723afa604a4c3c528778cd14f5dd3c747",
+    "insider-compiler-ch9.md": "7ec88cdf82ca1047240186ecf33b1c428d4584e5c36f8756b07c88dae063c41a",
     "insider-compiler-part2.md": "3357cd58ee2c06809bed64b41b2753e9e8374b940bb3701c20708aac495ae797",
     "insider-compiler-ch14.md": "596db3ec11c627c49ea9fea0d7cf6f9114fe9bc65158d747c0663d528cb53732",
     "insider-compiler-ch15.md": "76868b7f3a72f04d78d653a81d3ff240d49faef5ef6707e4ca1cebde67a4b4cf"
@@ -427,5 +427,11 @@
     "diagrams_unchanged": 63,
     "method": "All Mermaid code SHA-256 values equal the earlier actual rendering records; source Markdown hashes refreshed after prose/code corrections.",
     "previous_record": "reading-edition/mermaid-before-corrections.json"
+  },
+  "formatting_merge_hash_check": {
+    "status": "PASS",
+    "diagrams_unchanged": 63,
+    "method": "Mermaid code hashes match the actual rendering records. Source Markdown hashes refreshed after joining paginated code blocks; diagrams not rerendered.",
+    "record": "code-block-merge.json"
   }
 }

@@ -261,13 +261,6 @@ MLIR 社区提供 linalg 方言，即线性代数方言（参见9.1节）。它�
 #map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
 #map3 = affine_map<(d0, d1) -> (d0, d1)>
 func.func @forward(%arg0: tensor<1x16xf32>) -> tensor<1x10xf32> {
-```
-
-<!-- source: insider-compiler-ch1.pdf, PDF p. 9 -->
-
-代码清单 1-4（续；与上段连续）：
-
-```mlir
   %cst = arith.constant dense<"0xA270..."> : tensor<1x10xf32>
   %cst_0 = arith.constant dense<"0xC44B..."> : tensor<16x10xf32>
   %zero = arith.constant dense<0.0> : tensor<1x10xf32>
@@ -293,6 +286,8 @@ func.func @forward(%arg0: tensor<1x16xf32>) -> tensor<1x10xf32> {
   return %result : tensor<1x10xf32>
 }
 ```
+
+<!-- source: insider-compiler-ch1.pdf, PDF p. 9 -->
 
 代码清单 1-4 中有两类需要说明的表示：`affine_map` 和 `linalg.generic`。`#map0 = affine_map<(d0, d1, d2) -> (d0, d2)>` 定义一个从三个维度坐标到两个结果表达式的仿射映射。在本例中，三个映射把同一迭代坐标分别映射到输入、权重和输出的下标；它们本身不独立给出循环的全部取值范围，迭代范围还与操作数的形状等信息有关。
 
@@ -395,13 +390,6 @@ memref.global "private" constant @__constant_1x10xf32 : memref<1x10xf32> = dense
 func.func @forward(%arg0: memref<1x16xf32>, %arg1: memref<1x10xf32>) {
   %0 = memref.get_global @__constant_1x10xf32 : memref<1x10xf32>
   %1 = memref.get_global @__constant_16x10xf32 : memref<16x10xf32>
-```
-
-<!-- source: insider-compiler-ch1.pdf, PDF p. 11 -->
-
-代码清单 1-7（续；与上段连续）：
-
-```mlir
   // 与张量版一致，归约初值为零。
   %zero = arith.constant 0.0 : f32
   // 外层遍历输出列，下界 0、上界 10（不含），默认步长 1。
@@ -427,6 +415,8 @@ func.func @forward(%arg0: memref<1x16xf32>, %arg1: memref<1x10xf32>) {
   return
 }
 ```
+
+<!-- source: insider-compiler-ch1.pdf, PDF p. 11 -->
 
 ### 1.3.5 接入 LLVM 体系
 

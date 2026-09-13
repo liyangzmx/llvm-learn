@@ -66,11 +66,6 @@ class BuildableType<code builder> {
   code builderCall = builder;
 }
 // 在 TD 中可用的浮点约束记录类，以 F 开头，后跟数字
-```
-
-<!-- source: insider-compiler-ch4.pdf, PDF p. 3 -->
-
-```tablegen
 class F<int width>
     : Type<CPred<"$_self.isF" # width # "()">,
            width # "-bit float", "::mlir::FloatType">,
@@ -80,6 +75,8 @@ class F<int width>
 // F16 示例
 def F16 : F<16>;
 ```
+
+<!-- source: insider-compiler-ch4.pdf, PDF p. 3 -->
 
 使用 `mlir-tblgen` 工具对代码清单 4-2 进行处理，展开 `F16` 对应的完整记录，如代码清单 4-3 所示。
 
@@ -292,11 +289,6 @@ public:
   static LogicalResult verifyTrait(Operation *op) {
     ...
   }
-```
-
-<!-- source: insider-compiler-ch4.pdf, PDF p. 8 -->
-
-```cpp
   // 为单结果操作提供 foldTrait，用于执行操作折叠。
   static OpFoldResult foldTrait(Operation *op,
                                 ArrayRef<Attribute> operands) {
@@ -321,6 +313,8 @@ public:
   };
 };
 ```
+
+<!-- source: insider-compiler-ch4.pdf, PDF p. 8 -->
 
 #### 2. 关联特质
 
@@ -459,11 +453,6 @@ struct AffineInlinerInterface : public DialectInlinerInterface {
     ...
   }
 };
-```
-
-<!-- source: insider-compiler-ch4.pdf, PDF p. 13 -->
-
-```cpp
 // 方言实现接口后，需要将接口注册到方言中。
 // 本地 LLVM 18.1.8 的 affine 方言在 initialize() 中完成注册。
 void AffineDialect::initialize() {
@@ -471,6 +460,8 @@ void AffineDialect::initialize() {
   addInterfaces<AffineInlinerInterface>();
 }
 ```
+
+<!-- source: insider-compiler-ch4.pdf, PDF p. 13 -->
 
 > 校订注：原书两处 `isLegalToInline` 均漏掉本地 API 中的 `bool wouldBeCloned`，已补齐，并将注册位置改为实际源码中的 `initialize()`。
 
@@ -594,17 +585,14 @@ protected:
     }
     // 如果没有已注册操作元数据，则尝试方言提供的回退实现。
     if (Dialect *dialect = name.getDialect())
-```
-
-<!-- source: insider-compiler-ch4.pdf, PDF p. 16 -->
-
-```cpp
       return dialect->getRegisteredInterfaceForOp<ConcreteType>(name);
     return nullptr;
   }
   friend InterfaceBase;
 };
 ```
+
+<!-- source: insider-compiler-ch4.pdf, PDF p. 16 -->
 
 代码清单 4-14 的注释表明代码中最为关键的函数是 `getInterfaceFor()`。该函数旨在针对给定的操作获取其操作接口实现，或方言为该操作提供的接口回退实现。借助此函数，开发者能够便捷地从操作对象获取其接口对象，而 `dyn_cast` 会使用这一查询机制。不过，需要注意的是，在 `dyn_cast` 执行类型转换的过程中，本质上是用 `Operation *` 构造一个具体操作接口的轻量包装对象，而不是重新创建操作或模型对象。这一构造能力由 `OpInterface` 继承的模板类 `Interface` 提供。`Interface` 类具有一个至关重要的 `Concept *` 字段，指向接口模型，也是实现动态绑定的关键所在。`Interface` 的实现如代码清单 4-15 所示。
 
@@ -684,11 +672,6 @@ struct ComputationCostInterfaceInterfaceTraits {
     // Concept * 指向模型对象，Operation * 指向被查询的操作。
     int64_t (*getComputationCost)(const Concept *impl,
                                   ::mlir::Operation *);
-```
-
-<!-- source: insider-compiler-ch4.pdf, PDF p. 18 -->
-
-```cpp
   };
 
   // Model 适用于在具体操作上实现接口方法的情况。
@@ -747,11 +730,6 @@ public:
 
   // 接口对外提供的 API。
   int64_t getComputationCost();
-```
-
-<!-- source: insider-compiler-ch4.pdf, PDF p. 19 -->
-
-```cpp
 };
 
 // 接口特质的定义：本例没有额外的方法实现。
@@ -795,6 +773,10 @@ int64_t mlir::ComputationCostInterface::getComputationCost() {
   return getImpl()->getComputationCost(getImpl(), getOperation());
 }
 ```
+
+<!-- source: insider-compiler-ch4.pdf, PDF p. 18 -->
+
+<!-- source: insider-compiler-ch4.pdf, PDF p. 19 -->
 
 > 校订注：`Model`、`FallbackModel` 在本例中提供的是调用转发，不是缺少实现时仍能工作的业务默认值。`ExternalModel` 也只有在接口定义提供默认方法体时才会获得对应默认实现。清单补全了原书省略处所需的特质前向声明，并按本地 `mlir-tblgen` 的实际输出核对。
 

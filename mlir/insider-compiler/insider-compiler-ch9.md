@@ -206,13 +206,6 @@ module {
     %view = memref.view %arg0[%c0][%arg3, %arg5] : memref<?xi8> to memref<?x?xf32>
     %view_0 = memref.view %arg1[%c0][%arg5, %arg4] : memref<?xi8> to memref<?x?xf32>
     %view_1 = memref.view %arg2[%c0][%arg3, %arg4] : memref<?xi8> to memref<?x?xf32>
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 33 -->
-
-代码清单 9-5（续）：
-
-```mlir
     scf.for %arg6 = %c0 to %arg3 step %c1 {
       scf.for %arg7 = %c0 to %arg4 step %c1 {
         scf.for %arg8 = %c0 to %arg5 step %c1 {
@@ -229,6 +222,8 @@ module {
   }
 }
 ```
+
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 33 -->
 
 通过调用 `mlir-opt --convert-linalg-to-parallel-loops` 对代码清单 9-3 进行处理，可以得到如代码清单 9-6 所示的结果。在该代码中，原本的 `linalg.matmul` 算子被降级为两层 scf 循环：内层为 `scf.for`，执行归约维度的累加；外层为二维 `scf.parallel`，迭代输出矩阵的两个维度。
 
@@ -264,13 +259,6 @@ module {
 
 ```mlir
 func.func @conv1d_nwc_4x2x8_memref(%input: memref<4x6x3xf32>,
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 34 -->
-
-代码清单 9-7（续）：
-
-```mlir
                                  %filter: memref<1x3x8xf32>,
                                  %output: memref<4x2x8xf32>) {
   linalg.conv_1d_nwc_wcf
@@ -280,6 +268,8 @@ func.func @conv1d_nwc_4x2x8_memref(%input: memref<4x6x3xf32>,
   return
 }
 ```
+
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 34 -->
 
 通过上述测试 Pass 对代码清单 9-7 进行处理后，linalg 操作被转换为 vector 操作，结果如代码清单 9-8 所示。其中，原本的 `linalg.conv_1d_nwc_wcf` 操作被转换为向量读取、切片、收缩和写回操作，这样原本大量的循环逐元素运算被若干向量运算表示所代替（9.1.4 节还会详细介绍向量化优化）。高阶 vector 操作仍需进一步降低，不能直接按这些 IR 操作的条数计算最终机器指令数。
 
@@ -305,18 +295,13 @@ module {
     %9 = vector.contract {indexing_maps = [#map, #map1, #map2], iterator_types = ["parallel", "parallel", "parallel", "reduction"], kind = #vector.kind<add>} %4, %5, %7 : vector<4x1x3xf32>, vector<3x8xf32> into vector<4x1x8xf32>
     %10 = vector.insert_strided_slice %8, %2 {offsets = [0, 0, 0], strides = [1, 1, 1]} : vector<4x1x8xf32> into vector<4x2x8xf32>
     %11 = vector.insert_strided_slice %9, %10 {offsets = [0, 1, 0], strides = [1, 1, 1]} : vector<4x1x8xf32> into vector<4x2x8xf32>
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 35 -->
-
-代码清单 9-8（续）：
-
-```mlir
     vector.transfer_write %11, %arg2[%c0, %c0, %c0] {in_bounds = [true, true, true]} : vector<4x2x8xf32>, memref<4x2x8xf32>
     return
   }
 }
 ```
+
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 35 -->
 
 ### 9.1.3 重要操作
 
@@ -350,17 +335,12 @@ module {
 ```c
 for (i = 0; i < N; i++) {
   for (j = 0; j < M; j++) {
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 36 -->
-
-代码清单 9-9（续）：
-
-```c
     A[i][j] = B[i][j] + C[i][j];
   }
 }
 ```
+
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 36 -->
 
 `linalg.generic` 的语法轮廓如代码清单 9-10 所示。
 
@@ -625,13 +605,6 @@ module {
             %3 = affine.apply #map(%arg4, %arg6)
             %4 = memref.load %0[%arg3, %3, %arg5] : memref<1x16x1xf32, strided<[?, ?, ?], offset: ?>>
             // 输入位置：第 0 批、第 0 通道，宽度为 0,2,4,6,8,10,12,14。
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 42 -->
-
-代码清单 9-16（续）：
-
-```mlir
             %5 = memref.load %alloc[%arg3, %arg4, %arg5] : memref<1x4x1xf32>
             %6 = arith.maximumf %5, %4 : f32
             memref.store %6, %alloc[%arg3, %arg4, %arg5] : memref<1x4x1xf32>
@@ -644,6 +617,8 @@ module {
   }
 }
 ```
+
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 42 -->
 
 输出位置为 `[0, w, 0]`，其中 $w=0,1,2,3$；每个输出元素被加载、比较和写回两次，分别处理窗口的两个采样点。原书注释“取 4 个数、存 4 个数”是在说不同的位置数，不是动态执行的加载 / 存储次数。
 
@@ -800,13 +775,6 @@ func.func @matmul_tensors(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xf32>, %arg2:
 
   %c4 = arith.constant 4 : index
   %c2 = arith.constant 2 : index
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 46 -->
-
-代码清单 9-20（续）：
-
-```mlir
   %c0 = arith.constant 0 : index
   %c3 = arith.constant 3 : index
   %c1 = arith.constant 1 : index
@@ -831,6 +799,8 @@ func.func @matmul_tensors(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xf32>, %arg2:
 }
 ```
 
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 46 -->
+
 经 `--test-linalg-greedy-fusion` 处理后，得到代码清单 9-21。第一组 linalg 计算被按消费者所需切片重新构造到第二组 scf 循环中，形成包含两个局部 matmul 的循环体。这个过程结合了数据分块和生产者融合，并不意味着两条 matmul 已被合成单条 matmul。
 
 **代码清单 9-21 激进融合后的结果**
@@ -849,13 +819,6 @@ module {
     %dim_2 = tensor.dim %arg0, %c1 : tensor<?x?xf32>
     %dim_3 = tensor.dim %arg1, %c0 : tensor<?x?xf32>
     %0 = scf.for %arg3 = %c0 to %dim step %c2 iter_args(%arg4 = %arg2) -> (tensor<?x?xf32>) {
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 47 -->
-
-代码清单 9-21（续）：
-
-```mlir
       %extracted_slice = tensor.extract_slice %arg0[%arg3, 0] [2, %dim_2] [1, 1] : tensor<?x?xf32> to tensor<2x?xf32>
       %1 = scf.for %arg5 = %c0 to %dim_1 step %c3 iter_args(%arg6 = %arg4) -> (tensor<?x?xf32>) {
         %2 = scf.for %arg7 = %c0 to %dim_0 step %c4 iter_args(%arg8 = %arg6) -> (tensor<?x?xf32>) {
@@ -876,6 +839,8 @@ module {
   }
 }
 ```
+
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 47 -->
 
 该示例仅是融合策略的一部分。为实现更高收益，开发者除采用融合常见计算模式、减少中间存储等策略外，还应结合硬件开展性能分析。例如，上例可能在不同消费者列块中重复计算相同的生产者切片；是否划算需要权衡重算成本与存储成本，再设计定制化策略。
 
@@ -929,13 +894,6 @@ module {
     memref.copy %2, %alloc : memref<8xf32, strided<[?], offset: ?>> to memref<8xf32>
     scf.for %arg3 = %c0 to %c8 step %c1 {
       scf.for %arg4 = %c0 to %c4 step %c1 {
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 49 -->
-
-代码清单 9-23（续）：
-
-```mlir
         %4 = affine.apply #map(%arg3, %arg4)
         %5 = memref.load %1[%4] : memref<11xf32, strided<[?], offset: ?>>
         %6 = memref.load %0[%arg4] : memref<4xf32, strided<[?], offset: ?>>
@@ -950,6 +908,8 @@ module {
   }
 }
 ```
+
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 49 -->
 
 **（2）向量化优化效果**
 
@@ -1027,13 +987,6 @@ module attributes {transform.with_named_sequence} {
 
 ```mlir
 #map = affine_map<(d0)[s0] -> (10, -d0 + s0)>
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 51 -->
-
-代码清单 9-26（续）：
-
-```mlir
 #map1 = affine_map<(d0)[s0] -> (20, -d0 + s0)>
 #map2 = affine_map<(d0) -> (d0 - 1)>
 #map3 = affine_map<()[s0] -> (s0 - 1)>
@@ -1077,13 +1030,6 @@ module {
       }
     } {mapping = [#gpu.block<y>, #gpu.block<x>]}
     return %0 : tensor<?x?xf32>
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 52 -->
-
-代码清单 9-26（续）：
-
-```mlir
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
@@ -1094,6 +1040,10 @@ module {
   }
 }
 ```
+
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 51 -->
+
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 52 -->
 
 最后保留的嵌套 module 是 Transform 程序本身；本地解释器执行后不会自动从输出中删除它。前面分块计算中部分未使用的 `affine.apply` 是这一测试路径生成的中间计算，可由后续清理处理。
 
@@ -1191,11 +1141,6 @@ affine-expr ::= '(' affine-expr ')'
               | affine-expr 'floordiv' integer-literal
               | affine-expr 'mod' integer-literal
 
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 55 -->
-
-```ebnf
 
               | '-' affine-expr
               | bare-id
@@ -1214,6 +1159,8 @@ affine-map-attribute ::= 'affine_map' '<' affine-map-inline '>'
 affine-map-def ::= affine-map-id '=' affine-map-attribute
 affine-map ::= affine-map-id | affine-map-attribute
 ```
+
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 55 -->
 
 例如，`affine_map<(d0, d1) -> (d0 + d1, d1 + 16, 32)>` 定义从二维输入到三维输出的映射。输入为 d0、d1，输出依次为 d0 + d1、d1 + 16、32；每个输出都是输入的线性组合加常量偏移。
 
@@ -1238,17 +1185,14 @@ symbol-or-const ::= '-'? integer-literal | symbol-id
 multi-dim-semi-affine-expr ::=
     '(' semi-affine-expr (',' semi-affine-expr)* ')'
 
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 56 -->
-
-```ebnf
 
 semi-affine-map-inline ::=
     dim-and-symbol-value-lists '->' multi-dim-semi-affine-expr
 semi-affine-map-id ::= '#' suffix-id
 semi-affine-map ::= semi-affine-map-id | semi-affine-map-inline
 ```
+
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 56 -->
 
 例如，原书给出的 `affine_map<(d0, d1)[s0] -> (d0, d1 + s0, d1 - s0 - 1, 4 * d0 + d1)>` 将两个维度变量和一个符号参数映射为四个结果，依次为 d0、d1 + s0、d1 − s0 − 1、4d0 + d1。这个例子实际上已经属于普通仿射映射；半仿射映射包含普通仿射映射，但它没有展示半仿射新增的能力。`affine_map<(d0)[s0] -> (d0 * s0)>` 才用到了符号乘法扩展。
 
@@ -1396,15 +1340,12 @@ module {
     return
   }
 
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 60 -->
-
-```mlir
 
   func.func private @body(index)
 }
 ```
+
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 60 -->
 
 对比两份代码可见，affine.for 已变为 scf.for，上下界和步长改用 index 类型的 SSA 常量。两者的循环体结构保持相似。
 
@@ -2098,11 +2039,6 @@ module {
           %c1_7 = arith.constant 1 : index
           %c0_8 = arith.constant 0 : index
           %cst = arith.constant 0.000000e+00 : f32
-```
-
-<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 79 -->
-
-```mlir
           %7 = vector.transfer_read %extracted_slice[%c0_8, %c0_8], %cst
               {permutation_map = #map2} : tensor<8x1xf32>, vector<8x[16]x1xf32>
           %cst_9 = arith.constant 0.000000e+00 : f32
@@ -2146,7 +2082,9 @@ module {
 }
 ```
 
-清单 9-40 的两个代码块是同一份跨页代码，应合并后使用。为保留原书的完整输出，没有删去未使用的 `affine.apply` 等计算；后续归一化可以继续清理它们。
+<!-- source: insider-compiler-ch7-ch10.pdf, PDF p. 79 -->
+
+清单 9-40 保留了完整输出，没有删去未使用的 `affine.apply` 等计算；后续归一化可以继续清理它们。
 
 可以看到，代码清单 9-39 中的 `linalg.matmul` 被转换成了带掩码的向量运算：先通过 `vector.transfer_read` 读取并广播分块后的操作数，形成 `vector<8x[16]x1xf32>` 等向量值；随后结合 `arith.mulf` 与 `vector.multi_reduction <add>` 完成乘法和累加；最后由 `vector.transfer_write` 将结果写回对应的 tensor 切片。`vector.create_mask` 根据实际有效元素数限制最后一块的读写和计算，从而处理可伸缩维度的边界。
 

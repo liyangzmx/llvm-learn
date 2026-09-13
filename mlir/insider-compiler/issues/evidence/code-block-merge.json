@@ -1,0 +1,1011 @@
+{
+  "scope": "Formatting only: verify exact concatenated code contents, languages, page marker order, and unchanged Mermaid source. No code execution or new semantic validation.",
+  "baseline_commit": "859a9ed",
+  "files": [
+    {
+      "file": "insider-compiler-appendix.md",
+      "changed": false,
+      "before_sha256": "2c652ce76f81c47851111deebd897f708f62b1324fc533d18050b983368b6c2d",
+      "after_sha256": "2c652ce76f81c47851111deebd897f708f62b1324fc533d18050b983368b6c2d",
+      "before_blocks": 1,
+      "after_blocks": 1,
+      "code_stream_sha256": "8856a31def4ba87cbf6ad868e075ed30c9559fb6128e0cca8f0350314da0b415",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch1.md",
+      "changed": true,
+      "before_sha256": "2c04a9a245af0f0954cd743849db7a5531e9f918be89d2062b47916d0bfcff9b",
+      "after_sha256": "3124878ba0178e067c8eb6173d6e9368a9fbf4c71c2802e2b2c60fa88aeb7563",
+      "before_blocks": 15,
+      "after_blocks": 13,
+      "code_stream_sha256": "aa2c1f63389c17682abde3204fd3769ad921dc56c7c931ad207a714236db88a0",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [
+        {
+          "original_start_lines": [
+            258,
+            270
+          ],
+          "current_start_line": 258,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "e020dca58b405cbb1be801cc8cc3241fe8db23a3bbcfcfec073939d34b30f562",
+          "listing": "1-4"
+        },
+        {
+          "original_start_lines": [
+            391,
+            404
+          ],
+          "current_start_line": 386,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "5645c4b2c656c88c09487014899154f0311333f726ce6e5f8848818a85898e42",
+          "listing": "1-7"
+        }
+      ],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch10.md",
+      "changed": false,
+      "before_sha256": "62bbad09ca35005867cfbe059c10754dc08f12ce8833e183a51d77e06c035d57",
+      "after_sha256": "62bbad09ca35005867cfbe059c10754dc08f12ce8833e183a51d77e06c035d57",
+      "before_blocks": 30,
+      "after_blocks": 30,
+      "code_stream_sha256": "7b77cca347a35db67f26730a5b4192951128bd18790f5e59bc54a6ca832e0478",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch11.md",
+      "changed": true,
+      "before_sha256": "131ded920cdaaf0fb588cc8778c769630a444da2a3204f218e3dc43621d0824e",
+      "after_sha256": "1b0f1db72c19647b5bcc3375ee0ef49d4c8b80d5da08f5a5764dbfe242ed09ad",
+      "before_blocks": 27,
+      "after_blocks": 25,
+      "code_stream_sha256": "498e38ef22feefbdeaa7cafdea49b2aef0fe35020644e6582a9eb56bc293966f",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [
+        {
+          "original_start_lines": [
+            741,
+            773,
+            810
+          ],
+          "current_start_line": 739,
+          "original_blocks": 3,
+          "language": "mlir",
+          "code_sha256": "1c4fd0fb5d4a3f1c95e7b9ca8de3733cc765cca2543ca163509cb17e5aec4770",
+          "listing": "11-8"
+        }
+      ],
+      "prose_identical_except_page_labels_and_whitespace": false
+    },
+    {
+      "file": "insider-compiler-ch12.md",
+      "changed": false,
+      "before_sha256": "169c26e0e88d5171fdac10ea443fe578906e7a5c4c592c74cea43c2c9bfbdca6",
+      "after_sha256": "169c26e0e88d5171fdac10ea443fe578906e7a5c4c592c74cea43c2c9bfbdca6",
+      "before_blocks": 14,
+      "after_blocks": 14,
+      "code_stream_sha256": "f34d3d3fb77c8dd1617e1797b9937bff9e01c0690f384baf0cd07a71a1967612",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch13.md",
+      "changed": true,
+      "before_sha256": "58779a33cecee9baff5f6775813d13bb10509f1ff8d436a2726c9b35575226de",
+      "after_sha256": "18fd6dec0848ebc78eefc42290d89c85fa2e23f783d19ad09431107d2ec2f05e",
+      "before_blocks": 132,
+      "after_blocks": 83,
+      "code_stream_sha256": "80061a983dcb15bdfa644e8f57b373675669fb858ad5b5251885fd90d341ed37",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [
+        {
+          "original_start_lines": [
+            359,
+            367,
+            416
+          ],
+          "current_start_line": 359,
+          "original_blocks": 3,
+          "language": "mlir",
+          "code_sha256": "6797656cc9faa7cd26c59116c616b515c4a00375162bdbded70d67a9cddcc9df",
+          "listing": "13-3"
+        },
+        {
+          "original_start_lines": [
+            480,
+            508
+          ],
+          "current_start_line": 474,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "a7a4ab224c9bea05151a4d6883c90b978d0fd7663f609072bee0b885590225a0",
+          "listing": "13-4"
+        },
+        {
+          "original_start_lines": [
+            533,
+            555
+          ],
+          "current_start_line": 524,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "965ff3e60d0b30250a28127aa27d8fbd50a7f77093c833083d0d2311ba0ce400",
+          "listing": "13-5"
+        },
+        {
+          "original_start_lines": [
+            705,
+            715
+          ],
+          "current_start_line": 693,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "6152856704b30cc9fddb3506fc8f295a8f1164c593f50545b54e657e8ee4a7e6",
+          "listing": "13-10"
+        },
+        {
+          "original_start_lines": [
+            1080,
+            1091
+          ],
+          "current_start_line": 1065,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "d11a3ea75ac2e96d16b2c9a748fda5e95e61f2eaa731d6509afc927278f2ab2b",
+          "listing": "13-20"
+        },
+        {
+          "original_start_lines": [
+            1161,
+            1188
+          ],
+          "current_start_line": 1143,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "838be73ac48b0bcb11283e4fd61fb9d195dde9a58ff224d4738339edeee9aa36",
+          "listing": "13-22"
+        },
+        {
+          "original_start_lines": [
+            1241,
+            1277
+          ],
+          "current_start_line": 1220,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "d4e56f42975022d46ac331ce739edacc1ae866ccad13185f927da3324c009f47",
+          "listing": "13-25"
+        },
+        {
+          "original_start_lines": [
+            1308,
+            1323
+          ],
+          "current_start_line": 1284,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "58d19d246b3c4a419243ed727b4d9f8bcc21e88dcbdb7424896e323148cb47b2",
+          "listing": "13-26"
+        },
+        {
+          "original_start_lines": [
+            1352,
+            1384
+          ],
+          "current_start_line": 1325,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "113207a02b51c5a70c298251901bfc72d156b16f1b7da5e440f92f0ba7c97ba6",
+          "listing": "13-27"
+        },
+        {
+          "original_start_lines": [
+            1466,
+            1481
+          ],
+          "current_start_line": 1436,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "9181f59ab107deb52b71c8f0fe198eb8cee0f9d29c6ba9ee794e16e8c6ffa1d9",
+          "listing": "13-30"
+        },
+        {
+          "original_start_lines": [
+            1542,
+            1590
+          ],
+          "current_start_line": 1509,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "a4f8f0b10f675b74e473f264547ad1b7b818739e98cbb15dc65849d4aa386c7c",
+          "listing": "13-31"
+        },
+        {
+          "original_start_lines": [
+            1628,
+            1640
+          ],
+          "current_start_line": 1592,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "06c510ec7e0976e2ce670bddd78e0c5ff4c58bf97ef1975485b6b886de88ce54",
+          "listing": "13-32"
+        },
+        {
+          "original_start_lines": [
+            1665,
+            1699
+          ],
+          "current_start_line": 1626,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "a304a239886da05818ef0ba9b55ba8632928e686eb82ce9532c481f0de05f6c6",
+          "listing": "13-33"
+        },
+        {
+          "original_start_lines": [
+            1726,
+            1745
+          ],
+          "current_start_line": 1684,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "d94d3147315d8e73b2fb202abbab1cbd47ba5020352d66acd6d82b40deaa75d3",
+          "listing": "13-34"
+        },
+        {
+          "original_start_lines": [
+            1801,
+            1836,
+            1868
+          ],
+          "current_start_line": 1756,
+          "original_blocks": 3,
+          "language": "mlir",
+          "code_sha256": "2907a4cec6841fd523b0ef83b22a5f4121f5527ae694e2e543c2ff21eb16759a",
+          "listing": "13-35"
+        },
+        {
+          "original_start_lines": [
+            1896,
+            1903,
+            1962
+          ],
+          "current_start_line": 1845,
+          "original_blocks": 3,
+          "language": "mlir",
+          "code_sha256": "7a3b441d2fb111b6115f730431a931647213fdfd6b6b8a785a6172e23eb9341a",
+          "listing": "13-36"
+        },
+        {
+          "original_start_lines": [
+            2048,
+            2073
+          ],
+          "current_start_line": 1991,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "fe5a0c2c09648a2b060a1b1a790aa95241ca5d04aa231017c6c3ef1462037b87",
+          "listing": "13-39"
+        },
+        {
+          "original_start_lines": [
+            2107,
+            2117
+          ],
+          "current_start_line": 2047,
+          "original_blocks": 2,
+          "language": "text",
+          "code_sha256": "4472a6facf906b7a235a8009cb7382979940227566a9efe571c101dc0d94145a",
+          "listing": "13-40"
+        },
+        {
+          "original_start_lines": [
+            2128,
+            2145,
+            2165
+          ],
+          "current_start_line": 2065,
+          "original_blocks": 3,
+          "language": "mlir",
+          "code_sha256": "6ce2af64a33ec5d37ac69586ddfbae12e8404692406b1c35b6acf97773db31ba",
+          "listing": "13-41"
+        },
+        {
+          "original_start_lines": [
+            2182,
+            2194,
+            2213,
+            2242,
+            2259
+          ],
+          "current_start_line": 2113,
+          "original_blocks": 5,
+          "language": "mlir",
+          "code_sha256": "3b851ac10da76328a96b454b6f06b708eca1356bfd05eec324524dcb89efe438",
+          "listing": "13-42"
+        },
+        {
+          "original_start_lines": [
+            2299,
+            2326
+          ],
+          "current_start_line": 2218,
+          "original_blocks": 2,
+          "language": "text",
+          "code_sha256": "89a8eb707c419a7e0ca773dc6784237ccec8d422b4c0877ce31e378cc7689506",
+          "listing": "13-44"
+        },
+        {
+          "original_start_lines": [
+            2358,
+            2377,
+            2407,
+            2425
+          ],
+          "current_start_line": 2274,
+          "original_blocks": 4,
+          "language": "mlir",
+          "code_sha256": "b82439bf090dfcaad8efc91860e93923bcf0b8f8f32ea85b18a25c1b7e5e1663",
+          "listing": "13-45"
+        },
+        {
+          "original_start_lines": [
+            2443,
+            2455,
+            2474,
+            2506,
+            2533,
+            2561,
+            2579
+          ],
+          "current_start_line": 2350,
+          "original_blocks": 7,
+          "language": "mlir",
+          "code_sha256": "f8d5eb27f2911f87b772aaeabe6df68303f62590e9ee11b4e522dda7c5a0f489",
+          "listing": "13-46"
+        },
+        {
+          "original_start_lines": [
+            2592,
+            2612,
+            2632,
+            2653,
+            2673,
+            2697
+          ],
+          "current_start_line": 2481,
+          "original_blocks": 6,
+          "language": "mlir",
+          "code_sha256": "9b4287752abd111a0e6671944709fe8582ca2b6d764003dcd51d02223c3a3420",
+          "listing": "13-47"
+        },
+        {
+          "original_start_lines": [
+            2773,
+            2781
+          ],
+          "current_start_line": 2647,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "07ada0589fe3ae8e96d80f3a75a559cd1658c69745ca587c9dd7d65a65901ca0",
+          "listing": "13-49"
+        },
+        {
+          "original_start_lines": [
+            2816,
+            2826
+          ],
+          "current_start_line": 2685,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "4d40ab2b57152295a0255b180e2d9bf5249ff249a44377bf0c40972ea8bdddf8",
+          "listing": "13-50"
+        },
+        {
+          "original_start_lines": [
+            2944,
+            2963
+          ],
+          "current_start_line": 2808,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "6f78e6b239a78ee1bf0fe07aaac9599ec63a0cab76918f866d939b4a6dc46067",
+          "listing": "13-53"
+        },
+        {
+          "original_start_lines": [
+            3003,
+            3015
+          ],
+          "current_start_line": 2862,
+          "original_blocks": 2,
+          "language": "text",
+          "code_sha256": "b256d98c1296a111587d27e8a1c049779c51fd392f874d08dc6a46a3188b6017",
+          "listing": "13-55"
+        },
+        {
+          "original_start_lines": [
+            3039,
+            3051
+          ],
+          "current_start_line": 2893,
+          "original_blocks": 2,
+          "language": "text",
+          "code_sha256": "64faf47c503fa986b40add4c352cb431dfc709ac58e1b97fe01e66693f818da7",
+          "listing": "13-56"
+        },
+        {
+          "original_start_lines": [
+            3075,
+            3084
+          ],
+          "current_start_line": 2924,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "91c195f124e37adcc036b96545e4b7fd49a7b00fb312b456e8146b24615d7801",
+          "listing": "13-57"
+        },
+        {
+          "original_start_lines": [
+            3114,
+            3127
+          ],
+          "current_start_line": 2958,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "beccc97dca74e854bde55cc37d975afc392312c8f7c338d404f3d68d78600bae",
+          "listing": "13-58"
+        }
+      ],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch14.md",
+      "changed": false,
+      "before_sha256": "596db3ec11c627c49ea9fea0d7cf6f9114fe9bc65158d747c0663d528cb53732",
+      "after_sha256": "596db3ec11c627c49ea9fea0d7cf6f9114fe9bc65158d747c0663d528cb53732",
+      "before_blocks": 14,
+      "after_blocks": 14,
+      "code_stream_sha256": "ac50bcc19f8932c01f4cc1f50dbe433eda49619e3b973828ee0668fcb16b26b9",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch15.md",
+      "changed": false,
+      "before_sha256": "76868b7f3a72f04d78d653a81d3ff240d49faef5ef6707e4ca1cebde67a4b4cf",
+      "after_sha256": "76868b7f3a72f04d78d653a81d3ff240d49faef5ef6707e4ca1cebde67a4b4cf",
+      "before_blocks": 1,
+      "after_blocks": 1,
+      "code_stream_sha256": "b2dbc3454bd235546c1f67e21ed0c4ede599075a20a15638c70c0f59e1dbff56",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch2.md",
+      "changed": false,
+      "before_sha256": "c82228b0a5155b4ded952d30f2521676db3570f6bbcee1a430525a59046fcf06",
+      "after_sha256": "c82228b0a5155b4ded952d30f2521676db3570f6bbcee1a430525a59046fcf06",
+      "before_blocks": 4,
+      "after_blocks": 4,
+      "code_stream_sha256": "7c5fe6a3cb2b64f4df401812778cb6adf2cd840339d742f990bf402c0d7e6bff",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch3.md",
+      "changed": false,
+      "before_sha256": "33858c15cfa8b26e416b93447185c56eadaf29e730a7abc3216054b59c414480",
+      "after_sha256": "33858c15cfa8b26e416b93447185c56eadaf29e730a7abc3216054b59c414480",
+      "before_blocks": 45,
+      "after_blocks": 45,
+      "code_stream_sha256": "4255ad1c54c449e2d47309537716e36a30a71338120648363839d39dd713511e",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch4.md",
+      "changed": true,
+      "before_sha256": "b3617f0fb3184ffd2d48562fc73dda6a12475a1fcc8b6a27bb87406e3733f2ed",
+      "after_sha256": "82e360847b9249b711a1dce723ae78bdd1ee777a4945ddc4ba1856b04b22008a",
+      "before_blocks": 28,
+      "after_blocks": 22,
+      "code_stream_sha256": "5afe18fad07a0e7b17b6b55494098d50ae7d622fed1ae6462f00721f295c2c0c",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [
+        {
+          "original_start_lines": [
+            44,
+            73
+          ],
+          "current_start_line": 44,
+          "original_blocks": 2,
+          "language": "tablegen",
+          "code_sha256": "e1103046469767775c4e92775c2bbe9fb4281aa3b4b0554eaa56daa5130c8c05",
+          "listing": "4-2"
+        },
+        {
+          "original_start_lines": [
+            285,
+            299
+          ],
+          "current_start_line": 282,
+          "original_blocks": 2,
+          "language": "cpp",
+          "code_sha256": "3274dd2ee0dfbe1c4039b0741a50b91da3210dd2dd7b25d9118024325f7827e7",
+          "listing": "4-7"
+        },
+        {
+          "original_start_lines": [
+            453,
+            466
+          ],
+          "current_start_line": 447,
+          "original_blocks": 2,
+          "language": "cpp",
+          "code_sha256": "62463ef10d5a13c33cbd3596572408ae0a6d9cb0f5d66078420a70a9ce0f610a",
+          "listing": "4-11"
+        },
+        {
+          "original_start_lines": [
+            565,
+            601
+          ],
+          "current_start_line": 556,
+          "original_blocks": 2,
+          "language": "cpp",
+          "code_sha256": "538c8c4072209f959f4f1cc018419d5f4747dfefb1512db45822558bf139c847",
+          "listing": "4-14"
+        },
+        {
+          "original_start_lines": [
+            675,
+            691,
+            754
+          ],
+          "current_start_line": 663,
+          "original_blocks": 3,
+          "language": "cpp",
+          "code_sha256": "5b9659283b973dfddfed233131403988f567d3af45458ed8bb5aa4c74f4885fc",
+          "listing": "4-17"
+        }
+      ],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch5.md",
+      "changed": true,
+      "before_sha256": "8ea98eed462e2e8995045441d29c2ccad80ee75b4ea8f0a9ff91427f1571a17a",
+      "after_sha256": "123b1c22bd095728d43f70a1020b132dd687381030b534c3c8c002ae719007d1",
+      "before_blocks": 23,
+      "after_blocks": 19,
+      "code_stream_sha256": "c852607801f4deb9011ffea8e6003371ff7729a849d6e9d82e77dcec9848c8d7",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [
+        {
+          "original_start_lines": [
+            153,
+            166
+          ],
+          "current_start_line": 153,
+          "original_blocks": 2,
+          "language": "tablegen",
+          "code_sha256": "dd1576c5ab7f5476deba313d7b06f739bc2fd59324223d80bccd9d39f23c2c6e",
+          "listing": "5-3"
+        },
+        {
+          "original_start_lines": [
+            384,
+            402
+          ],
+          "current_start_line": 379,
+          "original_blocks": 2,
+          "language": "cpp",
+          "code_sha256": "dbe7005c7765391d13e69c27ca9422813fe9fd464957b5109c1a4fd863a59aff",
+          "listing": "5-14"
+        },
+        {
+          "original_start_lines": [
+            495,
+            509
+          ],
+          "current_start_line": 485,
+          "original_blocks": 2,
+          "language": "cpp",
+          "code_sha256": "74c9b036d002ab956282b833842cc982c7ec1591b8d9d5bc5bf6915623092c02",
+          "listing": "5-16"
+        },
+        {
+          "original_start_lines": [
+            572,
+            582
+          ],
+          "current_start_line": 557,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "fd07659c55c4e209c16c540b0a25418237d1bfbfbea00b6068a0702202bec903",
+          "listing": "5-17"
+        }
+      ],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch6.md",
+      "changed": true,
+      "before_sha256": "c9a3a9f65fc5fe6e28051c9dbcbf2fec786af1fc24b94fe107556a855e89ff27",
+      "after_sha256": "a9ce18d1162f93e14a4b1e3d5fffbd4a06a594d11a93c7301b9cd2dc1ad3b70a",
+      "before_blocks": 28,
+      "after_blocks": 20,
+      "code_stream_sha256": "5384de90cc02328d22d8d9c12caa173dfe5187ec59ec59dad01fc0cf3f736b1b",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [
+        {
+          "original_start_lines": [
+            99,
+            111
+          ],
+          "current_start_line": 99,
+          "original_blocks": 2,
+          "language": "cpp",
+          "code_sha256": "ffcbc810a18334a759b30b1d8414b6876c38dea68763962e38b6c2fbef982b72",
+          "listing": "6-1"
+        },
+        {
+          "original_start_lines": [
+            187,
+            198
+          ],
+          "current_start_line": 182,
+          "original_blocks": 2,
+          "language": "tablegen",
+          "code_sha256": "302c8879c1ee83eb46dfa7bd8c6871618bab041eb59199de97f8652f2a9eee3a",
+          "listing": "6-2"
+        },
+        {
+          "original_start_lines": [
+            220,
+            268
+          ],
+          "current_start_line": 210,
+          "original_blocks": 2,
+          "language": "cpp",
+          "code_sha256": "502f30c8563a7ef6516437403d2fd680308e4a4620e0f016dff9c6488294d318",
+          "listing": "6-3"
+        },
+        {
+          "original_start_lines": [
+            314,
+            324
+          ],
+          "current_start_line": 299,
+          "original_blocks": 2,
+          "language": "cpp",
+          "code_sha256": "9ee182ea16f1cc274cad8f510c9f2ec080bb6c607143aaa6ad8179867649051f",
+          "listing": "6-4"
+        },
+        {
+          "original_start_lines": [
+            469,
+            522
+          ],
+          "current_start_line": 449,
+          "original_blocks": 2,
+          "language": "text",
+          "code_sha256": "ead9c8edae6c7ce39d018cda8fdc45d5bc8ed87633321919f63208164f823e79",
+          "listing": "6-6"
+        },
+        {
+          "original_start_lines": [
+            550,
+            585
+          ],
+          "current_start_line": 525,
+          "original_blocks": 2,
+          "language": "text",
+          "code_sha256": "d95f1f0c862cf820754e0474c8fc250f9cbadeedd3239ac52a310e9dfa457cd6",
+          "listing": "6-7"
+        },
+        {
+          "original_start_lines": [
+            705,
+            761
+          ],
+          "current_start_line": 675,
+          "original_blocks": 2,
+          "language": "cpp",
+          "code_sha256": "fd48e6f47cadf3c80734bb8d670b1779d6c941640c96a509531d9728fc1297f1",
+          "listing": "6-12"
+        },
+        {
+          "original_start_lines": [
+            852,
+            860
+          ],
+          "current_start_line": 817,
+          "original_blocks": 2,
+          "language": "cpp",
+          "code_sha256": "f3ffee0208a9ca8afccc32756e43ebd32c7000f7dad1fe0522b0999a3e8a172e",
+          "listing": "6-14"
+        }
+      ],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch7.md",
+      "changed": false,
+      "before_sha256": "ab4e85daf44b29b265e8e44f5cd65727ff2fbda5b60d4da914ebdcda7c570fb7",
+      "after_sha256": "ab4e85daf44b29b265e8e44f5cd65727ff2fbda5b60d4da914ebdcda7c570fb7",
+      "before_blocks": 24,
+      "after_blocks": 24,
+      "code_stream_sha256": "c62cf78823c98944b54bc356e1e3ba92596d6e8297038fb7b65047dad2ae42d4",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch8.md",
+      "changed": false,
+      "before_sha256": "0be7323757c9f68cb496c2a380e04bc5622167d729f8dc27e3aee718fed62706",
+      "after_sha256": "0be7323757c9f68cb496c2a380e04bc5622167d729f8dc27e3aee718fed62706",
+      "before_blocks": 4,
+      "after_blocks": 4,
+      "code_stream_sha256": "7b53c65980bcae276ec187841a3a4f0f9b4cabdffeee7d78a69a588091479c97",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-ch9.md",
+      "changed": true,
+      "before_sha256": "b05631b1a73235b3b98fbf395a4ab81723afa604a4c3c528778cd14f5dd3c747",
+      "after_sha256": "7ec88cdf82ca1047240186ecf33b1c428d4584e5c36f8756b07c88dae063c41a",
+      "before_blocks": 65,
+      "after_blocks": 51,
+      "code_stream_sha256": "643683ebb60a203e74dd1bce418f6bb906688acf9cfce9ee31891e4717d44028",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [
+        {
+          "original_start_lines": [
+            201,
+            215
+          ],
+          "current_start_line": 201,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "29a501bdf2112d9df2f7a88fe221313a809240d10c46307ee4a18887300ccd53",
+          "listing": "9-5"
+        },
+        {
+          "original_start_lines": [
+            265,
+            273
+          ],
+          "current_start_line": 260,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "a8e7f6de3b727055f92b0530c4dc7fd0ae23f836f7519208cdb8f959dc6ad462",
+          "listing": "9-7"
+        },
+        {
+          "original_start_lines": [
+            288,
+            314
+          ],
+          "current_start_line": 278,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "a02d46bb5b9de0e6a51eb6553962ed8144be275e21e82250067e2ec4790b9549",
+          "listing": "9-8"
+        },
+        {
+          "original_start_lines": [
+            350,
+            359
+          ],
+          "current_start_line": 335,
+          "original_blocks": 2,
+          "language": "c",
+          "code_sha256": "abc69df185b4dd8445b5e4a576a7555449d10fff49e5a9a0a4c8064fdb6af9a6",
+          "listing": "9-9"
+        },
+        {
+          "original_start_lines": [
+            609,
+            634
+          ],
+          "current_start_line": 589,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "786d892c62336b280f7df13aef35dcfa40948e31828c066f8a46dbc4cb1e690d",
+          "listing": "9-16"
+        },
+        {
+          "original_start_lines": [
+            795,
+            809
+          ],
+          "current_start_line": 770,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "17ecaf626db98a5864b1ceffe6ea195b39b5b080ecf58c4a47fb1740dbcf7a30",
+          "listing": "9-20"
+        },
+        {
+          "original_start_lines": [
+            838,
+            858
+          ],
+          "current_start_line": 808,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "1f385b75bf2e848048866af0dd3a6f5448fd44116a31d7a1ef0d06e4f1ac983a",
+          "listing": "9-21"
+        },
+        {
+          "original_start_lines": [
+            917,
+            938
+          ],
+          "current_start_line": 882,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "23f6f4c137fc7f52ef3487d88a3747d6000ea7614a0b3d9bb19bfa1c81622036",
+          "listing": "9-23"
+        },
+        {
+          "original_start_lines": [
+            1028,
+            1036,
+            1086
+          ],
+          "current_start_line": 988,
+          "original_blocks": 3,
+          "language": "mlir",
+          "code_sha256": "fe8aee5b742a057ce39c604e9a7e3e0dbd2335f20cd759233cd8fa15fdfd4516",
+          "listing": "9-26"
+        },
+        {
+          "original_start_lines": [
+            1183,
+            1198
+          ],
+          "current_start_line": 1133,
+          "original_blocks": 2,
+          "language": "ebnf",
+          "code_sha256": "45f911d8fc9167d0cfe96908b7c6fbe67b84d83cafc4def1f05f34230cd04472",
+          "listing": "9-28"
+        },
+        {
+          "original_start_lines": [
+            1226,
+            1245
+          ],
+          "current_start_line": 1173,
+          "original_blocks": 2,
+          "language": "ebnf",
+          "code_sha256": "5aa5e14f9770b5a18b456439e9958e769262e9309338c8d1eae9ca08d5ec8a70",
+          "listing": "9-29"
+        },
+        {
+          "original_start_lines": [
+            1387,
+            1403
+          ],
+          "current_start_line": 1331,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "0407de2b913fbd4c72f6a8f9482f9150a349481c4908b41cfce2ba671df2d03e",
+          "listing": "9-32"
+        },
+        {
+          "original_start_lines": [
+            2058,
+            2105
+          ],
+          "current_start_line": 1999,
+          "original_blocks": 2,
+          "language": "mlir",
+          "code_sha256": "8340210876733685361574ca475ca77043fa801c473e9dc950c7c4a982734964",
+          "listing": "9-40"
+        }
+      ],
+      "prose_identical_except_page_labels_and_whitespace": false
+    },
+    {
+      "file": "insider-compiler-part2.md",
+      "changed": false,
+      "before_sha256": "3357cd58ee2c06809bed64b41b2753e9e8374b940bb3701c20708aac495ae797",
+      "after_sha256": "3357cd58ee2c06809bed64b41b2753e9e8374b940bb3701c20708aac495ae797",
+      "before_blocks": 1,
+      "after_blocks": 1,
+      "code_stream_sha256": "82e0326e863c7bf4acbdd93b9daa75e38a07afa3eb654df1cee5bd8543699cd1",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-part3.md",
+      "changed": false,
+      "before_sha256": "1b40486eaca70267609615a88513239b1ca7f266bc7cf7156b2742d5bdc30107",
+      "after_sha256": "1b40486eaca70267609615a88513239b1ca7f266bc7cf7156b2742d5bdc30107",
+      "before_blocks": 0,
+      "after_blocks": 0,
+      "code_stream_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [],
+      "prose_identical_except_page_labels_and_whitespace": true
+    },
+    {
+      "file": "insider-compiler-part4.md",
+      "changed": false,
+      "before_sha256": "9c880020c5d925b95367f4b5f3bfd68dc4acdd4a9f3f3d35aa70b178c3e3e96b",
+      "after_sha256": "9c880020c5d925b95367f4b5f3bfd68dc4acdd4a9f3f3d35aa70b178c3e3e96b",
+      "before_blocks": 0,
+      "after_blocks": 0,
+      "code_stream_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "code_stream_identical": true,
+      "page_markers_identical": true,
+      "mermaid_blocks_identical": true,
+      "merged_groups": [],
+      "prose_identical_except_page_labels_and_whitespace": true
+    }
+  ],
+  "merged_listings": 64,
+  "removed_fence_boundaries": 85,
+  "errors": [],
+  "reviewed_prose_changes": {
+    "insider-compiler-ch9.md": "Replace outdated instruction to join listing 9-40 with the existing complete-output explanation.",
+    "insider-compiler-ch11.md": "Remove outdated instruction to concatenate the three parts of listing 11-8."
+  }
+}

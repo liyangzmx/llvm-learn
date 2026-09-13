@@ -155,15 +155,6 @@ def AffineLoopInvariantCodeMotion { // 记录的基类为 PassBase、Pass。
   string argument = "affine-loop-invariant-code-motion";
   string baseClass = "::mlir::OperationPass<func::FuncOp>";
   string summary = "Hoist loop invariant instructions outside of affine loops";
-```
-
-[^ch5-dialects]: 毕竟，MLIR 框架提供的 `mlir-opt`、`mlir-translate` 等工具在开始执行前都会初始化 MLIRContext 并注册相应的方言，主要原因有两个：其一，这些工具在解析 IR 时依赖对应的方言，若缺少相应方言且未允许未注册方言，便无法识别操作，进而报错；其二，在进行变换或方言降级操作时同样常常依赖其他方言，这是由于在变换和降级过程中会生成其他方言中的操作。注册到 DialectRegistry 与实际加载到 MLIRContext 是不同的步骤。
-
-<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 5 -->
-
-代码清单 5-3（续）：
-
-```tablegen
   string description = "";
   code constructor = "mlir::affine::createAffineLoopInvariantCodeMotionPass()";
   list<string> dependentDialects = [];
@@ -171,6 +162,10 @@ def AffineLoopInvariantCodeMotion { // 记录的基类为 PassBase、Pass。
   list<Statistic> statistics = [];
 }
 ```
+
+[^ch5-dialects]: 毕竟，MLIR 框架提供的 `mlir-opt`、`mlir-translate` 等工具在开始执行前都会初始化 MLIRContext 并注册相应的方言，主要原因有两个：其一，这些工具在解析 IR 时依赖对应的方言，若缺少相应方言且未允许未注册方言，便无法识别操作，进而报错；其二，在进行变换或方言降级操作时同样常常依赖其他方言，这是由于在变换和降级过程中会生成其他方言中的操作。注册到 DialectRegistry 与实际加载到 MLIRContext 是不同的步骤。
+
+<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 5 -->
 
 继续使用工具 `mlir-tblgen`，对原始 TD 定义选择 `-gen-pass-decls` 生成器，便能得到 AffineLoopInvariantCodeMotion 对应的 C++ 文件，其中与 Pass 定义相关的头文件如代码清单 5-4 所示。
 
@@ -393,16 +388,11 @@ nestedModulePM.addPass(std::make_unique<MySPIRVModulePass>());
 OpPassManager &nestedFunctionPM = nestedModulePM.nest<spirv::FuncOp>();
 nestedFunctionPM.addPass(std::make_unique<MyFunctionPass>());
 OpPassManager &nestedAnyPM = nestedModulePM.nestAny();
-```
-
-<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 10 -->
-
-代码清单 5-14（续）：
-
-```cpp
 nestedAnyPM.addPass(createCanonicalizerPass());
 nestedAnyPM.addPass(createCSEPass());
 ```
+
+<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 10 -->
 
 代码清单 5-14 对应的 Pass 层次结构如代码清单 5-15 所示。MyFunctionPass 在此示例中应支持 `spirv::FuncOp`。
 
@@ -500,13 +490,6 @@ struct DominanceCounterInstrumentation : public PassInstrumentation {
   DominanceCounterInstrumentation(unsigned &count) : count(count) {}
   // 分析计算后调用该钩子函数。如果分析类型是支配信息，则累加计数器。
   void runAfterAnalysis(llvm::StringRef, TypeID id, Operation *) override {
-```
-
-<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 13 -->
-
-代码清单 5-16（续）：
-
-```cpp
     if (id == TypeID::get<DominanceInfo>())
       ++count;
   }
@@ -527,6 +510,8 @@ if (failed(pm.run(m))) {
 // 运行完成后可通过 domInfoCount 获取全部支配信息的计算次数。
 llvm::errs() << "DominanceInfo was computed " << domInfoCount << " times!\n";
 ```
+
+<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 13 -->
 
 > 校订注：计数器必须初始化为 `0`，否则首次递增或读取未初始化变量会产生错误；此外，本段省略了向 pm 添加实际使用支配分析的 Pass 的代码，若不添加任何 Pass，则计数结果为 `0`。占位部分需由调用环境提供。[校订依据](issues/ch5.md#ch5-instrumentation)
 
@@ -573,13 +558,6 @@ Pass 执行过程中极有可能出现错误。想要精准定位错误的具体
 // 通过失败捕获机制得到的两个 func 操作 IR。
 func.func @foo() {
   %0 = arith.constant 0 : i32
-```
-
-<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 15 -->
-
-代码清单 5-17（续）：
-
-```mlir
   return
 }
 func.func @bar() {
@@ -596,6 +574,8 @@ func.func @bar() {
   }
 #-}
 ```
+
+<!-- source: insider-compiler-ch5-ch6.pdf, PDF p. 15 -->
 
 同时，MLIR 社区还提供了重放机制。例如，在 `mlir-opt` 工具中，通过参数 `-run-reproducer` 可以重新运行指定的操作和 Pass Pipeline。该功能的实现相对简便，只需从 `mlir_reproducer` 资源中获取 Pass Pipeline 等信息，然后针对相应的操作执行 Pass 即可。
 

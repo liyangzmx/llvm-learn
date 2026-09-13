@@ -360,11 +360,6 @@ def matmul_kernel(
 module {
   tt.func public @matmul_kernel(
       %arg0: !tt.ptr<f16> {tt.divisibility = 16 : i32},
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 60 -->
-
-```mlir
       %arg1: !tt.ptr<f16> {tt.divisibility = 16 : i32},
       %arg2: !tt.ptr<f16> {tt.divisibility = 16 : i32},
       %arg3: i32 {tt.divisibility = 16 : i32},
@@ -409,11 +404,6 @@ module {
     %24 = arith.bitcast %c0_i32 : i32 to i32
     %25 = arith.bitcast %arg5 : i32 to i32
     %26 = arith.bitcast %c64_i32 : i32 to i32
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 61 -->
-
-```mlir
     %27 = llvm.mlir.undef : i32
     %28:3 = scf.for %arg9 = %24 to %25 step %26
         iter_args(%arg10 = %23, %arg11 = %12, %arg12 = %22)
@@ -461,6 +451,10 @@ module {
 }
 ```
 
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 60 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 61 -->
+
 清单 13-3 不止包含 `tt` 和 `arith` 两种方言：外层 `module` 属于 `builtin`，循环属于 `scf`，未使用的 `undef` 属于 `llvm`。主要张量和地址操作使用 Triton 方言，基础算术使用 MLIR 社区的 `arith`。两份清单可以用来比较 Python 语句与这些 IR 操作的对应关系，但必须考虑前述特化参数差异。接下来讨论 TTIR 的编译优化。
 
 <!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 62 -->
@@ -501,14 +495,11 @@ tt.func public @asm_in_loop(%arg0: !tt.ptr<bf16> {tt.divisibility = 16 : i32})
     %4 = tt.advance %arg2, [%c0_i32, %c0_i32] : <tensor<128x128xbf16>>
     scf.yield %4 : !tt.ptr<tensor<128x128xbf16>>
   }
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 63 -->
-
-```mlir
   tt.return
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 63 -->
 
 该优化可分两步理解。
 
@@ -548,11 +539,6 @@ module {
           %0 : tensor<16xi32> -> tensor<16xi16>, tensor<16xi16>
       %5 = arith.extsi %c0_i32 : i32 to i64
       %6 = arith.addi %arg2, %5 : i64
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 64 -->
-
-```mlir
       %7 = arith.extsi %c0_i32 : i32 to i64
       %8 = arith.addi %arg3, %7 : i64
       scf.yield %6, %8 : i64, i64
@@ -561,6 +547,8 @@ module {
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 64 -->
 
 二维张量指针具有两个偏移分量，所以清单 13-5 的 `%1`、`%2` 对应初始偏移，`%5`、`%7` 对应 `advance` 的两个增量，`%6`、`%8` 是相加后的新偏移。这里更新的是地址计算状态，尚未取得“新的张量数据”。继续做规范化还可折叠本例中的零增量和其他无用计算。
 
@@ -708,11 +696,6 @@ module {
       -> (tensor<128x128xf32>, tensor<128x128x!tt.ptr<f32>>) {
     %c1_i64 = arith.constant 1 : i64
     %cst = arith.constant 1.000000e+00 : f32
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 67 -->
-
-```mlir
     %0 = arith.addf %arg0, %cst : f32
     %1 = tt.splat %0 : f32 -> tensor<128x128xf32>
     %2 = tt.int_to_ptr %c1_i64 : i64 -> !tt.ptr<f32>
@@ -721,6 +704,8 @@ module {
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 67 -->
 
 这里仅转换并返回数值为 1 的指针，没有解引用该地址；不能把这一测试片段直接改成真实内存访问。TTIR 优化完成后，编译器继续将其转换为带布局信息的 TTGIR。
 
@@ -1084,11 +1069,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32,
     "triton_gpu.threads-per-warp" = 32 : i32} {
   tt.func @ops() {
     %a = arith.constant dense<1.00e+00> : tensor<128x32xf16>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 74 -->
-
-```mlir
     %b = arith.constant dense<2.00e+00> : tensor<32x128xf16>
     %c = arith.constant dense<3.00e+00> : tensor<128x128xf32>
     %0 = tt.dot %a, %b, %c
@@ -1097,6 +1077,8 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32,
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 74 -->
 
 先转换 `%a` 的类型，使其成为带二维 blocked 布局的 `tensor<128x32xf16, ...>`，再用新类型创建常量。这里所有布局数组的长度应与秩 2 一致；原书说明中一度写成 `[1]`、`[32]` 等一维数组，与随后代码不符。其余两个常量同样处理，但不同形状可产生不同的 warp 分布。
 
@@ -1181,11 +1163,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32,
     %9 = tt.load %8, %6 : tensor<1024x!tt.ptr<f32>, #blocked>
     %10 = tt.splat %arg1 : !tt.ptr<f16> -> tensor<1024x!tt.ptr<f16>, #blocked>
     %11 = tt.addptr %10, %4 : tensor<1024x!tt.ptr<f16>, #blocked>, tensor<1024xi32, #blocked>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 76 -->
-
-```mlir
     %12 = tt.load %11, %6 : tensor<1024x!tt.ptr<f16>, #blocked>
     %13 = arith.extf %12 : tensor<1024xf16, #blocked> to tensor<1024xf32, #blocked>
     %14 = arith.addf %9, %13 : tensor<1024xf32, #blocked>
@@ -1197,6 +1174,8 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32,
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 76 -->
 
 本例有两个 load 和一个 store。以 `%9` 的 f32 load 为例：张量有 1024 个元素，1 个 CTA 内有 4 个 warp，每个 warp 有 32 个线程，因此平均每个线程对应 8 个元素。但**平均元素数只是布局选择的一项上界**。实际代码还考虑连续性、对齐以及相关访存的共同次序。本例混合 f32/f16，依赖切片中的 f16 访问使共同候选达到 8，固定提交的回归测试明确期望使用 `sizePerThread = [8]`。不能把 `1024 / (1×4×32) = 8` 当作所有访存的通用最优公式。[Coalesce 实现及测试依据](issues/ch13.md#ch13-coalesce)。
 
@@ -1270,11 +1249,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32,
     %15 = triton_gpu.convert_layout %14 : tensor<1024x!tt.ptr<f16>, #blocked>
         -> tensor<1024x!tt.ptr<f16>, #blocked1>
     %16 = triton_gpu.convert_layout %6 : tensor<1024xi1, #blocked> -> tensor<1024xi1, #blocked1>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 78 -->
-
-```mlir
     %17 = tt.load %15, %16 : tensor<1024x!tt.ptr<f16>, #blocked1>
     %18 = triton_gpu.convert_layout %17 : tensor<1024xf16, #blocked1> -> tensor<1024xf16, #blocked>
     %19 = arith.extf %18 : tensor<1024xf16, #blocked> to tensor<1024xf32, #blocked>
@@ -1291,6 +1265,8 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32,
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 78 -->
 
 #### 2. TritonGPUPlanCTA 优化
 
@@ -1316,11 +1292,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32,
 module attributes {"triton_gpu.num-ctas" = 2 : i32, "triton_gpu.num-warps" = 4 : i32} {
   tt.func @matmul_fmadot(%ptr: !tt.ptr<f32> {tt.divisibility = 16 : i32},
       %a: !tt.memdesc<32x32xf32, #shared, #triton_gpu.shared_memory>,
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 79 -->
-
-```mlir
       %b: !tt.memdesc<32x32xf32, #shared, #triton_gpu.shared_memory>) {
     %cst = arith.constant dense<0.000000e+00> : tensor<32x32xf32, #blocked>
     %a_mat = triton_gpu.local_load %a
@@ -1340,6 +1311,8 @@ module attributes {"triton_gpu.num-ctas" = 2 : i32, "triton_gpu.num-warps" = 4 :
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 79 -->
 
 原书命令的输入名“14-26.mlir”同样修正为“13-26.mlir”：
 
@@ -1377,11 +1350,6 @@ module attributes {"triton_gpu.num-ctas" = 2 : i32, "triton_gpu.num-warps" = 4 :
         -> tensor<32x32xf32, #triton_gpu.dot_op<{opIdx = 1, parent = #blocked}>>
     %4 = tt.dot %2, %3, %cst, inputPrecision = ieee
         : tensor<32x32xf32, #triton_gpu.dot_op<{opIdx = 0, parent = #blocked}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 80 -->
-
-```mlir
         * tensor<32x32xf32, #triton_gpu.dot_op<{opIdx = 1, parent = #blocked}>>
         -> tensor<32x32xf32, #blocked>
     %5 = tt.splat %arg0 : !tt.ptr<f32> -> tensor<32x1x!tt.ptr<f32>, #blocked>
@@ -1392,6 +1360,8 @@ module attributes {"triton_gpu.num-ctas" = 2 : i32, "triton_gpu.num-warps" = 4 :
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 80 -->
 
 原输入的 `threadsPerWarp = [2, 16]`、`warpsPerCTA = [1, 4]`、`CTAsPerCGA = [2, 1]`、`CTASplitNum = [1, 1]`，在新 dot 布局中分别成为 `[8, 4]`、`[4, 1]`、`[1, 2]`、`[1, 2]`；`sizePerThread = [1, 4]` 和顺序保持不变。为保持类型一致，在 dot 前加入两次转换，把旧 parent 布局的操作数转到新 parent 布局。原书输出漏写输入中的 `inputPrecision = ieee`，已补回，布局规划不能顺便改变这一数值精度设置。[CTAPlan 校订](issues/ch13.md#ch13-cta-plan)。
 
@@ -1474,11 +1444,6 @@ module attributes {triton_gpu.target = "cuda:80", "triton_gpu.num-ctas" = 1 : i3
       %arg0: !tt.ptr<f32> {tt.divisibility = 16 : i32},
       %arg1: !tt.ptr<f32> {tt.divisibility = 16 : i32},
       %arg2: i32 {tt.divisibility = 16 : i32, tt.max_divisibility = 8 : i32},
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 82 -->
-
-```mlir
       %18: tensor<32x128x!tt.ptr<f32>, #blocked> {tt.divisibility = 16 : i32},
       %11: i32 {tt.divisibility = 16 : i32},
       %25: tensor<32x!tt.ptr<f32>, #blocked1> {tt.divisibility = 16 : i32})
@@ -1522,6 +1487,8 @@ module attributes {triton_gpu.target = "cuda:80", "triton_gpu.num-ctas" = 1 : i3
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 82 -->
 
 这个 IR 片段把指针张量直接作为函数参数，调用环境及地址构造未展示，所有 load 的地址应由调用方保证有效。分析步骤如下。
 
@@ -1583,11 +1550,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
       ^bb0(%arg8: f32, %arg9: f32):
         %16 = arith.mulf %arg8, %arg9 : f32
         tt.reduce.return %16 : f32
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 84 -->
-
-```mlir
       }) : (tensor<32x32x4xf32, #blocked2>)
           -> tensor<32x32xf32, #triton_gpu.slice<{dim = 2, parent = #blocked2}>>
       %15 = arith.mulf %arg7, %14
@@ -1611,6 +1573,8 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
 }
 ```
 
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 84 -->
+
 转换涉及三处重要更新。
 
 1. 把 **scf.for** 的累加器初始化从清单 **13-30** 中的 `tensor<32xf32, slice<dim=1,...>>` 变为 `tensor<32x32xf32, slice<dim=2,...>>`，本例乘法的中性值为 1。原书分别误写为 `scf.if` 和清单 13-20。
@@ -1633,11 +1597,6 @@ module attributes {triton_gpu.target = "cuda:90", "triton_gpu.num-ctas" = 1 : i3
     "triton_gpu.num-warps" = 32 : i32, "triton_gpu.threads-per-warp" = 32 : i32} {
   tt.func @check_instrShape_per_warps(%arg0: !tt.ptr<f32> {tt.divisibility = 16 : i32}) {
     %mask = arith.constant dense<true> : tensor<128x128xi1, #blocked>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 85 -->
-
-```mlir
     %zero_f32 = arith.constant dense<0.000000e+00> : tensor<128x128xf32, #blocked>
     %a = arith.constant dense<0.000000e+00>
         : tensor<128x128xf16, #triton_gpu.dot_op<{opIdx = 0, parent = #blocked}>>
@@ -1653,6 +1612,8 @@ module attributes {triton_gpu.target = "cuda:90", "triton_gpu.num-ctas" = 1 : i3
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 85 -->
 
 该例为了测试 warp 数与指令形状选择，使用大量零常量及重复的输出地址；它不是完整矩阵乘内核，不能据其 store 推断正确的矩阵结果存储方式。命令形式如下。
 
@@ -1692,16 +1653,13 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 32 
         -> tensor<128x128xf32, #mma>
     %4 = triton_gpu.convert_layout %3 : tensor<128x128xf32, #mma> -> tensor<128x128xf32, #blocked>
     %5 = tt.splat %arg0 : !tt.ptr<f32> -> tensor<128x128x!tt.ptr<f32>, #blocked>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 86 -->
-
-```mlir
     tt.store %5, %4, %cst_0 : tensor<128x128x!tt.ptr<f32>, #blocked>
     tt.return
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 86 -->
 
 清单 13-32 的 dot 被替换成 warp-group dot，同时产生 shared 和 MMA 编码。A/B 通过 `local_alloc` 进入适用的共享内存缓冲区，累加器通过 `convert_layout` 变为 MMA 编码，计算结果再转换回原布局，供后续 store 使用。[矩阵加速路径校订](issues/ch13.md#ch13-accelerate-matmul)。
 
@@ -1738,11 +1696,6 @@ module attributes {"triton_gpu.num-warps" = 4 : i32} {
   tt.func @matmul_loop_mixed(%lb: index, %ub: index, %step: index,
       %A: !tt.ptr<f8E5M2>, %B: !tt.ptr<f16>) -> tensor<128x128xf32, #C> {
     %a_ptr_init = tt.splat %A : !tt.ptr<f8E5M2> -> tensor<128x16x!tt.ptr<f8E5M2>, #AL>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 87 -->
-
-```mlir
     %b_ptr_init = tt.splat %B : !tt.ptr<f16> -> tensor<16x128x!tt.ptr<f16>, #BL>
     %a_mask = arith.constant dense<true> : tensor<128x16xi1, #AL>
     %a_other = arith.constant dense<0.00e+00> : tensor<128x16xf8E5M2, #AL>
@@ -1792,6 +1745,8 @@ module attributes {"triton_gpu.num-warps" = 4 : i32} {
 }
 ```
 
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 87 -->
+
 <!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 88 -->
 
 第二步，为循环初始的共享内存值生成预取。原书把它们称为清单 13-34 的 `%3` 和 `%5`，但这些是重新编号后的名字；在输入中相应值为 `%a_init`、`%b_init`。清单 13-35 展示插入前序操作、尚未把它们接入新循环的中间形式。
@@ -1829,11 +1784,6 @@ module attributes {"triton_gpu.num-warps" = 4 : i32} {
     %4 = tt.load %1, %cst_3, %cst_2 : tensor<16x128x!tt.ptr<f16>, #BL>
     %5 = triton_gpu.local_alloc %4 : (tensor<16x128xf16, #BL>)
         -> !tt.memdesc<16x128xf16, #S, #triton_gpu.shared_memory>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 89 -->
-
-```mlir
     %c0_i32 = arith.constant 0 : i32
     %c0_i32_6 = arith.constant 0 : i32
     %6 = triton_gpu.memdesc_subview %3[%c0_i32, %c0_i32_6]
@@ -1861,11 +1811,6 @@ module attributes {"triton_gpu.num-warps" = 4 : i32} {
       %13 = tt.fp_to_fp %12 : tensor<128x16xf8E5M2, #A_OP> -> tensor<128x16xf16, #A_OP>
       %14 = triton_gpu.local_load %arg9
           : !tt.memdesc<16x128xf16, #S, #triton_gpu.shared_memory> -> tensor<16x128xf16, #B_OP>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 90 -->
-
-```mlir
       %15 = tt.dot %13, %14, %arg10
           : tensor<128x16xf16, #A_OP> * tensor<16x128xf16, #B_OP> -> tensor<128x128xf32, #C>
       %16 = tt.addptr %arg6, %cst_0
@@ -1889,6 +1834,10 @@ module attributes {"triton_gpu.num-warps" = 4 : i32} {
 }
 ```
 
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 89 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 90 -->
+
 第三步，新建循环，为 dot 加入预取操作数，更新迭代参数和 yield，再删除冗余指令。本例 K=16，恰好与预取宽度相同，所以每轮只需一个 dot；一般更大的 K 可能拆为多个 dot。清单 13-36 保留原书的全部运算，使用布局别名减少重复，并同步修复 B 的更新。
 
 **代码清单 13-36 TritonGPUPrefetch 及规范化后的结果形式**
@@ -1896,11 +1845,6 @@ module attributes {"triton_gpu.num-warps" = 4 : i32} {
 ```mlir
 #blocked = #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32],
     warpsPerCTA = [4, 1], order = [1, 0]}>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 91 -->
-
-```mlir
 #blocked1 = #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8],
     warpsPerCTA = [4, 1], order = [1, 0]}>
 #mma = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0,
@@ -1955,11 +1899,6 @@ module attributes {"triton_gpu.num-warps" = 4 : i32} {
       %17 = triton_gpu.memdesc_subview %15[%c0_i32, %c0_i32]
           : !tt.memdesc<128x16xf8E5M2, #shared, #triton_gpu.shared_memory>
           -> !tt.memdesc<128x16xf8E5M2, #shared, #triton_gpu.shared_memory>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 92 -->
-
-```mlir
       %18 = triton_gpu.local_load %17
           : !tt.memdesc<128x16xf8E5M2, #shared, #triton_gpu.shared_memory>
           -> tensor<128x16xf8E5M2, #A_OP>
@@ -1982,6 +1921,10 @@ module attributes {"triton_gpu.num-warps" = 4 : i32} {
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 91 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 92 -->
 
 #### 7. Pipeline 优化
 
@@ -2066,11 +2009,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
     %b_tmp0 = tt.make_range {end = 128 : i32, start = 0 : i32} : tensor<128xi32, #BLs0>
     %b_tmp1 = tt.expand_dims %b_tmp0 {axis = 0 : i32} : tensor<128xi32, #BLs0> -> tensor<1x128xi32, #BL>
     %b_offs = tt.broadcast %b_tmp1 : tensor<1x128xi32, #BL> -> tensor<32x128xi32, #BL>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 94 -->
-
-```mlir
     %b_ptr_init = tt.addptr %b_ptr_splat, %b_offs : tensor<32x128x!tt.ptr<f16>, #BL>, tensor<32x128xi32, #BL>
 
     %a_mask = arith.constant dense<true> : tensor<128x32xi1, #AL>
@@ -2100,6 +2038,8 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
 }
 ```
 
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 94 -->
+
 第 1 步：扫描循环体内符合条件的加载与点积。原书加粗的是 `%a_ = tt.load %a_ptr`、`%b_ = tt.load %b_ptr, %b_mask, %b_other` 和 `%c = tt.dot %a, %b, %prev_c`；正文清单用合法注释标出这些调度对象。为它们安排阶段后，结果如代码清单 13-40：两个 `tt.load` 位于阶段 0，`tt.dot` 位于阶段 2，阶段 1 此时为空。
 
 **代码清单 13-40** 为 tt.dot 和 tt.load 设置调度阶段
@@ -2110,16 +2050,13 @@ cluster: 1:
 %13 = tt.load %arg7, %cst_1, %cst_2 : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
 cluster: 1:
 %11 = tt.load %arg6 : tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 95 -->
-
-```text
 ---- Ops in stage 1
 ---- Ops in stage 2
 cluster: 0:
 %15 = tt.dot %12, %14, %arg8 : tensor<128x32xf16, #triton_gpu.dot_op<{opIdx = 0, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>> * tensor<32x128xf16, #triton_gpu.dot_op<{opIdx = 1, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>> -> tensor<128x128xf32, #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>>
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 95 -->
 
 第 2 步：为第 1 步中的加载创建 `triton_gpu.local_alloc`，为预取准备 shared 布局缓冲区，见代码清单 13-41。两个 memdesc 的最外层大小都是 2，分别保存 A 与 B 的两个缓冲槽。
 
@@ -2138,11 +2075,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
     %5 = tt.splat %arg4 : !tt.ptr<f16> -> tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %6 = tt.make_range {end = 128 : i32, start = 0 : i32} : tensor<128xi32, #triton_gpu.slice<{dim = 0, parent = #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>}>>
     %7 = tt.expand_dims %6 {axis = 0 : i32} : tensor<128xi32, #triton_gpu.slice<{dim = 0, parent = #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>}>> -> tensor<1x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 96 -->
-
-```mlir
     %8 = tt.broadcast %7 : tensor<1x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>> -> tensor<32x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %9 = tt.addptr %5, %8 : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<32x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %cst = arith.constant dense<true> : tensor<128x32xi1, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
@@ -2158,11 +2090,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
         %arg6 = %4, %arg7 = %9, %arg8 = %cst_3) -> (tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<128x128xf32, #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>>) {
       %13 = tt.load %arg6 : tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
       %14 = triton_gpu.convert_layout %13 : tensor<128x32xf16, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>> -> tensor<128x32xf16, #triton_gpu.dot_op<{opIdx = 0, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 97 -->
-
-```mlir
       %15 = tt.load %arg7, %cst_1, %cst_2 : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
       %16 = triton_gpu.convert_layout %15 : tensor<32x128xf16, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>> -> tensor<32x128xf16, #triton_gpu.dot_op<{opIdx = 1, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>>
       %17 = tt.dot %14, %16, %arg8 : tensor<128x32xf16, #triton_gpu.dot_op<{opIdx = 0, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>> * tensor<32x128xf16, #triton_gpu.dot_op<{opIdx = 1, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>> -> tensor<128x128xf32, #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>>
@@ -2174,6 +2101,10 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 96 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 97 -->
 
 第 3 步：将第 1 步中的 `tt.load` 替换为 `triton_gpu.async_copy_global_to_local` 及数据预取相关操作，结果如代码清单 13-42。提交操作产生组令牌；等待操作和令牌关联表达异步完成要求，随后从共享内存装载并转换到点积操作数布局。
 
@@ -2187,11 +2118,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
     %0 = tt.splat %arg3 : !tt.ptr<f16> -> tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %1 = tt.make_range {end = 32 : i32, start = 0 : i32} : tensor<32xi32, #triton_gpu.slice<{dim = 0, parent = #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>}>>
     %2 = tt.expand_dims %1 {axis = 0 : i32} : tensor<32xi32, #triton_gpu.slice<{dim = 0, parent = #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>}>> -> tensor<1x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 98 -->
-
-```mlir
     %3 = tt.broadcast %2 : tensor<1x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>> -> tensor<128x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %4 = tt.addptr %0, %3 : tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<128x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %5 = tt.splat %arg4 : !tt.ptr<f16> -> tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
@@ -2206,11 +2132,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
     %cst_3 = arith.constant dense<0.000000e+00> : tensor<128x128xf32, #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>>
     %cst_4 = arith.constant dense<4> : tensor<128x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %cst_5 = arith.constant dense<4> : tensor<32x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 99 -->
-
-```mlir
     %10 = triton_gpu.local_alloc : () -> !tt.memdesc<2x128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
     %11 = triton_gpu.local_alloc : () -> !tt.memdesc<2x32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
     %c-1_i32 = arith.constant -1 : i32
@@ -2235,11 +2156,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
       %23 = triton_gpu.memdesc_subview %10[%18, %c0_i32_6, %c0_i32_6] : !tt.memdesc<2x128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> !tt.memdesc<128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
       %24 = triton_gpu.local_load %23 token %22 : !tt.memdesc<128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> tensor<128x32xf16, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
       %25 = triton_gpu.convert_layout %24 : tensor<128x32xf16, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>> -> tensor<128x32xf16, #triton_gpu.dot_op<{opIdx = 0, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 100 -->
-
-```mlir
       %26 = triton_gpu.memdesc_subview %11[%15, %c0_i32_7, %c0_i32_7] : !tt.memdesc<2x32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> !tt.memdesc<32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
       %27 = triton_gpu.async_copy_global_to_local %arg7, %26 mask %cst_1 other %cst_2 : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>> -> <32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
       %28 = triton_gpu.async_commit_group %27
@@ -2252,15 +2168,18 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
       %35 = tt.addptr %arg7, %cst_5 : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<32x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
       scf.yield %34, %35, %33, %15, %18 : tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<128x128xf32, #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>>, i32, i32
     }
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 101 -->
-
-```mlir
     tt.return
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 98 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 99 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 100 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 101 -->
 
 接着为循环体中的新操作安排阶段，得到代码清单 13-43。这里是调度表的打印，表内列举顺序不等同于最终可执行 IR 的先后顺序，所以可以看到提交操作列在其拷贝定义之前。
 
@@ -2319,11 +2238,6 @@ cluster: 2:
 ---- Ops in stage 1
 cluster: 3:
 %18 = arith.select %17, %16, %c0_i32 : i32
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 103 -->
-
-```text
 cluster: 3:
 %16 = arith.addi %arg10, %c1_i32 : i32
 cluster: 3:
@@ -2349,6 +2263,8 @@ cluster: 1:
 %31 = triton_gpu.local_load %30 token %29 : !tt.memdesc<32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> tensor<32x128xf16, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
 ```
 
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 103 -->
+
 <!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 104 -->
 
 第 5 步：为前面第 2 步创建的 `triton_gpu.local_alloc` 补上对应的 `triton_gpu.local_dealloc`，结果如代码清单 13-45。原书此处误指为“第 3 步”创建；释放前插入 `async_wait {num = 0}`，等待未完成的异步组。
@@ -2370,11 +2286,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
     %7 = tt.expand_dims %6 {axis = 0 : i32} : tensor<128xi32, #triton_gpu.slice<{dim = 0, parent = #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>}>> -> tensor<1x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %8 = tt.broadcast %7 : tensor<1x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>> -> tensor<32x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %9 = tt.addptr %5, %8 : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<32x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 105 -->
-
-```mlir
     %cst = arith.constant dense<true> : tensor<128x32xi1, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %cst_0 = arith.constant dense<0.000000e+00> : tensor<128x32xf16, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %cst_1 = arith.constant dense<true> : tensor<32x128xi1, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
@@ -2400,11 +2311,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
       %18 = arith.cmpi slt, %17, %c2_i32 : i32
       %19 = arith.select %18, %17, %c0_i32 : i32
       %20 = triton_gpu.memdesc_subview %10[%16, %c0_i32_6, %c0_i32_6] : !tt.memdesc<2x128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> !tt.memdesc<128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 106 -->
-
-```mlir
       %21 = triton_gpu.async_copy_global_to_local %arg6, %20 : tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>> -> <128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
       %22 = triton_gpu.async_commit_group %21
       %23 = triton_gpu.async_wait %22 {num = 0 : i32}
@@ -2418,11 +2324,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
       %31 = triton_gpu.memdesc_subview %11[%19, %c0_i32_7, %c0_i32_7] : !tt.memdesc<2x32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> !tt.memdesc<32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
       %32 = triton_gpu.local_load %31 token %30 : !tt.memdesc<32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> tensor<32x128xf16, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
       %33 = triton_gpu.convert_layout %32 : tensor<32x128xf16, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>> -> tensor<32x128xf16, #triton_gpu.dot_op<{opIdx = 1, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 107 -->
-
-```mlir
       %34 = tt.dot %26, %33, %arg8 : tensor<128x32xf16, #triton_gpu.dot_op<{opIdx = 0, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>> * tensor<32x128xf16, #triton_gpu.dot_op<{opIdx = 1, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>> -> tensor<128x128xf32, #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>>
       %35 = tt.addptr %arg6, %cst_4 : tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<128x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
       %36 = tt.addptr %arg7, %cst_5 : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<32x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
@@ -2436,6 +2337,12 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
 }
 ```
 
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 105 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 106 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 107 -->
+
 第 6 步：生成前言代码，把阶段小于 `maxStage` 的相应指令实例复制到循环外。此例 `maxStage = 2`：先生成阶段 0 的第一批操作，再生成阶段 0 的下一批及阶段 1 的相应操作，见代码清单 13-46。原书加粗的前言范围对应 `%c0`、`%12` 至 `%54` 以及其中的常量定义，清单中已用注释标出。该清单是仅生成前言、尚未完成原循环重接的内部快照；不能单独运行它来验证与原程序等价。
 
 **代码清单 13-46** 生成前言后的代码（编译器内部中间快照）
@@ -2448,11 +2355,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
     %0 = tt.splat %arg3 : !tt.ptr<f16> -> tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %1 = tt.make_range {end = 32 : i32, start = 0 : i32} : tensor<32xi32, #triton_gpu.slice<{dim = 0, parent = #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>}>>
     %2 = tt.expand_dims %1 {axis = 0 : i32} : tensor<32xi32, #triton_gpu.slice<{dim = 0, parent = #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>}>> -> tensor<1x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 108 -->
-
-```mlir
     %3 = tt.broadcast %2 : tensor<1x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>> -> tensor<128x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %4 = tt.addptr %0, %3 : tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<128x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %5 = tt.splat %arg4 : !tt.ptr<f16> -> tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
@@ -2467,11 +2369,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
     %cst_3 = arith.constant dense<0.000000e+00> : tensor<128x128xf32, #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>>
     %cst_4 = arith.constant dense<4> : tensor<128x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %cst_5 = arith.constant dense<4> : tensor<32x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 109 -->
-
-```mlir
     %10 = triton_gpu.local_alloc : () -> !tt.memdesc<2x128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
     %11 = triton_gpu.local_alloc : () -> !tt.memdesc<2x32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
     %c-1_i32 = arith.constant -1 : i32
@@ -2499,11 +2396,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
     %25 = tt.splat %14 : i1 -> tensor<32x128xi1, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %26 = arith.andi %25, %cst_1 : tensor<32x128xi1, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %27 = triton_gpu.async_copy_global_to_local %9, %24 mask %26 other %cst_2 : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>> -> <32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 110 -->
-
-```mlir
     %28 = triton_gpu.async_commit_group %27
     %c1 = arith.constant 1 : index
     %29 = arith.muli %arg2, %c1 : index
@@ -2526,11 +2418,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
     %45 = arith.andi %44, %cst_1 : tensor<32x128xi1, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %46 = triton_gpu.async_copy_global_to_local %35, %43 mask %45 other %cst_2 : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>> -> <32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
     %47 = triton_gpu.async_commit_group %46
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 111 -->
-
-```mlir
     %48 = arith.addi %c-1_i32, %c1_i32 : i32
     %49 = arith.cmpi slt, %48, %c2_i32 : i32
     %50 = arith.select %49, %48, %c0_i32 : i32
@@ -2554,11 +2441,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
       %66 = triton_gpu.async_wait %65 {num = 0 : i32}
       %67 = triton_gpu.memdesc_subview %10[%62, %c0_i32_6, %c0_i32_6] : !tt.memdesc<2x128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> !tt.memdesc<128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
       %68 = triton_gpu.local_load %67 token %66 : !tt.memdesc<128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> tensor<128x32xf16, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 112 -->
-
-```mlir
       %69 = triton_gpu.convert_layout %68 : tensor<128x32xf16, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>> -> tensor<128x32xf16, #triton_gpu.dot_op<{opIdx = 0, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>>
       %70 = triton_gpu.memdesc_subview %11[%59, %c0_i32_7, %c0_i32_7] : !tt.memdesc<2x32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> !tt.memdesc<32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
       %71 = triton_gpu.async_copy_global_to_local %arg7, %70 mask %cst_1 other %cst_2 : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>> -> <32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
@@ -2572,11 +2454,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
       %79 = tt.addptr %arg7, %cst_5 : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<32x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
       scf.yield %78, %79, %77, %59, %62 : tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<128x128xf32, #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>>, i32, i32
     }
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 113 -->
-
-```mlir
     %56 = triton_gpu.async_wait {num = 0 : i32}
     triton_gpu.local_dealloc %10 : !tt.memdesc<2x128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
     triton_gpu.local_dealloc %11 : !tt.memdesc<2x32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
@@ -2584,6 +2461,18 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 108 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 109 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 110 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 111 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 112 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 113 -->
 
 第 7 步：根据阶段重建循环体和跨迭代值传递，再进行归一化，原书展示的最终结果如代码清单 13-47。变化不限于调整指令顺序：循环携带参数从 5 个变为 11 个，包括预取的共享内存视图和令牌；循环保留原上界，`%40` 控制提前两次迭代的拷贝是否仍在合法范围内；等待组数量改为 2 以允许较新的组继续在途。原书称结果经过 `canonicalize`，但没有给出生成该快照的确切版本和全部选项，本次仅恢复其打印并核对结构，未声称可逐字复现该输出。
 
@@ -2605,11 +2494,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
     %0 = tt.splat %arg3 : !tt.ptr<f16> -> tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %1 = tt.make_range {end = 32 : i32, start = 0 : i32} : tensor<32xi32, #triton_gpu.slice<{dim = 0, parent = #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>}>>
     %2 = tt.expand_dims %1 {axis = 0 : i32} : tensor<32xi32, #triton_gpu.slice<{dim = 0, parent = #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>}>> -> tensor<1x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 114 -->
-
-```mlir
     %3 = tt.broadcast %2 : tensor<1x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>> -> tensor<128x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %4 = tt.addptr %0, %3 : tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<128x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %5 = tt.splat %arg4 : !tt.ptr<f16> -> tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
@@ -2625,11 +2509,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
     %15 = triton_gpu.async_copy_global_to_local %4, %13 mask %14 : tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>> -> <128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
     %16 = triton_gpu.async_commit_group %15
     %17 = triton_gpu.memdesc_subview %11[%c0_i32, %c0_i32, %c0_i32] : !tt.memdesc<2x32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> !tt.memdesc<32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 115 -->
-
-```mlir
     %18 = tt.splat %12 : i1 -> tensor<32x128xi1, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
     %19 = triton_gpu.async_copy_global_to_local %9, %17 mask %18 other %cst_2 : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>> -> <32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
     %20 = triton_gpu.async_commit_group %19
@@ -2646,11 +2525,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
     %31 = triton_gpu.async_copy_global_to_local %24, %29 mask %30 other %cst_2 : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>> -> <32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
     %32 = triton_gpu.async_commit_group %31
     %33 = triton_gpu.memdesc_subview %10[%c0_i32, %c0_i32, %c0_i32] : !tt.memdesc<2x128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> !tt.memdesc<128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 116 -->
-
-```mlir
     %34 = triton_gpu.async_wait %20 {num = 2 : i32}
     %35 = triton_gpu.memdesc_subview %11[%c0_i32, %c0_i32, %c0_i32] : !tt.memdesc<2x32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> !tt.memdesc<32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
     %36:11 = scf.for %arg5 = %arg0 to %arg1 step %arg2 iter_args(
@@ -2666,11 +2540,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
       %43 = triton_gpu.local_load %arg13 token %arg14 : !tt.memdesc<32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> tensor<32x128xf16, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
       %44 = triton_gpu.convert_layout %43 : tensor<32x128xf16, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>> -> tensor<32x128xf16, #triton_gpu.dot_op<{opIdx = 1, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>>
       %45 = tt.dot %42, %44, %arg8 : tensor<128x32xf16, #triton_gpu.dot_op<{opIdx = 0, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>> * tensor<32x128xf16, #triton_gpu.dot_op<{opIdx = 1, parent = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>, kWidth = 2}>> -> tensor<128x128xf32, #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 117 -->
-
-```mlir
       %46 = tt.addptr %arg6, %cst_0 : tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<128x32xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>
       %47 = tt.addptr %arg7, %cst : tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<32x128xi32, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>
       %48 = arith.addi %arg9, %c1_i32 : i32
@@ -2690,11 +2559,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
       %62 = triton_gpu.memdesc_subview %10[%61, %c0_i32, %c0_i32] : !tt.memdesc<2x128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> !tt.memdesc<128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
       %63 = triton_gpu.async_wait %arg16 {num = 2 : i32}
       %64 = triton_gpu.memdesc_subview %11[%61, %c0_i32, %c0_i32] : !tt.memdesc<2x32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable> -> !tt.memdesc<32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 118 -->
-
-```mlir
       scf.yield %46, %47, %45, %50, %61, %62, %63, %64, %63, %54, %58 : tensor<128x32x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<32x128x!tt.ptr<f16>, #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [1, 0]}>>, tensor<128x128xf32, #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>>, i32, i32, !tt.memdesc<128x32xf16, #triton_gpu.shared<{vec = 8, perPhase = 2, maxPhase = 4, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>, !triton_gpu.async.token, !tt.memdesc<32x128xf16, #triton_gpu.shared<{vec = 8, perPhase = 1, maxPhase = 8, order = [1, 0], hasLeadingOffset = false}>, #triton_gpu.shared_memory, mutable>, !triton_gpu.async.token, !triton_gpu.async.token, !triton_gpu.async.token
     }
     %37 = triton_gpu.async_wait {num = 0 : i32}
@@ -2704,6 +2568,16 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 114 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 115 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 116 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 117 -->
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 118 -->
 
 #### 8. TritonGPUOptimizeDotOperands 优化
 
@@ -2772,13 +2646,6 @@ triton-opt 13-48.mlir -split-input-file -tritongpu-optimize-dot-operands
 
 ```mlir
 #blocked = #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [4, 8], warpsPerCTA = [4, 1], order = [1, 0]}>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 120 -->
-
-代码清单 13-49（续；与上段代码连续）：
-
-```mlir
 #blocked1 = #triton_gpu.blocked<{sizePerThread = [1, 4], threadsPerWarp = [1, 32], warpsPerCTA = [4, 1], order = [0, 1]}>
 #mma = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [4, 1], instrShape = []}>
 module attributes {"triton_gpu.num-warps" = 4 : i32, "triton_gpu.target" = "cuda:80"} {
@@ -2797,6 +2664,8 @@ module attributes {"triton_gpu.num-warps" = 4 : i32, "triton_gpu.target" = "cuda
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 120 -->
 
 #### 9. TritonGPUReduceDataDuplication 优化
 
@@ -2817,19 +2686,14 @@ TritonGPUReduceDataDuplication 将满足条件的 `triton_gpu.convert_layout` �
 #blocked = #triton_gpu.blocked<{sizePerThread = [1, 1], threadsPerWarp = [16, 2], warpsPerCTA = [1, 4], order = [0, 1]}>
 #mma = #triton_gpu.nvidia_mma<{versionMajor = 2, versionMinor = 0, warpsPerCTA = [1, 4], instrShape = [16, 8]}>
 module attributes {"triton_gpu.target" = "cuda:80", "triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 : i32, "triton_gpu.threads-per-warp" = 32 : i32} {
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 121 -->
-
-代码清单 13-50（续；与上段代码连续）：
-
-```mlir
   tt.func @apply_swizzle(%arg0: tensor<16x256xf16, #blocked>) {
     %0 = triton_gpu.convert_layout %arg0 : tensor<16x256xf16, #blocked> -> tensor<16x256xf16, #triton_gpu.dot_op<{opIdx = 0, parent = #mma, kWidth = 4}>>
     tt.return
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 121 -->
 
 对上述代码执行以下命令，结果如代码清单 13-51 所示：
 
@@ -2954,17 +2818,12 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
     %1 = triton_gpu.local_load %0 : !tt.memdesc<16x16xf32, #shared, #triton_gpu.shared_memory> -> tensor<16x16xf32, #blocked>
     %2 = triton_gpu.local_alloc %1 : (tensor<16x16xf32, #blocked>) -> !tt.memdesc<16x16xf32, #shared1, #triton_gpu.shared_memory>
     %3 = triton_gpu.local_load %2 : !tt.memdesc<16x16xf32, #shared1, #triton_gpu.shared_memory> -> tensor<16x16xf32, #dot>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 124 -->
-
-代码清单 13-53（续；与上段代码连续）：
-
-```mlir
     tt.return %3 : tensor<16x16xf32, #dot>
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 124 -->
 
 #### 12. TritonGPUCombineTensorSelectAndIf 优化
 
@@ -3006,13 +2865,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
 !P = tensor<64x!tt.ptr<f32>, #blocked>
 "builtin.module"() ({
   "tt.func"() <{function_type = (!T, !P, i1) -> (), sym_name = "select_if_combine", sym_visibility = "public"}> ({
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 125 -->
-
-代码清单 13-55（续；与上段代码连续）：
-
-```text
   ^bb0(%arg0: !T, %arg1: !P, %arg2: i1):
     %0 = "arith.constant"() <{value = dense<0.0> : !T}> : () -> !T
     %1 = "arith.constant"() <{value = dense<1.0> : !T}> : () -> !T
@@ -3032,6 +2884,8 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
 }) {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 : i32, "triton_gpu.target" = "cuda:90", "triton_gpu.threads-per-warp" = 32 : i32} : () -> ()
 ```
 
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 125 -->
+
 3）取每个 `arith.select` 的 true、false 值，分别追加到新 if 的 then、else 分支的 `scf.yield` 操作数中。这里更新的是 yield 的操作数，并非把常量定义移动进分支。结果如代码清单 13-56 所示，`%0`、`%1` 分别成为两个分支的返回值。
 
 **代码清单 13-56** 为新 scf.if 的两个分支添加 yield 操作数后的中间快照
@@ -3042,13 +2896,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
 !P = tensor<64x!tt.ptr<f32>, #blocked>
 "builtin.module"() ({
   "tt.func"() <{function_type = (!T, !P, i1) -> (), sym_name = "select_if_combine", sym_visibility = "public"}> ({
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 126 -->
-
-代码清单 13-56（续；与上段代码连续）：
-
-```text
   ^bb0(%arg0: !T, %arg1: !P, %arg2: i1):
     %0 = "arith.constant"() <{value = dense<0.0> : !T}> : () -> !T
     %1 = "arith.constant"() <{value = dense<1.0> : !T}> : () -> !T
@@ -3068,6 +2915,8 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
 }) {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 : i32, "triton_gpu.target" = "cuda:90", "triton_gpu.threads-per-warp" = 32 : i32} : () -> ()
 ```
 
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 126 -->
+
 4）用新 if 的相应结果替换旧 if 的结果和各 select 的所有使用，删除原来的 `arith.select` 与旧 `scf.if`，得到代码清单 13-57。原文及原清单标题中的 `tt.select` 应为 `arith.select`。该例中最后一次 `tt.store` 使用 `%0`，即新 if 的结果。
 
 **代码清单 13-57** 删除原有 scf.if 和 arith.select 后的优化结果
@@ -3075,13 +2924,6 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
 ```mlir
 #blocked = #triton_gpu.blocked<{sizePerThread = [1], threadsPerWarp = [32], warpsPerCTA = [4], order = [0]}>
 module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 : i32, "triton_gpu.target" = "cuda:90", "triton_gpu.threads-per-warp" = 32 : i32} {
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 127 -->
-
-代码清单 13-57（续；与上段代码连续）：
-
-```mlir
   tt.func public @select_if_combine(%arg0: tensor<64xf32, #blocked>, %arg1: tensor<64x!tt.ptr<f32>, #blocked>, %arg2: i1) attributes {noinline = false} {
     %cst = arith.constant dense<0.0> : tensor<64xf32, #blocked>
     %cst_0 = arith.constant dense<1.0> : tensor<64xf32, #blocked>
@@ -3096,6 +2938,8 @@ module attributes {"triton_gpu.num-ctas" = 1 : i32, "triton_gpu.num-warps" = 4 :
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 127 -->
 
 此过程的支配条件、`takeBody` 移动语义及中间 IR 的边界见[select 与 if 合并校订](issues/ch13.md#ch13-tail-select)。
 
@@ -3118,17 +2962,12 @@ module attributes {"triton_gpu.target" = "cuda:80", "triton_gpu.num-ctas" = 1 : 
   tt.func public @dont_divide_0() attributes {noinline = false} {
     %zero = arith.constant dense<0.000000e+00> : tensor<16x1xf32, #mma>
     %cvt = triton_gpu.convert_layout %zero : tensor<16x1xf32, #mma> -> tensor<16x1xf32, #blocked>
-```
-
-<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 128 -->
-
-代码清单 13-58（续；与上段代码连续）：
-
-```mlir
     tt.return
   }
 }
 ```
+
+<!-- source: insider-compiler-ch11-ch13.pdf, PDF p. 128 -->
 
 执行以下命令，得到代码清单 13-59 所示结果：
 
