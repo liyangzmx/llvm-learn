@@ -1,0 +1,1237 @@
+{
+  "source": "/opt/llvm-project",
+  "build": "/opt/llvm-project/build",
+  "output": "/private/tmp/toy18-reviewed-verification",
+  "rebuilt": false,
+  "lab_blocks": 43,
+  "lit_counts": {
+    "PASS": 56
+  },
+  "checks": [
+    {
+      "name": "source-revision",
+      "command": [
+        "git",
+        "-C",
+        "/opt/llvm-project",
+        "rev-parse",
+        "HEAD"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "binary-version",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch7",
+        "--version"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [
+        "18.1.8"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-00-preflight-02",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "cmake --version\nninja --version\nclang++ --version\npython3 --version\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-00-preflight-04",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"$TOY_BUILD/bin/toyc-ch1\" --help\n\"$TOY_BUILD/bin/toyc-ch1\" /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy -emit=ast\n\"$TOY_BUILD/bin/toyc-ch2\" /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy -emit=mlir\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-00-preflight-05",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"$TOY_BUILD/bin/toyc-ch2\" /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy -emit=mlir 2> generated.mlir\n\"$TOY_BUILD/bin/toyc-ch2\" generated.mlir -emit=mlir 2> reparsed.mlir\ndiff -u generated.mlir reparsed.mlir\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-00-preflight-06",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "set -o pipefail\n\"$TOY_BUILD/bin/toyc-ch7\" /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir -emit=mlir -opt 2>&1 \\\n  | \"$TOY_BUILD/bin/FileCheck\" /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-00-preflight-08",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "test -x \"$TOY_BUILD/bin/toyc-ch1\"\ntest -x \"$TOY_BUILD/bin/FileCheck\"\n\"$TOY_BUILD/bin/toyc-ch1\" --help\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-00-preflight-09",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "rg -n 'mlirGen\\(VarDeclExprAST|create<ReshapeOp>|declare\\(' \\\n  /opt/llvm-project/mlir/examples/toy/Ch2/mlir/MLIRGen.cpp\nsed -n '379,405p' /opt/llvm-project/mlir/examples/toy/Ch2/mlir/MLIRGen.cpp\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-00-preflight-10",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "if \"$TOY_BUILD/bin/toyc-ch1\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy \\\n  -emit=ast 2> \"$TOY_LAB/ch1-ast.txt\"; then\n  sed -n '1,45p' \"$TOY_LAB/ch1-ast.txt\"\nelse\n  sed -n '1,80p' \"$TOY_LAB/ch1-ast.txt\"\nfi\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-01-from-source-to-ast-01",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "${TOY_BUILD}/bin/toyc-ch1 \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy \\\n  -emit=ast\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-01-from-source-to-ast-02",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "test -x \"$TOY_BUILD/bin/toyc-ch1\"\ntest -x \"$TOY_BUILD/bin/FileCheck\"\n\"$TOY_BUILD/bin/toyc-ch1\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy \\\n  -emit=ast 2> \"$TOY_LAB/ch1-ast.txt\"\nrg -n 'Proto|VarDecl|Literal|BinOp|Call|Return' \"$TOY_LAB/ch1-ast.txt\"\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-01-from-source-to-ast-03",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "set -o pipefail\n\"$TOY_BUILD/bin/toyc-ch1\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy -emit=ast 2>&1 \\\n  | \"$TOY_BUILD/bin/FileCheck\" /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-01-from-source-to-ast-04",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "cp /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy \"$TOY_LAB/ch1-edit.toy\"\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-02-first-mlir-01",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "${TOY_BUILD}/bin/mlir-tblgen -gen-op-decls \\\n  /opt/llvm-project/mlir/examples/toy/Ch2/include/toy/Ops.td \\\n  -I /opt/llvm-project/mlir/include\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-02-first-mlir-02",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"${TOY_BUILD}/bin/mlir-tblgen\" -gen-dialect-decls /opt/llvm-project/mlir/examples/toy/Ch2/include/toy/Ops.td -I /opt/llvm-project/mlir/include\n\"${TOY_BUILD}/bin/mlir-tblgen\" -gen-op-defs /opt/llvm-project/mlir/examples/toy/Ch2/include/toy/Ops.td -I /opt/llvm-project/mlir/include\n\"${TOY_BUILD}/bin/mlir-tblgen\" -gen-op-doc /opt/llvm-project/mlir/examples/toy/Ch2/include/toy/Ops.td -I /opt/llvm-project/mlir/include\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-02-first-mlir-03",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "${TOY_BUILD}/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy -emit=mlir\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-02-first-mlir-04",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "${TOY_BUILD}/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy -emit=mlir -mlir-print-debuginfo 2> codegen.mlir\n${TOY_BUILD}/bin/toyc-ch2 codegen.mlir -emit=mlir 2> roundtrip.mlir\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-02-first-mlir-05",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "test -x \"$TOY_BUILD/bin/toyc-ch2\"\n\"$TOY_BUILD/bin/toyc-ch2\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy \\\n  -emit=ast 2> \"$TOY_LAB/ch2-ast.txt\"\n\"$TOY_BUILD/bin/toyc-ch2\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy \\\n  -emit=mlir 2> \"$TOY_LAB/ch2-custom.mlir\"\n\"$TOY_BUILD/bin/toyc-ch2\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy \\\n  -emit=mlir -mlir-print-op-generic 2> \"$TOY_LAB/ch2-generic.mlir\"\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-02-first-mlir-06",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"$TOY_BUILD/bin/toyc-ch2\" \"$TOY_LAB/ch2-generic.mlir\" \\\n  -emit=mlir 2> \"$TOY_LAB/ch2-roundtrip.mlir\"\ndiff -u \"$TOY_LAB/ch2-custom.mlir\" \"$TOY_LAB/ch2-roundtrip.mlir\"\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-03-rewriting-01",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "${TOY_BUILD}/bin/toyc-ch3 \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch3/transpose_transpose.toy \\\n  -emit=mlir -opt\n\n${TOY_BUILD}/bin/toyc-ch3 \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy \\\n  -emit=mlir -opt\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-03-rewriting-02",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "test -x \"$TOY_BUILD/bin/toyc-ch3\"\ntest -x \"$TOY_BUILD/bin/mlir-tblgen\"\ntest -x \"$TOY_BUILD/bin/FileCheck\"\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-03-rewriting-03",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"$TOY_BUILD/bin/toyc-ch3\" \\\n  \"$TOY_ROOT/aiversion/examples/03-shared-transpose.mlir\" \\\n  -emit=mlir 2> \"$TOY_LAB/ch3-shared-before.mlir\"\n\"$TOY_BUILD/bin/toyc-ch3\" \\\n  \"$TOY_ROOT/aiversion/examples/03-shared-transpose.mlir\" \\\n  -emit=mlir -opt 2> \"$TOY_LAB/ch3-shared-after.mlir\"\nrg -n 'toy.transpose|toy.print' \"$TOY_LAB/ch3-shared-before.mlir\" \"$TOY_LAB/ch3-shared-after.mlir\"\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-03-rewriting-04",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"$TOY_BUILD/bin/toyc-ch3\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy \\\n  -emit=mlir 2> \"$TOY_LAB/ch3-reshape-before.mlir\"\n\"$TOY_BUILD/bin/toyc-ch3\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy \\\n  -emit=mlir -opt 2> \"$TOY_LAB/ch3-reshape-after.mlir\"\ndiff -u \"$TOY_LAB/ch3-reshape-before.mlir\" \"$TOY_LAB/ch3-reshape-after.mlir\"\n"
+      ],
+      "returncode": 1,
+      "expected": 1,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-03-rewriting-05",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "set -o pipefail\n\"$TOY_BUILD/bin/toyc-ch3\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy \\\n  -emit=mlir -opt 2>&1 \\\n  | \"$TOY_BUILD/bin/FileCheck\" /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-03-rewriting-06",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"$TOY_BUILD/bin/mlir-tblgen\" -gen-rewriters \\\n  /opt/llvm-project/mlir/examples/toy/Ch3/mlir/ToyCombine.td \\\n  -I /opt/llvm-project/mlir/include \\\n  -I /opt/llvm-project/mlir/examples/toy/Ch3/include \\\n  > \"$TOY_LAB/ch3-generated.inc\"\nrg -n -A 7 'struct (RedundantReshapeOptPattern|ReshapeReshapeOptPattern|FoldConstantReshapeOptPattern)' \\\n  \"$TOY_LAB/ch3-generated.inc\"\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-04-interfaces-and-shapes-01",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "${TOY_BUILD}/bin/toyc-ch4 \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/codegen.toy \\\n  -emit=mlir -opt\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-04-interfaces-and-shapes-02",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "test -x \"$TOY_BUILD/bin/toyc-ch4\"\ntest -x \"$TOY_BUILD/bin/FileCheck\"\n\"$TOY_BUILD/bin/toyc-ch4\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir \\\n  -emit=mlir 2> \"$TOY_LAB/ch4-no-opt.mlir\"\n\"$TOY_BUILD/bin/toyc-ch4\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir \\\n  -emit=mlir -opt 2> \"$TOY_LAB/ch4-opt.mlir\"\nrg -n 'toy.generic_call|toy.cast|tensor<\\*xf64>|toy.func private' \"$TOY_LAB/ch4-no-opt.mlir\"\nsed -n '1,45p' \"$TOY_LAB/ch4-opt.mlir\"\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-04-interfaces-and-shapes-03",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"$TOY_BUILD/bin/toyc-ch4\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir \\\n  -emit=mlir -opt -mlir-disable-threading -mlir-print-ir-after-all \\\n  2> \"$TOY_LAB/ch4-passes.log\"\nrg -n 'IR Dump|toy.generic_call|toy.cast|tensor<' \"$TOY_LAB/ch4-passes.log\"\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-04-interfaces-and-shapes-04",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "set -o pipefail\n\"$TOY_BUILD/bin/toyc-ch4\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir \\\n  -emit=mlir -opt 2>&1 \\\n  | \"$TOY_BUILD/bin/FileCheck\" /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-05-progressive-lowering-01",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "${TOY_BUILD}/bin/toyc-ch5 \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir \\\n  -emit=mlir-affine -opt\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-05-progressive-lowering-02",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"${TOY_BUILD}/bin/toyc-ch5\" /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir -emit=mlir-affine 2> affine-basic.mlir\n\"${TOY_BUILD}/bin/toyc-ch5\" /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir -emit=mlir-affine -opt 2> affine-opt.mlir\ndiff -u affine-basic.mlir affine-opt.mlir\n"
+      ],
+      "returncode": 1,
+      "expected": 1,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-05-progressive-lowering-03",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "test -x \"$TOY_BUILD/bin/toyc-ch5\"\n\"$TOY_BUILD/bin/toyc-ch5\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir \\\n  -emit=mlir-affine 2> \"$TOY_LAB/ch5-basic.mlir\"\n\"$TOY_BUILD/bin/toyc-ch5\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir \\\n  -emit=mlir-affine -opt 2> \"$TOY_LAB/ch5-fused.mlir\"\nrg -n 'memref.alloc|memref.dealloc|affine.for|affine.load|affine.store|arith.mulf|toy.print' \\\n  \"$TOY_LAB/ch5-basic.mlir\" \"$TOY_LAB/ch5-fused.mlir\"\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-05-progressive-lowering-04",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"$TOY_BUILD/bin/toyc-ch5\" \\\n  \"$TOY_ROOT/aiversion/examples/05-live-reshape.toy\" \\\n  -emit=mlir -opt 2> \"$TOY_LAB/ch5-live-reshape.mlir\"\nrg -n 'toy.transpose|toy.reshape|toy.print' \"$TOY_LAB/ch5-live-reshape.mlir\"\n\nif \"$TOY_BUILD/bin/toyc-ch5\" \\\n  \"$TOY_ROOT/aiversion/examples/05-live-reshape.toy\" \\\n  -emit=mlir-affine 2> \"$TOY_LAB/ch5-reshape-error.txt\"; then\n  printf '降级成功：请核对版本或规则是否已变化。\\n'\nelse\n  sed -n '1,90p' \"$TOY_LAB/ch5-reshape-error.txt\"\nfi\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-06-llvm-and-jit-01",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=jit\n${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.toy -emit=mlir\n${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.toy -emit=mlir-affine\n${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.toy -emit=mlir-llvm\n${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.toy -emit=llvm\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-06-llvm-and-jit-02",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/llvm-lowering.mlir -emit=mlir-affine\n\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/llvm-lowering.mlir -emit=mlir-llvm\n\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/llvm-lowering.mlir -emit=llvm -opt\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-06-llvm-and-jit-03",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=mlir-affine 2> stage-affine.mlir\n\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=mlir-llvm 2> stage-llvm.mlir\n\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=llvm 2> stage.ll\n\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=jit > result.txt 2> jit-errors.txt\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-06-llvm-and-jit-04",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "test -x \"$TOY_BUILD/bin/toyc-ch6\"\nfor stage in mlir mlir-affine mlir-llvm llvm; do\n  if ! \"$TOY_BUILD/bin/toyc-ch6\" \\\n    /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy \\\n    \"-emit=$stage\" 2> \"$TOY_LAB/ch6-$stage.txt\"; then\n    printf '失败阶段：%s\\n' \"$stage\"\n    break\n  fi\ndone\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-06-llvm-and-jit-05",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"$TOY_BUILD/bin/toyc-ch6\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy \\\n  -emit=llvm -opt 2> \"$TOY_LAB/ch6-llvm-opt.txt\"\ndiff -u \"$TOY_LAB/ch6-llvm.txt\" \"$TOY_LAB/ch6-llvm-opt.txt\"\n"
+      ],
+      "returncode": 1,
+      "expected": 1,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-06-llvm-and-jit-06",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "if \"$TOY_BUILD/bin/toyc-ch6\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy \\\n  -emit=jit > \"$TOY_LAB/ch6-result.txt\" 2> \"$TOY_LAB/ch6-jit-errors.txt\"; then\n  sed -n '1,5p' \"$TOY_LAB/ch6-result.txt\"\nelse\n  sed -n '1,90p' \"$TOY_LAB/ch6-jit-errors.txt\"\nfi\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-07-custom-types-01",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "${TOY_BUILD}/bin/toyc-ch7 \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=mlir\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-07-custom-types-02",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "${TOY_BUILD}/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir -emit=mlir -opt\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-07-custom-types-03",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"${TOY_BUILD}/bin/toyc-ch7\" /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir -emit=mlir 2> struct-before.mlir\n\"${TOY_BUILD}/bin/toyc-ch7\" /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir -emit=mlir -opt 2> struct-after.mlir\ndiff -u struct-before.mlir struct-after.mlir\n"
+      ],
+      "returncode": 1,
+      "expected": 1,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-07-custom-types-04",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "test -x \"$TOY_BUILD/bin/toyc-ch7\"\ntest -x \"$TOY_BUILD/bin/FileCheck\"\n\"$TOY_BUILD/bin/toyc-ch7\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=ast 2> \"$TOY_LAB/ch7-ast.txt\"\n\"$TOY_BUILD/bin/toyc-ch7\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=mlir 2> \"$TOY_LAB/ch7-raw.mlir\"\n\"$TOY_BUILD/bin/toyc-ch7\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=mlir -opt 2> \"$TOY_LAB/ch7-opt.mlir\"\n\"$TOY_BUILD/bin/toyc-ch7\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=mlir-affine 2> \"$TOY_LAB/ch7-affine.mlir\"\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-07-custom-types-05",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "set -o pipefail\n\"$TOY_BUILD/bin/toyc-ch7\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=mlir -opt 2>&1 \\\n  | \"$TOY_BUILD/bin/FileCheck\" \\\n    /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy --check-prefix=OPT\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "lab-07-custom-types-06",
+      "command": [
+        "bash",
+        "-e",
+        "-o",
+        "pipefail",
+        "-c",
+        "\"$TOY_BUILD/bin/toyc-ch7\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=jit > \"$TOY_LAB/ch7-result.txt\" 2> \"$TOY_LAB/ch7-errors.txt\"\n"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "numeric-ch6-jit.toy-opt0",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch6",
+        "/opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy",
+        "-emit=jit"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": "1.000000 2.000000 \n3.000000 4.000000 \n",
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "numeric-ch6-llvm-lowering.mlir-opt0",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch6",
+        "/opt/llvm-project/mlir/test/Examples/Toy/Ch6/llvm-lowering.mlir",
+        "-emit=jit"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": "1.000000 16.000000 \n4.000000 25.000000 \n9.000000 36.000000 \n",
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "numeric-ch6-jit.toy-opt1",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch6",
+        "/opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy",
+        "-emit=jit",
+        "-opt"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": "1.000000 2.000000 \n3.000000 4.000000 \n",
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "numeric-ch6-llvm-lowering.mlir-opt1",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch6",
+        "/opt/llvm-project/mlir/test/Examples/Toy/Ch6/llvm-lowering.mlir",
+        "-emit=jit",
+        "-opt"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": "1.000000 16.000000 \n4.000000 25.000000 \n9.000000 36.000000 \n",
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "numeric-ch7-jit.toy-opt0",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch7",
+        "/opt/llvm-project/mlir/test/Examples/Toy/Ch7/jit.toy",
+        "-emit=jit"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": "1.000000 2.000000 \n3.000000 4.000000 \n",
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "numeric-ch7-llvm-lowering.mlir-opt0",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch7",
+        "/opt/llvm-project/mlir/test/Examples/Toy/Ch7/llvm-lowering.mlir",
+        "-emit=jit"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": "1.000000 16.000000 \n4.000000 25.000000 \n9.000000 36.000000 \n",
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "numeric-struct-opt0",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch7",
+        "/opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy",
+        "-emit=jit"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": "1.000000 16.000000 \n4.000000 25.000000 \n9.000000 36.000000 \n",
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "numeric-ch7-jit.toy-opt1",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch7",
+        "/opt/llvm-project/mlir/test/Examples/Toy/Ch7/jit.toy",
+        "-emit=jit",
+        "-opt"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": "1.000000 2.000000 \n3.000000 4.000000 \n",
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "numeric-ch7-llvm-lowering.mlir-opt1",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch7",
+        "/opt/llvm-project/mlir/test/Examples/Toy/Ch7/llvm-lowering.mlir",
+        "-emit=jit",
+        "-opt"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": "1.000000 16.000000 \n4.000000 25.000000 \n9.000000 36.000000 \n",
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "numeric-struct-opt1",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch7",
+        "/opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy",
+        "-emit=jit",
+        "-opt"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": "1.000000 16.000000 \n4.000000 25.000000 \n9.000000 36.000000 \n",
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "upstream-lit",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/opt/llvm-project/build/bin/llvm-lit",
+        "-v",
+        "-j",
+        "2",
+        "--output",
+        "/private/tmp/toy18-reviewed-verification/lit-results.json",
+        "/private/tmp/toy18-reviewed-verification/lit"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "snippet-ch1-01",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch1",
+        "/private/tmp/toy18-reviewed-verification/snippet-ch1-01.toy",
+        "-emit=ast"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "snippet-ch1-02",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch1",
+        "/private/tmp/toy18-reviewed-verification/snippet-ch1-02.toy",
+        "-emit=ast"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "snippet-ch2-02",
+      "command": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/private/tmp/toy18-reviewed-verification/snippet-ch2-02.mlir",
+        "-allow-unregistered-dialect"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [
+        "\"toy.print\"()"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "snippet-ch2-05",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch2",
+        "/private/tmp/toy18-reviewed-verification/snippet-ch2-05.mlir",
+        "-emit=mlir"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "snippet-ch2-06",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch2",
+        "/private/tmp/toy18-reviewed-verification/snippet-ch2-06.toy",
+        "-emit=mlir"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "snippet-ch2-07",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch2",
+        "/private/tmp/toy18-reviewed-verification/snippet-ch2-07.mlir",
+        "-emit=mlir"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "snippet-ch2-08",
+      "command": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/private/tmp/toy18-reviewed-verification/snippet-ch2-08.mlir",
+        "-allow-unregistered-dialect"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "snippet-ch3-01",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch3",
+        "/private/tmp/toy18-reviewed-verification/snippet-ch3-01.mlir",
+        "-emit=mlir"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "snippet-ch3-02",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch3",
+        "/private/tmp/toy18-reviewed-verification/snippet-ch3-02.toy",
+        "-emit=mlir"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "snippet-ch4-01",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch4",
+        "/private/tmp/toy18-reviewed-verification/snippet-ch4-01.mlir",
+        "-emit=mlir"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "snippet-ch6-01",
+      "command": [
+        "/opt/llvm-project/build/bin/mlir-opt",
+        "/private/tmp/toy18-reviewed-verification/snippet-ch6-01.mlir",
+        "-allow-unregistered-dialect"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "snippet-ch7-01",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch7",
+        "/private/tmp/toy18-reviewed-verification/snippet-ch7-01.toy",
+        "-emit=mlir"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "shared-transpose",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch3",
+        "/opt/coding/mlir-toy/mlir/toy/aiversion/examples/03-shared-transpose.mlir",
+        "-emit=mlir",
+        "-opt"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "live-reshape-mlir",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch5",
+        "/opt/coding/mlir-toy/mlir/toy/aiversion/examples/05-live-reshape.toy",
+        "-emit=mlir",
+        "-opt"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [
+        "toy.reshape"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "live-reshape-rejected",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch5",
+        "/opt/coding/mlir-toy/mlir/toy/aiversion/examples/05-live-reshape.toy",
+        "-emit=mlir-affine"
+      ],
+      "returncode": 4,
+      "expected": 4,
+      "expected_stdout": null,
+      "contains": [
+        "failed to legalize operation 'toy.reshape'"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "print-scalar",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch6",
+        "/private/tmp/toy18-reviewed-verification/scalar.toy",
+        "-emit=jit"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": "5.500000 ",
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "print-vector",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch6",
+        "/private/tmp/toy18-reviewed-verification/vector.toy",
+        "-emit=jit"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": "1.000000 2.000000 3.000000 ",
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "precedence",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch1",
+        "/private/tmp/toy18-reviewed-verification/precedence.toy",
+        "-emit=ast"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "known-error-propagation-gap",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch2",
+        "/private/tmp/toy18-reviewed-verification/unknown-variable.toy",
+        "-emit=mlir"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [
+        "unknown variable 'missing'",
+        "toy.return"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "name": "known-shape-validation-gap",
+      "command": [
+        "/opt/llvm-project/build/bin/toyc-ch4",
+        "/private/tmp/toy18-reviewed-verification/mismatched-shapes.toy",
+        "-emit=mlir",
+        "-opt"
+      ],
+      "returncode": 0,
+      "expected": 0,
+      "expected_stdout": null,
+      "contains": [
+        "toy.mul",
+        "tensor<2x3xf64>",
+        "tensor<3x2xf64>"
+      ],
+      "absent": [
+        "error:"
+      ],
+      "passed": true
+    }
+  ],
+  "passed": true
+}

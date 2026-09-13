@@ -1,0 +1,346 @@
+{
+  "__version__": [
+    18,
+    1,
+    8
+  ],
+  "elapsed": 1.9343361854553223,
+  "tests": [
+    {
+      "code": "PASS",
+      "elapsed": 0.011811017990112305,
+      "name": "MLIR-Toy-existing-build :: Ch1/ast.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch1 /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch1 /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.011017322540283203,
+      "name": "MLIR-Toy-existing-build :: Ch1/empty.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch1 /opt/llvm-project/mlir/test/Examples/Toy/Ch1/empty.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch1/empty.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch1 /opt/llvm-project/mlir/test/Examples/Toy/Ch1/empty.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch1/empty.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.013750791549682617,
+      "name": "MLIR-Toy-existing-build :: Ch2/ast.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/ast.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch2/ast.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/ast.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch2/ast.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.013971090316772461,
+      "name": "MLIR-Toy-existing-build :: Ch2/codegen.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy -emit=mlir 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy -emit=mlir\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.011030912399291992,
+      "name": "MLIR-Toy-existing-build :: Ch2/empty.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/empty.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch2/empty.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/empty.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch2/empty.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.019843101501464844,
+      "name": "MLIR-Toy-existing-build :: Ch2/invalid.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/not /opt/llvm-project/build/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/invalid.mlir -emit=mlir 2>&1\n# executed command: /opt/llvm-project/build/bin/not /opt/llvm-project/build/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/invalid.mlir -emit=mlir\n# .---command stdout------------\n# | loc(\"/opt/llvm-project/mlir/test/Examples/Toy/Ch2/invalid.mlir\":8:8): error: 'toy.print' op requires zero results\n# | Error can't load file /opt/llvm-project/mlir/test/Examples/Toy/Ch2/invalid.mlir\n# `-----------------------------\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.011531829833984375,
+      "name": "MLIR-Toy-existing-build :: Ch2/scalar.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/scalar.toy -emit=mlir 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch2/scalar.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/scalar.toy -emit=mlir\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch2/scalar.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.015517950057983398,
+      "name": "MLIR-Toy-existing-build :: Ch3/ast.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/ast.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch3/ast.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/ast.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch3/ast.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.01641702651977539,
+      "name": "MLIR-Toy-existing-build :: Ch3/codegen.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/codegen.toy -emit=mlir 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch3/codegen.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/codegen.toy -emit=mlir\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch3/codegen.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.014756917953491211,
+      "name": "MLIR-Toy-existing-build :: Ch3/empty.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/empty.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch3/empty.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/empty.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch3/empty.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.01946282386779785,
+      "name": "MLIR-Toy-existing-build :: Ch3/invalid.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/not /opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/invalid.mlir -emit=mlir 2>&1\n# executed command: /opt/llvm-project/build/bin/not /opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/invalid.mlir -emit=mlir\n# .---command stdout------------\n# | /opt/llvm-project/mlir/test/Examples/Toy/Ch3/invalid.mlir:8:8: error: 'toy.print' op requires zero results\n# |   %0 = \"toy.print\"()  : () -> tensor<2x3xf64>\n# |        ^\n# | /opt/llvm-project/mlir/test/Examples/Toy/Ch3/invalid.mlir:8:8: note: see current operation: %0 = \"toy.print\"() : () -> tensor<2x3xf64>\n# | Error can't load file /opt/llvm-project/mlir/test/Examples/Toy/Ch3/invalid.mlir\n# `-----------------------------\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.016414165496826172,
+      "name": "MLIR-Toy-existing-build :: Ch3/scalar.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/scalar.toy -emit=mlir 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch3/scalar.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/scalar.toy -emit=mlir\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch3/scalar.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.016694068908691406,
+      "name": "MLIR-Toy-existing-build :: Ch3/transpose_transpose.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/transpose_transpose.toy -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch3/transpose_transpose.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/transpose_transpose.toy -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch3/transpose_transpose.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.015249013900756836,
+      "name": "MLIR-Toy-existing-build :: Ch3/trivial_reshape.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch3 /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.016427993774414062,
+      "name": "MLIR-Toy-existing-build :: Ch4/ast.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/ast.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/ast.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/ast.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/ast.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.01702094078063965,
+      "name": "MLIR-Toy-existing-build :: Ch4/codegen.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/codegen.toy -emit=mlir 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/codegen.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/codegen.toy -emit=mlir\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/codegen.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.014770030975341797,
+      "name": "MLIR-Toy-existing-build :: Ch4/empty.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/empty.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/empty.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/empty.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/empty.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.018805980682373047,
+      "name": "MLIR-Toy-existing-build :: Ch4/invalid.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/not /opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/invalid.mlir -emit=mlir 2>&1\n# executed command: /opt/llvm-project/build/bin/not /opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/invalid.mlir -emit=mlir\n# .---command stdout------------\n# | /opt/llvm-project/mlir/test/Examples/Toy/Ch4/invalid.mlir:8:8: error: 'toy.print' op requires zero results\n# |   %0 = \"toy.print\"()  : () -> tensor<2x3xf64>\n# |        ^\n# | /opt/llvm-project/mlir/test/Examples/Toy/Ch4/invalid.mlir:8:8: note: see current operation: %0 = \"toy.print\"() : () -> tensor<2x3xf64>\n# | Error can't load file /opt/llvm-project/mlir/test/Examples/Toy/Ch4/invalid.mlir\n# `-----------------------------\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.015460014343261719,
+      "name": "MLIR-Toy-existing-build :: Ch4/scalar.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/scalar.toy -emit=mlir 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/scalar.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/scalar.toy -emit=mlir\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/scalar.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.018318891525268555,
+      "name": "MLIR-Toy-existing-build :: Ch4/shape_inference.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir\n# executed command: /opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.017199039459228516,
+      "name": "MLIR-Toy-existing-build :: Ch4/transpose_transpose.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/transpose_transpose.toy -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/transpose_transpose.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/transpose_transpose.toy -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/transpose_transpose.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.01701974868774414,
+      "name": "MLIR-Toy-existing-build :: Ch4/trivial_reshape.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/trivial_reshape.toy -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/trivial_reshape.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch4 /opt/llvm-project/mlir/test/Examples/Toy/Ch4/trivial_reshape.toy -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch4/trivial_reshape.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.07291913032531738,
+      "name": "MLIR-Toy-existing-build :: Ch5/affine-lowering.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir -emit=mlir-affine 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir\n# executed command: /opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir -emit=mlir-affine\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir\n# RUN: at line 2\n/opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir -emit=mlir-affine -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir --check-prefix=OPT\n# executed command: /opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir -emit=mlir-affine -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir --check-prefix=OPT\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.023939847946166992,
+      "name": "MLIR-Toy-existing-build :: Ch5/ast.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/ast.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/ast.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/ast.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/ast.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.025207996368408203,
+      "name": "MLIR-Toy-existing-build :: Ch5/codegen.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/codegen.toy -emit=mlir 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/codegen.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/codegen.toy -emit=mlir\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/codegen.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.022958040237426758,
+      "name": "MLIR-Toy-existing-build :: Ch5/empty.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/empty.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/empty.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/empty.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/empty.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.027359962463378906,
+      "name": "MLIR-Toy-existing-build :: Ch5/invalid.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/not /opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/invalid.mlir -emit=mlir 2>&1\n# executed command: /opt/llvm-project/build/bin/not /opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/invalid.mlir -emit=mlir\n# .---command stdout------------\n# | /opt/llvm-project/mlir/test/Examples/Toy/Ch5/invalid.mlir:8:8: error: 'toy.print' op requires zero results\n# |   %0 = \"toy.print\"()  : () -> tensor<2x3xf64>\n# |        ^\n# | /opt/llvm-project/mlir/test/Examples/Toy/Ch5/invalid.mlir:8:8: note: see current operation: %0 = \"toy.print\"() : () -> tensor<2x3xf64>\n# | Error can't load file /opt/llvm-project/mlir/test/Examples/Toy/Ch5/invalid.mlir\n# `-----------------------------\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.023726224899291992,
+      "name": "MLIR-Toy-existing-build :: Ch5/scalar.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/scalar.toy -emit=mlir 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/scalar.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/scalar.toy -emit=mlir\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/scalar.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.028030872344970703,
+      "name": "MLIR-Toy-existing-build :: Ch5/shape_inference.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/shape_inference.mlir -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/shape_inference.mlir\n# executed command: /opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/shape_inference.mlir -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/shape_inference.mlir\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.025762081146240234,
+      "name": "MLIR-Toy-existing-build :: Ch5/transpose_transpose.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/transpose_transpose.toy -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/transpose_transpose.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/transpose_transpose.toy -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/transpose_transpose.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.025211095809936523,
+      "name": "MLIR-Toy-existing-build :: Ch5/trivial_reshape.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/trivial_reshape.toy -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/trivial_reshape.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch5 /opt/llvm-project/mlir/test/Examples/Toy/Ch5/trivial_reshape.toy -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch5/trivial_reshape.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.21405696868896484,
+      "name": "MLIR-Toy-existing-build :: Ch6/affine-lowering.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/affine-lowering.mlir -emit=mlir-affine 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/affine-lowering.mlir\n# executed command: /opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/affine-lowering.mlir -emit=mlir-affine\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/affine-lowering.mlir\n# RUN: at line 2\n/opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/affine-lowering.mlir -emit=mlir-affine -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/affine-lowering.mlir --check-prefix=OPT\n# executed command: /opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/affine-lowering.mlir -emit=mlir-affine -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/affine-lowering.mlir --check-prefix=OPT\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09356307983398438,
+      "name": "MLIR-Toy-existing-build :: Ch6/ast.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/ast.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/ast.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/ast.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/ast.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09321331977844238,
+      "name": "MLIR-Toy-existing-build :: Ch6/codegen.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.toy -emit=mlir 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.toy -emit=mlir\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09434008598327637,
+      "name": "MLIR-Toy-existing-build :: Ch6/empty.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/empty.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/empty.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/empty.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/empty.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09777283668518066,
+      "name": "MLIR-Toy-existing-build :: Ch6/invalid.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/not /opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/invalid.mlir -emit=mlir 2>&1\n# executed command: /opt/llvm-project/build/bin/not /opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/invalid.mlir -emit=mlir\n# .---command stdout------------\n# | loc(\"/opt/llvm-project/mlir/test/Examples/Toy/Ch6/invalid.mlir\":8:8): error: 'toy.print' op requires zero results\n# | Error can't load file /opt/llvm-project/mlir/test/Examples/Toy/Ch6/invalid.mlir\n# `-----------------------------\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.16962981224060059,
+      "name": "MLIR-Toy-existing-build :: Ch6/jit.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch6 -emit=jit /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch6 -emit=jit /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy\n# .---command stdout------------\n# | 1.000000 2.000000 \n# | 3.000000 4.000000 \n# `-----------------------------\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.172821044921875,
+      "name": "MLIR-Toy-existing-build :: Ch6/llvm-lowering.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/llvm-lowering.mlir -emit=llvm -opt\n# executed command: /opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/llvm-lowering.mlir -emit=llvm -opt\n# .---command stderr------------\n# | ; ModuleID = 'LLVMDialectModule'\n# | source_filename = \"LLVMDialectModule\"\n# | target datalayout = \"e-m:o-i64:64-i128:128-n32:64-S128\"\n# | target triple = \"arm64-apple-darwin24.6.0\"\n# | \n# | @frmt_spec = internal constant [4 x i8] c\"%f \\00\"\n# | \n# | ; Function Attrs: nofree nounwind\n# | declare !dbg !3 noundef i32 @printf(ptr nocapture noundef readonly, ...) local_unnamed_addr #0\n# | \n# | ; Function Attrs: nofree nounwind\n# | define void @main() local_unnamed_addr #0 !dbg !6 {\n# | .preheader3:\n# |   %0 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @frmt_spec, double 1.000000e+00), !dbg !7\n# |   %1 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @frmt_spec, double 1.600000e+01), !dbg !7\n# |   %putchar = tail call i32 @putchar(i32 10), !dbg !7\n# |   %2 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @frmt_spec, double 4.000000e+00), !dbg !7\n# |   %3 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @frmt_spec, double 2.500000e+01), !dbg !7\n# |   %putchar.1 = tail call i32 @putchar(i32 10), !dbg !7\n# |   %4 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @frmt_spec, double 9.000000e+00), !dbg !7\n# |   %5 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @frmt_spec, double 3.600000e+01), !dbg !7\n# |   %putchar.2 = tail call i32 @putchar(i32 10), !dbg !7\n# |   ret void, !dbg !8\n# | }\n# | \n# | ; Function Attrs: nofree nounwind\n# | declare noundef i32 @putchar(i32 noundef) local_unnamed_addr #0\n# | \n# | attributes #0 = { nofree nounwind }\n# | \n# | !llvm.module.flags = !{!0}\n# | !llvm.dbg.cu = !{!1}\n# | \n# | !0 = !{i32 2, !\"Debug Info Version\", i32 3}\n# | !1 = distinct !DICompileUnit(language: DW_LANG_C, file: !2, producer: \"MLIR\", isOptimized: true, runtimeVersion: 0, emissionKind: LineTablesOnly)\n# | !2 = !DIFile(filename: \"llvm-lowering.mlir\", directory: \"/opt/llvm-project/mlir/test/Examples/Toy/Ch6\")\n# | !3 = !DISubprogram(name: \"printf\", linkageName: \"printf\", scope: !2, file: !2, type: !4, spFlags: DISPFlagOptimized)\n# | !4 = !DISubroutineType(cc: DW_CC_normal, types: !5)\n# | !5 = !{}\n# | !6 = distinct !DISubprogram(name: \"main\", linkageName: \"main\", scope: !2, file: !2, line: 3, type: !4, scopeLine: 1, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1)\n# | !7 = !DILocation(line: 7, column: 3, scope: !6)\n# | !8 = !DILocation(line: 8, column: 3, scope: !6)\n# | \n# `-----------------------------\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09479093551635742,
+      "name": "MLIR-Toy-existing-build :: Ch6/scalar.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/scalar.toy -emit=mlir 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/scalar.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/scalar.toy -emit=mlir\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/scalar.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09815311431884766,
+      "name": "MLIR-Toy-existing-build :: Ch6/shape_inference.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/shape_inference.mlir -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/shape_inference.mlir\n# executed command: /opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/shape_inference.mlir -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/shape_inference.mlir\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09669899940490723,
+      "name": "MLIR-Toy-existing-build :: Ch6/transpose_transpose.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/transpose_transpose.toy -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/transpose_transpose.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/transpose_transpose.toy -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/transpose_transpose.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09485888481140137,
+      "name": "MLIR-Toy-existing-build :: Ch6/trivial_reshape.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/trivial_reshape.toy -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/trivial_reshape.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/trivial_reshape.toy -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch6/trivial_reshape.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.2132730484008789,
+      "name": "MLIR-Toy-existing-build :: Ch7/affine-lowering.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/affine-lowering.mlir -emit=mlir-affine 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/affine-lowering.mlir\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/affine-lowering.mlir -emit=mlir-affine\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/affine-lowering.mlir\n# RUN: at line 2\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/affine-lowering.mlir -emit=mlir-affine -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/affine-lowering.mlir --check-prefix=OPT\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/affine-lowering.mlir -emit=mlir-affine -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/affine-lowering.mlir --check-prefix=OPT\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09360098838806152,
+      "name": "MLIR-Toy-existing-build :: Ch7/ast.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/ast.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/ast.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/ast.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/ast.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09277224540710449,
+      "name": "MLIR-Toy-existing-build :: Ch7/codegen.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/codegen.toy -emit=mlir 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/codegen.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/codegen.toy -emit=mlir\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/codegen.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.08999204635620117,
+      "name": "MLIR-Toy-existing-build :: Ch7/empty.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/empty.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/empty.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/empty.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/empty.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09366703033447266,
+      "name": "MLIR-Toy-existing-build :: Ch7/invalid.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/not /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/invalid.mlir -emit=mlir 2>&1\n# executed command: /opt/llvm-project/build/bin/not /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/invalid.mlir -emit=mlir\n# .---command stdout------------\n# | loc(\"/opt/llvm-project/mlir/test/Examples/Toy/Ch7/invalid.mlir\":8:8): error: 'toy.print' op requires zero results\n# | Error can't load file /opt/llvm-project/mlir/test/Examples/Toy/Ch7/invalid.mlir\n# `-----------------------------\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.1363229751586914,
+      "name": "MLIR-Toy-existing-build :: Ch7/jit.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch7 -emit=jit /opt/llvm-project/mlir/test/Examples/Toy/Ch7/jit.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 -emit=jit /opt/llvm-project/mlir/test/Examples/Toy/Ch7/jit.toy\n# .---command stdout------------\n# | 1.000000 2.000000 \n# | 3.000000 4.000000 \n# `-----------------------------\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.1398777961730957,
+      "name": "MLIR-Toy-existing-build :: Ch7/llvm-lowering.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/llvm-lowering.mlir -emit=llvm -opt\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/llvm-lowering.mlir -emit=llvm -opt\n# .---command stderr------------\n# | ; ModuleID = 'LLVMDialectModule'\n# | source_filename = \"LLVMDialectModule\"\n# | target datalayout = \"e-m:o-i64:64-i128:128-n32:64-S128\"\n# | target triple = \"arm64-apple-darwin24.6.0\"\n# | \n# | @frmt_spec = internal constant [4 x i8] c\"%f \\00\"\n# | \n# | ; Function Attrs: nofree nounwind\n# | declare !dbg !3 noundef i32 @printf(ptr nocapture noundef readonly, ...) local_unnamed_addr #0\n# | \n# | ; Function Attrs: nofree nounwind\n# | define void @main() local_unnamed_addr #0 !dbg !6 {\n# | .preheader3:\n# |   %0 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @frmt_spec, double 1.000000e+00), !dbg !7\n# |   %1 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @frmt_spec, double 1.600000e+01), !dbg !7\n# |   %putchar = tail call i32 @putchar(i32 10), !dbg !7\n# |   %2 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @frmt_spec, double 4.000000e+00), !dbg !7\n# |   %3 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @frmt_spec, double 2.500000e+01), !dbg !7\n# |   %putchar.1 = tail call i32 @putchar(i32 10), !dbg !7\n# |   %4 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @frmt_spec, double 9.000000e+00), !dbg !7\n# |   %5 = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @frmt_spec, double 3.600000e+01), !dbg !7\n# |   %putchar.2 = tail call i32 @putchar(i32 10), !dbg !7\n# |   ret void, !dbg !8\n# | }\n# | \n# | ; Function Attrs: nofree nounwind\n# | declare noundef i32 @putchar(i32 noundef) local_unnamed_addr #0\n# | \n# | attributes #0 = { nofree nounwind }\n# | \n# | !llvm.module.flags = !{!0}\n# | !llvm.dbg.cu = !{!1}\n# | \n# | !0 = !{i32 2, !\"Debug Info Version\", i32 3}\n# | !1 = distinct !DICompileUnit(language: DW_LANG_C, file: !2, producer: \"MLIR\", isOptimized: true, runtimeVersion: 0, emissionKind: LineTablesOnly)\n# | !2 = !DIFile(filename: \"llvm-lowering.mlir\", directory: \"/opt/llvm-project/mlir/test/Examples/Toy/Ch7\")\n# | !3 = !DISubprogram(name: \"printf\", linkageName: \"printf\", scope: !2, file: !2, type: !4, spFlags: DISPFlagOptimized)\n# | !4 = !DISubroutineType(cc: DW_CC_normal, types: !5)\n# | !5 = !{}\n# | !6 = distinct !DISubprogram(name: \"main\", linkageName: \"main\", scope: !2, file: !2, line: 3, type: !4, scopeLine: 1, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1)\n# | !7 = !DILocation(line: 7, column: 3, scope: !6)\n# | !8 = !DILocation(line: 8, column: 3, scope: !6)\n# | \n# `-----------------------------\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09308791160583496,
+      "name": "MLIR-Toy-existing-build :: Ch7/scalar.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/scalar.toy -emit=mlir 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/scalar.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/scalar.toy -emit=mlir\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/scalar.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.0946340560913086,
+      "name": "MLIR-Toy-existing-build :: Ch7/shape_inference.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/shape_inference.mlir -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/shape_inference.mlir\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/shape_inference.mlir -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/shape_inference.mlir\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09164786338806152,
+      "name": "MLIR-Toy-existing-build :: Ch7/struct-ast.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-ast.toy -emit=ast 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-ast.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-ast.toy -emit=ast\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-ast.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.1877119541168213,
+      "name": "MLIR-Toy-existing-build :: Ch7/struct-codegen.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy -emit=mlir 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy -emit=mlir\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy\n# RUN: at line 2\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy --check-prefix=OPT\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy --check-prefix=OPT\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09378290176391602,
+      "name": "MLIR-Toy-existing-build :: Ch7/struct-opt.mlir",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.09348416328430176,
+      "name": "MLIR-Toy-existing-build :: Ch7/transpose_transpose.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/transpose_transpose.toy -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/transpose_transpose.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/transpose_transpose.toy -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/transpose_transpose.toy\n\n--\n"
+    },
+    {
+      "code": "PASS",
+      "elapsed": 0.0921330451965332,
+      "name": "MLIR-Toy-existing-build :: Ch7/trivial_reshape.toy",
+      "output": "Exit Code: 0\n\nCommand Output (stdout):\n--\n# RUN: at line 1\n/opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/trivial_reshape.toy -emit=mlir -opt 2>&1 | /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/trivial_reshape.toy\n# executed command: /opt/llvm-project/build/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/trivial_reshape.toy -emit=mlir -opt\n# executed command: /opt/llvm-project/build/bin/FileCheck /opt/llvm-project/mlir/test/Examples/Toy/Ch7/trivial_reshape.toy\n\n--\n"
+    }
+  ]
+}

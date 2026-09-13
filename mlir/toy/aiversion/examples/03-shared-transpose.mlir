@@ -1,7 +1,7 @@
 // Teaching example: the inner transpose has another live user.
 // Inspect with toyc-ch3 -emit=mlir, then with -emit=mlir -opt.
 // Expected from source semantics: remove the outer transpose only.
-// This example has not been executed in this documentation task.
+// Verified with LLVM 18.1.8 on 2026-09-13; see ../RUNTIME-VALIDATION.md.
 module {
   toy.func @main() {
     %a = toy.constant dense<[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]> : tensor<2x3xf64>

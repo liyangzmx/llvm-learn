@@ -363,7 +363,7 @@ Print pattern 读取 adaptor 的输入并更新操作后：
 
 但融合不是把两个相邻 for 的文本拼接。若第二个循环依赖第一个循环尚未计算的位置，或存在别名与副作用，改变顺序就可能改变结果。通用 pass 的价值在于利用依赖条件判断能否这样改。示例有望删除中间 T，但不能承诺所有输入和所有循环都被融合，也不能承诺每次 dump 的排列顺序完全相同。
 
-可比较同一个本地测试的两份 IR；这是待构建后执行的实验命令：
+可用已有工具比较同一个本地测试的两份 IR：
 
 ```bash
 "${TOY_BUILD}/bin/toyc-ch5" /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir -emit=mlir-affine 2> affine-basic.mlir
@@ -454,7 +454,7 @@ struct PrintOpLowering : public OpConversionPattern<toy::PrintOp> {
 ### 14.3 对照未融合与融合后的结构
 
 ```bash
-cmake --build "$TOY_BUILD" --target toyc-ch5 --parallel 2
+test -x "$TOY_BUILD/bin/toyc-ch5"
 "$TOY_BUILD/bin/toyc-ch5" \
   /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir \
   -emit=mlir-affine 2> "$TOY_LAB/ch5-basic.mlir"
@@ -494,4 +494,4 @@ fi
 
 按当前源码预期，第一条生成优化后的 Toy IR，仍能看到活跃 reshape；第二条在合法化 toy.reshape 时失败。该输入不是故意写坏 Toy 语法，而是触及当前后端未实现的能力。
 
-若只是将 target 改为允许所有 Toy 操作，conversion 也许不再报错，但下一阶段仍不知道如何执行残留的 reshape；这不是正确实现。此例由教材新增，本轮没有执行它，诊断完整措辞以实际运行输出为准。
+若只是将 target 改为允许所有 Toy 操作，conversion 也许不再报错，但下一阶段仍不知道如何执行残留的 reshape；这不是正确实现。2026-09-13 实测：Toy IR 生成成功；Affine 降级退出码为 4，诊断含 `failed to legalize operation 'toy.reshape' that was explicitly marked illegal`。这符合教材描述的后端限制，见 [运行验证报告](RUNTIME-VALIDATION.md)。

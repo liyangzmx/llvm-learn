@@ -87,11 +87,23 @@ Ch6/
 
 `.inc` 文件多由 TableGen 生成，通常位于**构建目录**的对应子目录；源码检出中找不到 `Ops.cpp.inc` 并不意味着仓库漏了文件。不要手工创建空的 inc 来绕过报错，也不要把第 7 章生成的文件拷给第 2 章。
 
-## 5. 构建：使用独立目录，不改动现有 LLVM build
+## 5. 优先复用已有构建
 
-检查发现已有 `/opt/llvm-project/build/CMakeCache.txt` 启用的是 clang 与 clang-tools-extra，`LLVM_BUILD_EXAMPLES=OFF`，没有 MLIR/Toy 配置。因此教材采用新的构建目录。以下命令是提供给读者的步骤，本文尚未执行完整构建。
+2026-09-13 实测确认 `/opt/llvm-project/build/bin/toyc-ch1` 到 `toyc-ch7` 全部可用，版本为 LLVM 18.1.8。现有 CMake 缓存为 `LLVM_ENABLE_PROJECTS=clang;mlir;clang-tools-extra`、`LLVM_BUILD_EXAMPLES=ON`、`LLVM_INCLUDE_EXAMPLES=ON`、`LLVM_TARGETS_TO_BUILD=BPF;Native`、`CMAKE_BUILD_TYPE=Debug`、`LLVM_ENABLE_ASSERTIONS=ON`。第 6、7 章 JIT 已执行成功，直接使用这个构建即可。此前“现有 build 未启用 MLIR”的记录已过时。
 
-首先确认系统已有可用的 C++ 工具链、CMake、Ninja 和 Python 3；可以读出工具版本：
+```bash
+export TOY_BUILD=/opt/llvm-project/build
+for chapter in 1 2 3 4 5 6 7; do
+  test -x "$TOY_BUILD/bin/toyc-ch$chapter" || break
+done
+"$TOY_BUILD/bin/toyc-ch7" --version
+```
+
+后续各章先检查已有工具，不会自动调用构建。只有缺少二进制、修改过相关源码或发现版本不匹配时，才需要考虑补建相应目标。
+
+### 5.1 仅在没有可用构建时，配置独立目录
+
+下面保留从零准备环境的方法；本次验证没有执行这些配置或构建命令。先确认系统已有可用的 C++ 工具链、CMake、Ninja 和 Python 3；可以读出工具版本：
 
 ```bash
 cmake --version
@@ -102,7 +114,7 @@ python3 --version
 
 本地 LLVM 的具体依赖要求应查看 [llvm/CMakeLists.txt](/opt/llvm-project/llvm/CMakeLists.txt)，不要仅以网络上另一版本的最低要求判断。这里不要求额外检出新的 llvm-project，也不要求更新当前 release/18.x 源码。
 
-在本知识库的任意目录中执行下面的命令；`git rev-parse --show-toplevel` 用于定位仓库根目录，因此检出目录无需命名为 `llvm-learn`。构建产物放在仓库根目录的 `build-llvm18/`，已由 `.gitignore` 排除。
+若确实需要独立构建，可在本知识库的任意目录中执行下面的命令；`git rev-parse --show-toplevel` 用于定位仓库根目录。构建产物放在仓库根目录的 `build-llvm18/`，已由 `.gitignore` 排除。已有可用 `/opt/llvm-project/build` 时跳过此块，避免重新设置 TOY_BUILD 或开始耗时构建。
 
 ```bash
 export TOY_BUILD="$(git rev-parse --show-toplevel)/build-llvm18"
@@ -133,7 +145,7 @@ Toy 聚合目标来自 [examples/toy/CMakeLists.txt](/opt/llvm-project/mlir/exam
 
 ## 6. 先做最小验证，再运行后续章节
 
-构建成功后，先检查入口，再运行一个最简单的官方文件：
+确认工具存在后，先检查入口，再运行一个最简单的官方文件：
 
 ```bash
 "$TOY_BUILD/bin/toyc-ch1" --help
@@ -202,26 +214,26 @@ SSA 指每个 SSA 值只定义一次；这不意味着整个程序不能循环�
 
 ## 10. 建立一套可反复使用的实验工作流
 
-后面每章的“关键代码与实验”都只选当前阶段的入口和转换点。第一次实验前先按 §5 完成 CMake 配置，再从本知识库的任意目录中，在同一个终端设置：
+后面每章的“关键代码与实验”都只选当前阶段的入口和转换点。第一次实验前先按 §5 确认已有工具，再从本知识库的任意目录中，在同一个终端设置：
 
 ```bash
 export TOY_ROOT="$(git rev-parse --show-toplevel)/mlir/toy"
-export TOY_BUILD="$(git rev-parse --show-toplevel)/build-llvm18"
+export TOY_BUILD=/opt/llvm-project/build
 export TOY_LAB="$(mktemp -d /tmp/mlir-toy-lab.XXXXXX)"
 printf '教材目录：%s\n构建目录：%s\n实验输出：%s\n' "$TOY_ROOT" "$TOY_BUILD" "$TOY_LAB"
 ```
 
 TOY_ROOT 指向教材与独立实验输入所在的 `mlir/toy/`。如果实际使用其他构建目录，应修改 TOY_BUILD 的值。TOY_LAB 是新建的独立临时目录，用来保存各阶段 IR，不会覆盖教材或 LLVM 的测试输入。关闭终端后变量不会自动保留；需要长期保存结果时，由你将这个目录复制到合适位置。后续命令都假设这三个变量已设置。
 
-### 10.1 每次只构建当前要观察的工具
+### 10.1 每次先检查当前要观察的工具
 
 ```bash
-cmake --build "$TOY_BUILD" --target toyc-ch1 FileCheck --parallel 2
 test -x "$TOY_BUILD/bin/toyc-ch1"
+test -x "$TOY_BUILD/bin/FileCheck"
 "$TOY_BUILD/bin/toyc-ch1" --help
 ```
 
-构建失败就先处理构建诊断，不继续解释后面的运行结果。“unknown target”通常是配置没有启用 Toy；“找不到文件”也可能只是 TOY_BUILD 指向了别的目录。学习第 N 章时，将目标和命令换成对应的 toyc-chN；FileCheck 是验证预期文本的辅助程序，不参与生成 Toy IR。
+检查失败时先确认 TOY_BUILD 是否指向正确目录，再决定是否按 §5.1 补建缺少的目标。学习第 N 章时，将命令换成对应的 toyc-chN；FileCheck 是验证预期文本的辅助程序，不参与生成 Toy IR。
 
 ### 10.2 读源码时先找函数，再看局部实现
 
@@ -251,4 +263,4 @@ fi
 
 成功和失败都读取同一个 stderr 文件，但解读不同：成功时是 AST，失败时可能只是诊断。若用管道连接 FileCheck，先设置 `set -o pipefail`；若用 diff 比较 IR，退出码 1 表示不同，不等于工具崩溃。
 
-后文的结果说明分为“源码推导的观察点”和“官方 CHECK 的文本约束”。本轮没有构建 Toy，所以新命令与新增小例子仍是待运行实验，不是已经成功执行的日志。
+2026-09-13 已复用现有构建逐章运行实验、两个新增输入与 Toy JIT；结果见 [运行验证报告](RUNTIME-VALIDATION.md)。报告区分正常成功、预期失败及仅作讲解的片段，没有重新构建 LLVM。

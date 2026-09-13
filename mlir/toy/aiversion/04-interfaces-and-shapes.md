@@ -233,7 +233,7 @@ optPM.addPass(mlir::createCSEPass());
 
 结果中的张量可全部具体化：
 
-> 代码性质：示意（非逐字源码，未编译或运行验证）。
+> 代码性质：示意（非逐字源码；完整片段已用 LLVM 18.1.8 解析验证）。
 
 ```mlir
 toy.func @main() {
@@ -465,7 +465,8 @@ Module PassManager
 ### 14.2 先验证 -opt 是否真正启用了流水线
 
 ```bash
-cmake --build "$TOY_BUILD" --target toyc-ch4 FileCheck --parallel 2
+test -x "$TOY_BUILD/bin/toyc-ch4"
+test -x "$TOY_BUILD/bin/FileCheck"
 "$TOY_BUILD/bin/toyc-ch4" \
   /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir \
   -emit=mlir 2> "$TOY_LAB/ch4-no-opt.mlir"

@@ -16,7 +16,7 @@ transpose(transpose(x)) → x
 
 对应 IR：
 
-> 代码性质：示意（非逐字源码，未编译或运行验证）。
+> 代码性质：示意（非逐字源码；完整片段已用 LLVM 18.1.8 解析验证）。
 
 ```mlir
 toy.func @transpose_transpose(%arg0: tensor<*xf64>) -> tensor<*xf64> {

@@ -233,7 +233,7 @@ optPM.addPass(mlir::createCSEPass());
 
 结果中的张量可全部具体化：
 
-> 代码性质：示意（非逐字源码，未编译或运行验证）。
+> 代码性质：示意（非逐字源码；完整片段已用 LLVM 18.1.8 解析验证）。
 
 ```mlir
 toy.func @main() {

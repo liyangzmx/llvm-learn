@@ -283,7 +283,8 @@ std::unique_ptr<toy::ModuleAST> parseInputFile(llvm::StringRef filename) {
 ### 12.3 打印 AST，并区分声明形状与字面量形状
 
 ```bash
-cmake --build "$TOY_BUILD" --target toyc-ch1 FileCheck --parallel 2
+test -x "$TOY_BUILD/bin/toyc-ch1"
+test -x "$TOY_BUILD/bin/FileCheck"
 "$TOY_BUILD/bin/toyc-ch1" \
   /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy \
   -emit=ast 2> "$TOY_LAB/ch1-ast.txt"

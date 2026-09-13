@@ -1,0 +1,260 @@
+[
+  {
+    "name": "lab-00-preflight-02",
+    "document": "aiversion/00-preflight.md",
+    "line": 108,
+    "command": "cmake --version\nninja --version\nclang++ --version\npython3 --version\n"
+  },
+  {
+    "name": "lab-00-preflight-04",
+    "document": "aiversion/00-preflight.md",
+    "line": 150,
+    "command": "\"$TOY_BUILD/bin/toyc-ch1\" --help\n\"$TOY_BUILD/bin/toyc-ch1\" /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy -emit=ast\n\"$TOY_BUILD/bin/toyc-ch2\" /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy -emit=mlir\n"
+  },
+  {
+    "name": "lab-00-preflight-05",
+    "document": "aiversion/00-preflight.md",
+    "line": 162,
+    "command": "\"$TOY_BUILD/bin/toyc-ch2\" /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy -emit=mlir 2> generated.mlir\n\"$TOY_BUILD/bin/toyc-ch2\" generated.mlir -emit=mlir 2> reparsed.mlir\ndiff -u generated.mlir reparsed.mlir\n"
+  },
+  {
+    "name": "lab-00-preflight-06",
+    "document": "aiversion/00-preflight.md",
+    "line": 176,
+    "command": "set -o pipefail\n\"$TOY_BUILD/bin/toyc-ch7\" /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir -emit=mlir -opt 2>&1 \\\n  | \"$TOY_BUILD/bin/FileCheck\" /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir\n"
+  },
+  {
+    "name": "lab-00-preflight-08",
+    "document": "aiversion/00-preflight.md",
+    "line": 230,
+    "command": "test -x \"$TOY_BUILD/bin/toyc-ch1\"\ntest -x \"$TOY_BUILD/bin/FileCheck\"\n\"$TOY_BUILD/bin/toyc-ch1\" --help\n"
+  },
+  {
+    "name": "lab-00-preflight-09",
+    "document": "aiversion/00-preflight.md",
+    "line": 242,
+    "command": "rg -n 'mlirGen\\(VarDeclExprAST|create<ReshapeOp>|declare\\(' \\\n  /opt/llvm-project/mlir/examples/toy/Ch2/mlir/MLIRGen.cpp\nsed -n '379,405p' /opt/llvm-project/mlir/examples/toy/Ch2/mlir/MLIRGen.cpp\n"
+  },
+  {
+    "name": "lab-00-preflight-10",
+    "document": "aiversion/00-preflight.md",
+    "line": 254,
+    "command": "if \"$TOY_BUILD/bin/toyc-ch1\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy \\\n  -emit=ast 2> \"$TOY_LAB/ch1-ast.txt\"; then\n  sed -n '1,45p' \"$TOY_LAB/ch1-ast.txt\"\nelse\n  sed -n '1,80p' \"$TOY_LAB/ch1-ast.txt\"\nfi\n"
+  },
+  {
+    "name": "lab-01-from-source-to-ast-01",
+    "document": "aiversion/01-from-source-to-ast.md",
+    "line": 84,
+    "command": "${TOY_BUILD}/bin/toyc-ch1 \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy \\\n  -emit=ast\n"
+  },
+  {
+    "name": "lab-01-from-source-to-ast-02",
+    "document": "aiversion/01-from-source-to-ast.md",
+    "line": 285,
+    "command": "test -x \"$TOY_BUILD/bin/toyc-ch1\"\ntest -x \"$TOY_BUILD/bin/FileCheck\"\n\"$TOY_BUILD/bin/toyc-ch1\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy \\\n  -emit=ast 2> \"$TOY_LAB/ch1-ast.txt\"\nrg -n 'Proto|VarDecl|Literal|BinOp|Call|Return' \"$TOY_LAB/ch1-ast.txt\"\n"
+  },
+  {
+    "name": "lab-01-from-source-to-ast-03",
+    "document": "aiversion/01-from-source-to-ast.md",
+    "line": 298,
+    "command": "set -o pipefail\n\"$TOY_BUILD/bin/toyc-ch1\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy -emit=ast 2>&1 \\\n  | \"$TOY_BUILD/bin/FileCheck\" /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy\n"
+  },
+  {
+    "name": "lab-01-from-source-to-ast-04",
+    "document": "aiversion/01-from-source-to-ast.md",
+    "line": 307,
+    "command": "cp /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy \"$TOY_LAB/ch1-edit.toy\"\n"
+  },
+  {
+    "name": "lab-02-first-mlir-01",
+    "document": "aiversion/02-first-mlir.md",
+    "line": 122,
+    "command": "${TOY_BUILD}/bin/mlir-tblgen -gen-op-decls \\\n  /opt/llvm-project/mlir/examples/toy/Ch2/include/toy/Ops.td \\\n  -I /opt/llvm-project/mlir/include\n"
+  },
+  {
+    "name": "lab-02-first-mlir-02",
+    "document": "aiversion/02-first-mlir.md",
+    "line": 292,
+    "command": "\"${TOY_BUILD}/bin/mlir-tblgen\" -gen-dialect-decls /opt/llvm-project/mlir/examples/toy/Ch2/include/toy/Ops.td -I /opt/llvm-project/mlir/include\n\"${TOY_BUILD}/bin/mlir-tblgen\" -gen-op-defs /opt/llvm-project/mlir/examples/toy/Ch2/include/toy/Ops.td -I /opt/llvm-project/mlir/include\n\"${TOY_BUILD}/bin/mlir-tblgen\" -gen-op-doc /opt/llvm-project/mlir/examples/toy/Ch2/include/toy/Ops.td -I /opt/llvm-project/mlir/include\n"
+  },
+  {
+    "name": "lab-02-first-mlir-03",
+    "document": "aiversion/02-first-mlir.md",
+    "line": 334,
+    "command": "${TOY_BUILD}/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy -emit=mlir\n"
+  },
+  {
+    "name": "lab-02-first-mlir-04",
+    "document": "aiversion/02-first-mlir.md",
+    "line": 348,
+    "command": "${TOY_BUILD}/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy -emit=mlir -mlir-print-debuginfo 2> codegen.mlir\n${TOY_BUILD}/bin/toyc-ch2 codegen.mlir -emit=mlir 2> roundtrip.mlir\n"
+  },
+  {
+    "name": "lab-02-first-mlir-05",
+    "document": "aiversion/02-first-mlir.md",
+    "line": 549,
+    "command": "test -x \"$TOY_BUILD/bin/toyc-ch2\"\n\"$TOY_BUILD/bin/toyc-ch2\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy \\\n  -emit=ast 2> \"$TOY_LAB/ch2-ast.txt\"\n\"$TOY_BUILD/bin/toyc-ch2\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy \\\n  -emit=mlir 2> \"$TOY_LAB/ch2-custom.mlir\"\n\"$TOY_BUILD/bin/toyc-ch2\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy \\\n  -emit=mlir -mlir-print-op-generic 2> \"$TOY_LAB/ch2-generic.mlir\"\n"
+  },
+  {
+    "name": "lab-02-first-mlir-06",
+    "document": "aiversion/02-first-mlir.md",
+    "line": 566,
+    "command": "\"$TOY_BUILD/bin/toyc-ch2\" \"$TOY_LAB/ch2-generic.mlir\" \\\n  -emit=mlir 2> \"$TOY_LAB/ch2-roundtrip.mlir\"\ndiff -u \"$TOY_LAB/ch2-custom.mlir\" \"$TOY_LAB/ch2-roundtrip.mlir\"\n"
+  },
+  {
+    "name": "lab-03-rewriting-01",
+    "document": "aiversion/03-rewriting.md",
+    "line": 132,
+    "command": "${TOY_BUILD}/bin/toyc-ch3 \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch3/transpose_transpose.toy \\\n  -emit=mlir -opt\n\n${TOY_BUILD}/bin/toyc-ch3 \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy \\\n  -emit=mlir -opt\n"
+  },
+  {
+    "name": "lab-03-rewriting-02",
+    "document": "aiversion/03-rewriting.md",
+    "line": 278,
+    "command": "test -x \"$TOY_BUILD/bin/toyc-ch3\"\ntest -x \"$TOY_BUILD/bin/mlir-tblgen\"\ntest -x \"$TOY_BUILD/bin/FileCheck\"\n"
+  },
+  {
+    "name": "lab-03-rewriting-03",
+    "document": "aiversion/03-rewriting.md",
+    "line": 316,
+    "command": "\"$TOY_BUILD/bin/toyc-ch3\" \\\n  \"$TOY_ROOT/aiversion/examples/03-shared-transpose.mlir\" \\\n  -emit=mlir 2> \"$TOY_LAB/ch3-shared-before.mlir\"\n\"$TOY_BUILD/bin/toyc-ch3\" \\\n  \"$TOY_ROOT/aiversion/examples/03-shared-transpose.mlir\" \\\n  -emit=mlir -opt 2> \"$TOY_LAB/ch3-shared-after.mlir\"\nrg -n 'toy.transpose|toy.print' \"$TOY_LAB/ch3-shared-before.mlir\" \"$TOY_LAB/ch3-shared-after.mlir\"\n"
+  },
+  {
+    "name": "lab-03-rewriting-04",
+    "document": "aiversion/03-rewriting.md",
+    "line": 332,
+    "command": "\"$TOY_BUILD/bin/toyc-ch3\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy \\\n  -emit=mlir 2> \"$TOY_LAB/ch3-reshape-before.mlir\"\n\"$TOY_BUILD/bin/toyc-ch3\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy \\\n  -emit=mlir -opt 2> \"$TOY_LAB/ch3-reshape-after.mlir\"\ndiff -u \"$TOY_LAB/ch3-reshape-before.mlir\" \"$TOY_LAB/ch3-reshape-after.mlir\"\n"
+  },
+  {
+    "name": "lab-03-rewriting-05",
+    "document": "aiversion/03-rewriting.md",
+    "line": 344,
+    "command": "set -o pipefail\n\"$TOY_BUILD/bin/toyc-ch3\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy \\\n  -emit=mlir -opt 2>&1 \\\n  | \"$TOY_BUILD/bin/FileCheck\" /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy\n"
+  },
+  {
+    "name": "lab-03-rewriting-06",
+    "document": "aiversion/03-rewriting.md",
+    "line": 356,
+    "command": "\"$TOY_BUILD/bin/mlir-tblgen\" -gen-rewriters \\\n  /opt/llvm-project/mlir/examples/toy/Ch3/mlir/ToyCombine.td \\\n  -I /opt/llvm-project/mlir/include \\\n  -I /opt/llvm-project/mlir/examples/toy/Ch3/include \\\n  > \"$TOY_LAB/ch3-generated.inc\"\nrg -n -A 7 'struct (RedundantReshapeOptPattern|ReshapeReshapeOptPattern|FoldConstantReshapeOptPattern)' \\\n  \"$TOY_LAB/ch3-generated.inc\"\n"
+  },
+  {
+    "name": "lab-04-interfaces-and-shapes-01",
+    "document": "aiversion/04-interfaces-and-shapes.md",
+    "line": 251,
+    "command": "${TOY_BUILD}/bin/toyc-ch4 \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/codegen.toy \\\n  -emit=mlir -opt\n"
+  },
+  {
+    "name": "lab-04-interfaces-and-shapes-02",
+    "document": "aiversion/04-interfaces-and-shapes.md",
+    "line": 467,
+    "command": "test -x \"$TOY_BUILD/bin/toyc-ch4\"\ntest -x \"$TOY_BUILD/bin/FileCheck\"\n\"$TOY_BUILD/bin/toyc-ch4\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir \\\n  -emit=mlir 2> \"$TOY_LAB/ch4-no-opt.mlir\"\n\"$TOY_BUILD/bin/toyc-ch4\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir \\\n  -emit=mlir -opt 2> \"$TOY_LAB/ch4-opt.mlir\"\nrg -n 'toy.generic_call|toy.cast|tensor<\\*xf64>|toy.func private' \"$TOY_LAB/ch4-no-opt.mlir\"\nsed -n '1,45p' \"$TOY_LAB/ch4-opt.mlir\"\n"
+  },
+  {
+    "name": "lab-04-interfaces-and-shapes-03",
+    "document": "aiversion/04-interfaces-and-shapes.md",
+    "line": 484,
+    "command": "\"$TOY_BUILD/bin/toyc-ch4\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir \\\n  -emit=mlir -opt -mlir-disable-threading -mlir-print-ir-after-all \\\n  2> \"$TOY_LAB/ch4-passes.log\"\nrg -n 'IR Dump|toy.generic_call|toy.cast|tensor<' \"$TOY_LAB/ch4-passes.log\"\n"
+  },
+  {
+    "name": "lab-04-interfaces-and-shapes-04",
+    "document": "aiversion/04-interfaces-and-shapes.md",
+    "line": 498,
+    "command": "set -o pipefail\n\"$TOY_BUILD/bin/toyc-ch4\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir \\\n  -emit=mlir -opt 2>&1 \\\n  | \"$TOY_BUILD/bin/FileCheck\" /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir\n"
+  },
+  {
+    "name": "lab-05-progressive-lowering-01",
+    "document": "aiversion/05-progressive-lowering.md",
+    "line": 165,
+    "command": "${TOY_BUILD}/bin/toyc-ch5 \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir \\\n  -emit=mlir-affine -opt\n"
+  },
+  {
+    "name": "lab-05-progressive-lowering-02",
+    "document": "aiversion/05-progressive-lowering.md",
+    "line": 368,
+    "command": "\"${TOY_BUILD}/bin/toyc-ch5\" /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir -emit=mlir-affine 2> affine-basic.mlir\n\"${TOY_BUILD}/bin/toyc-ch5\" /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir -emit=mlir-affine -opt 2> affine-opt.mlir\ndiff -u affine-basic.mlir affine-opt.mlir\n"
+  },
+  {
+    "name": "lab-05-progressive-lowering-03",
+    "document": "aiversion/05-progressive-lowering.md",
+    "line": 456,
+    "command": "test -x \"$TOY_BUILD/bin/toyc-ch5\"\n\"$TOY_BUILD/bin/toyc-ch5\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir \\\n  -emit=mlir-affine 2> \"$TOY_LAB/ch5-basic.mlir\"\n\"$TOY_BUILD/bin/toyc-ch5\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir \\\n  -emit=mlir-affine -opt 2> \"$TOY_LAB/ch5-fused.mlir\"\nrg -n 'memref.alloc|memref.dealloc|affine.for|affine.load|affine.store|arith.mulf|toy.print' \\\n  \"$TOY_LAB/ch5-basic.mlir\" \"$TOY_LAB/ch5-fused.mlir\"\n"
+  },
+  {
+    "name": "lab-05-progressive-lowering-04",
+    "document": "aiversion/05-progressive-lowering.md",
+    "line": 480,
+    "command": "\"$TOY_BUILD/bin/toyc-ch5\" \\\n  \"$TOY_ROOT/aiversion/examples/05-live-reshape.toy\" \\\n  -emit=mlir -opt 2> \"$TOY_LAB/ch5-live-reshape.mlir\"\nrg -n 'toy.transpose|toy.reshape|toy.print' \"$TOY_LAB/ch5-live-reshape.mlir\"\n\nif \"$TOY_BUILD/bin/toyc-ch5\" \\\n  \"$TOY_ROOT/aiversion/examples/05-live-reshape.toy\" \\\n  -emit=mlir-affine 2> \"$TOY_LAB/ch5-reshape-error.txt\"; then\n  printf '降级成功：请核对版本或规则是否已变化。\\n'\nelse\n  sed -n '1,90p' \"$TOY_LAB/ch5-reshape-error.txt\"\nfi\n"
+  },
+  {
+    "name": "lab-06-llvm-and-jit-01",
+    "document": "aiversion/06-llvm-and-jit.md",
+    "line": 226,
+    "command": "${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=jit\n${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.toy -emit=mlir\n${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.toy -emit=mlir-affine\n${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.toy -emit=mlir-llvm\n${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.toy -emit=llvm\n"
+  },
+  {
+    "name": "lab-06-llvm-and-jit-02",
+    "document": "aiversion/06-llvm-and-jit.md",
+    "line": 240,
+    "command": "\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/llvm-lowering.mlir -emit=mlir-affine\n\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/llvm-lowering.mlir -emit=mlir-llvm\n\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/llvm-lowering.mlir -emit=llvm -opt\n"
+  },
+  {
+    "name": "lab-06-llvm-and-jit-03",
+    "document": "aiversion/06-llvm-and-jit.md",
+    "line": 385,
+    "command": "\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=mlir-affine 2> stage-affine.mlir\n\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=mlir-llvm 2> stage-llvm.mlir\n\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=llvm 2> stage.ll\n\"${TOY_BUILD}/bin/toyc-ch6\" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=jit > result.txt 2> jit-errors.txt\n"
+  },
+  {
+    "name": "lab-06-llvm-and-jit-04",
+    "document": "aiversion/06-llvm-and-jit.md",
+    "line": 490,
+    "command": "test -x \"$TOY_BUILD/bin/toyc-ch6\"\nfor stage in mlir mlir-affine mlir-llvm llvm; do\n  if ! \"$TOY_BUILD/bin/toyc-ch6\" \\\n    /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy \\\n    \"-emit=$stage\" 2> \"$TOY_LAB/ch6-$stage.txt\"; then\n    printf '失败阶段：%s\\n' \"$stage\"\n    break\n  fi\ndone\n"
+  },
+  {
+    "name": "lab-06-llvm-and-jit-05",
+    "document": "aiversion/06-llvm-and-jit.md",
+    "line": 515,
+    "command": "\"$TOY_BUILD/bin/toyc-ch6\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy \\\n  -emit=llvm -opt 2> \"$TOY_LAB/ch6-llvm-opt.txt\"\ndiff -u \"$TOY_LAB/ch6-llvm.txt\" \"$TOY_LAB/ch6-llvm-opt.txt\"\n"
+  },
+  {
+    "name": "lab-06-llvm-and-jit-06",
+    "document": "aiversion/06-llvm-and-jit.md",
+    "line": 526,
+    "command": "if \"$TOY_BUILD/bin/toyc-ch6\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy \\\n  -emit=jit > \"$TOY_LAB/ch6-result.txt\" 2> \"$TOY_LAB/ch6-jit-errors.txt\"; then\n  sed -n '1,5p' \"$TOY_LAB/ch6-result.txt\"\nelse\n  sed -n '1,90p' \"$TOY_LAB/ch6-jit-errors.txt\"\nfi\n"
+  },
+  {
+    "name": "lab-07-custom-types-01",
+    "document": "aiversion/07-custom-types.md",
+    "line": 289,
+    "command": "${TOY_BUILD}/bin/toyc-ch7 \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=mlir\n"
+  },
+  {
+    "name": "lab-07-custom-types-02",
+    "document": "aiversion/07-custom-types.md",
+    "line": 370,
+    "command": "${TOY_BUILD}/bin/toyc-ch7 /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir -emit=mlir -opt\n"
+  },
+  {
+    "name": "lab-07-custom-types-03",
+    "document": "aiversion/07-custom-types.md",
+    "line": 493,
+    "command": "\"${TOY_BUILD}/bin/toyc-ch7\" /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir -emit=mlir 2> struct-before.mlir\n\"${TOY_BUILD}/bin/toyc-ch7\" /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-opt.mlir -emit=mlir -opt 2> struct-after.mlir\ndiff -u struct-before.mlir struct-after.mlir\n"
+  },
+  {
+    "name": "lab-07-custom-types-04",
+    "document": "aiversion/07-custom-types.md",
+    "line": 617,
+    "command": "test -x \"$TOY_BUILD/bin/toyc-ch7\"\ntest -x \"$TOY_BUILD/bin/FileCheck\"\n\"$TOY_BUILD/bin/toyc-ch7\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=ast 2> \"$TOY_LAB/ch7-ast.txt\"\n\"$TOY_BUILD/bin/toyc-ch7\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=mlir 2> \"$TOY_LAB/ch7-raw.mlir\"\n\"$TOY_BUILD/bin/toyc-ch7\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=mlir -opt 2> \"$TOY_LAB/ch7-opt.mlir\"\n\"$TOY_BUILD/bin/toyc-ch7\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=mlir-affine 2> \"$TOY_LAB/ch7-affine.mlir\"\n"
+  },
+  {
+    "name": "lab-07-custom-types-05",
+    "document": "aiversion/07-custom-types.md",
+    "line": 645,
+    "command": "set -o pipefail\n\"$TOY_BUILD/bin/toyc-ch7\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=mlir -opt 2>&1 \\\n  | \"$TOY_BUILD/bin/FileCheck\" \\\n    /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy --check-prefix=OPT\n"
+  },
+  {
+    "name": "lab-07-custom-types-06",
+    "document": "aiversion/07-custom-types.md",
+    "line": 658,
+    "command": "\"$TOY_BUILD/bin/toyc-ch7\" \\\n  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \\\n  -emit=jit > \"$TOY_LAB/ch7-result.txt\" 2> \"$TOY_LAB/ch7-errors.txt\"\n"
+  }
+]

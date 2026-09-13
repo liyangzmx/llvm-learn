@@ -615,7 +615,8 @@ void ConstantOp::inferShapes() {
 ### 16.3 按四个观察点读结构体例子
 
 ```bash
-cmake --build "$TOY_BUILD" --target toyc-ch7 FileCheck --parallel 2
+test -x "$TOY_BUILD/bin/toyc-ch7"
+test -x "$TOY_BUILD/bin/FileCheck"
 "$TOY_BUILD/bin/toyc-ch7" \
   /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \
   -emit=ast 2> "$TOY_LAB/ch7-ast.txt"
@@ -660,4 +661,4 @@ set -o pipefail
   -emit=jit > "$TOY_LAB/ch7-result.txt" 2> "$TOY_LAB/ch7-errors.txt"
 ```
 
-成功时按运算语义应得到三行，分别为 `1 16`、`4 25`、`9 36`；实际格式带六位小数和元素后空格。本轮未执行这个实验；它验证的是本例通过消除常量结构体接上旧后端，不能推出已经支持任意运行时结构体布局和 ABI。
+2026-09-13 实测得到三行，分别为 `1 16`、`4 25`、`9 36`；实际格式带六位小数和元素后空格，开启和关闭 -opt 的输出相同，见 [运行验证报告](RUNTIME-VALIDATION.md)。这验证了本例通过消除常量结构体接上旧后端，不能推出已经支持任意运行时结构体布局和 ABI。

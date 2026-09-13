@@ -9,6 +9,8 @@
 - [构建与实验准备](aiversion/00-preflight.md)
 - [版本、来源与校正说明](SOURCES.md)
 - [文档验证记录](VALIDATION.md)
+- [LLVM 18.1.8 实际运行报告](aiversion/RUNTIME-VALIDATION.md)
+- [本机 CMake 构建参数](../../README.md#本地-llvm-1818-构建参数)
 
 扩充版完整包含对应 official 正文，另有基础解释、源码推导、图解和带答案的练习。源码与原文冲突时，以本地代码为准并解释差异。
 

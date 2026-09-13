@@ -1,0 +1,11 @@
+$ node mlir/toy/scripts/validate-materials.mjs
+PASS: {"documents":22,"localLinks":233,"sourceExcerpts":59,"mermaidBlocks":13,"bashBlocks":66,"sourceFiles":186,"expandedChapters":7,"testPaths":88,"codeBlocks":{"total":140,"verbatim":59,"adapted":8,"illustrative":73,"unclassified":0}}
+Static checks only; no semantic-quality or English-coverage guarantee; no LLVM build, MLIR verification, JIT execution, or diagram rendering is implied.
+exit=0
+
+$ node mlir/toy/scripts/validate-materials.test.mjs
+PASS: baseline
+PASS: rejects missing provenance label
+PASS: rejects verbatim label without anchor
+PASS: rejects changed verbatim excerpt
+exit=0

@@ -221,7 +221,7 @@ int runJit(mlir::ModuleOp module) {
 
 ## 5. 运行与观察
 
-先按 [环境准备](../aiversion/00-preflight.md) 构建并设置 `TOY_BUILD`。本地现有 `/opt/llvm-project/build` 未启用 MLIR，不能直接假定其中已有这些二进制。
+先按 [环境准备](../aiversion/00-preflight.md) 设置 `TOY_BUILD`。2026-09-13 已确认本地 `/opt/llvm-project/build` 包含本章二进制，可直接复用，无需重新构建。
 
 ```bash
 ${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=jit
@@ -243,8 +243,8 @@ ${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.t
 "${TOY_BUILD}/bin/toyc-ch6" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/llvm-lowering.mlir -emit=llvm -opt
 ```
 
-注意本地该文件的 RUN 只有 `toyc-ch6 %s -emit=llvm -opt`，**没有管道连接 FileCheck**。它虽保留若干 CHECK 注释，最后一个浮点数却写成 `3.000000e+01`（30）；输入最后一个元素为 6，逐元素自乘应为 36，即 `3.600000e+01`。因此不能把这些未接入 RUN 的历史 CHECK 当作已验证的数值金标准，也不要直接添加 FileCheck 管道并期待成功。上述命令用于观察各层 IR；本文未执行这些命令，未修改上游测试。
+注意本地该文件的 RUN 只有 `toyc-ch6 %s -emit=llvm -opt`，**没有管道连接 FileCheck**。它虽保留若干 CHECK 注释，最后一个浮点数却写成 `3.000000e+01`（30）；输入最后一个元素为 6，逐元素自乘应为 36，即 `3.600000e+01`。因此不能把这些未接入 RUN 的历史 CHECK 当作已验证的数值金标准，也不要直接添加 FileCheck 管道并期待成功。2026-09-13 已执行上述命令，并额外用 JIT 验证最后一个元素为 36；上游测试文件保持原样。
 
-需要追踪 pass 时加入 `-mlir-disable-threading -mlir-print-ir-after-all`。示例输出来自本地测试约定与源码推导；本文没有把未构建运行的结果声称为实测。
+需要追踪 pass 时加入 `-mlir-disable-threading -mlir-print-ir-after-all`。实测范围与原始证据见 [运行验证报告](../aiversion/RUNTIME-VALIDATION.md)。未完整的讲解片段仍不作为可独立执行的程序。
 
 下一章在高层加入结构体，并通过折叠把它重新接入这套后端。

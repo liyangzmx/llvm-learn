@@ -221,7 +221,7 @@ int runJit(mlir::ModuleOp module) {
 
 ## 5. 运行与观察
 
-先按 [环境准备](../aiversion/00-preflight.md) 构建并设置 `TOY_BUILD`。本地现有 `/opt/llvm-project/build` 未启用 MLIR，不能直接假定其中已有这些二进制。
+先按 [环境准备](../aiversion/00-preflight.md) 设置 `TOY_BUILD`。2026-09-13 已确认本地 `/opt/llvm-project/build` 包含本章二进制，可直接复用，无需重新构建。
 
 ```bash
 ${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=jit
@@ -243,9 +243,9 @@ ${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/codegen.t
 "${TOY_BUILD}/bin/toyc-ch6" /opt/llvm-project/mlir/test/Examples/Toy/Ch6/llvm-lowering.mlir -emit=llvm -opt
 ```
 
-注意本地该文件的 RUN 只有 `toyc-ch6 %s -emit=llvm -opt`，**没有管道连接 FileCheck**。它虽保留若干 CHECK 注释，最后一个浮点数却写成 `3.000000e+01`（30）；输入最后一个元素为 6，逐元素自乘应为 36，即 `3.600000e+01`。因此不能把这些未接入 RUN 的历史 CHECK 当作已验证的数值金标准，也不要直接添加 FileCheck 管道并期待成功。上述命令用于观察各层 IR；本文未执行这些命令，未修改上游测试。
+注意本地该文件的 RUN 只有 `toyc-ch6 %s -emit=llvm -opt`，**没有管道连接 FileCheck**。它虽保留若干 CHECK 注释，最后一个浮点数却写成 `3.000000e+01`（30）；输入最后一个元素为 6，逐元素自乘应为 36，即 `3.600000e+01`。因此不能把这些未接入 RUN 的历史 CHECK 当作已验证的数值金标准，也不要直接添加 FileCheck 管道并期待成功。2026-09-13 已执行上述命令，并额外用 JIT 验证最后一个元素为 36；上游测试文件保持原样。
 
-需要追踪 pass 时加入 `-mlir-disable-threading -mlir-print-ir-after-all`。示例输出来自本地测试约定与源码推导；本文没有把未构建运行的结果声称为实测。
+需要追踪 pass 时加入 `-mlir-disable-threading -mlir-print-ir-after-all`。实测范围与原始证据见 [运行验证报告](../aiversion/RUNTIME-VALIDATION.md)。未完整的讲解片段仍不作为可独立执行的程序。
 
 下一章在高层加入结构体，并通过折叠把它重新接入这套后端。
 
@@ -304,7 +304,7 @@ allocated pointer 与 aligned pointer 分开，是因为对齐后的可访问地
 
 结构化循环把初始化、条件和步进收在一个操作及其 Region 里。CF 层则显式写出控制流边。下面是一个只用于解释 CFG 的完整 MLIR 函数；循环体没有业务计算：
 
-> 代码性质：示意（非逐字源码，未编译或运行验证）。
+> 代码性质：示意（非逐字源码；完整片段已用 LLVM 18.1.8 解析验证）。
 
 ```mlir
 module {
@@ -398,7 +398,7 @@ dump 写 stderr，程序的 printf 写 stdout，这是本地驱动的选择，�
 3.000000 4.000000 
 ```
 
-这是源码和测试规定的预期，不是本文声称已经运行得到的日志。
+2026-09-13 已实测得到上述输出，并精确核对每个元素后的空格和每行末尾的换行。
 
 | 失败发生在哪一步 | 优先检查 |
 |---|---|
@@ -488,7 +488,7 @@ MemRef Load 的结果是 f64，而不是一个完整张量；LLVM::CallOp 接收
 ### 13.3 用一个输入沿每个停止点保存 IR
 
 ```bash
-cmake --build "$TOY_BUILD" --target toyc-ch6 --parallel 2
+test -x "$TOY_BUILD/bin/toyc-ch6"
 for stage in mlir mlir-affine mlir-llvm llvm; do
   if ! "$TOY_BUILD/bin/toyc-ch6" \
     /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy \
@@ -535,4 +535,4 @@ fi
 
 源码规定的预期为两行 1、2 和 3、4，每个数打印六位小数，后有空格。如果 LLVM IR 已成功生成但 JIT 失败，优先检查执行引擎、宿主目标、外部符号和入口，而不是仅凭最终失败就怀疑 Parser。
 
-本轮没有运行 JIT；以上是帮助你建立证据链的命令。尤其不要用 llvm-lowering.mlir 里过期的最后一条 CHECK 去否定正确的数值推导，相关边界已在 §5.1 说明。
+2026-09-13 已复用现有构建运行 JIT，并比较开启和关闭 -opt 的数值输出，结果见 [运行验证报告](RUNTIME-VALIDATION.md)。llvm-lowering.mlir 最后一个数实测为 36；不要用该文件中未接入 RUN 的过期 CHECK 否定实际结果，相关边界见 §5.1。

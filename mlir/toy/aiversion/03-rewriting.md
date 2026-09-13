@@ -16,7 +16,7 @@ transpose(transpose(x)) → x
 
 对应 IR：
 
-> 代码性质：示意（非逐字源码，未编译或运行验证）。
+> 代码性质：示意（非逐字源码；完整片段已用 LLVM 18.1.8 解析验证）。
 
 ```mlir
 toy.func @transpose_transpose(%arg0: tensor<*xf64>) -> tensor<*xf64> {
@@ -273,10 +273,12 @@ FileCheck 的 `CHECK-LABEL` 定位函数，`CHECK-NEXT` 约束相邻输出，`CH
 
 ## 12. 关键代码与实验：证明删掉的是正确的节点
 
-本章不再重复 DRR 的整套定义，而把“模式为什么成功”和“结果怎样验证”接起来。准备好第 0 章环境，先构建本章工具：
+本章不再重复 DRR 的整套定义，而把“模式为什么成功”和“结果怎样验证”接起来。准备好第 0 章环境，先检查已有工具：
 
 ```bash
-cmake --build "$TOY_BUILD" --target toyc-ch3 mlir-tblgen FileCheck --parallel 2
+test -x "$TOY_BUILD/bin/toyc-ch3"
+test -x "$TOY_BUILD/bin/mlir-tblgen"
+test -x "$TOY_BUILD/bin/FileCheck"
 ```
 
 ### 12.1 一次真实的匹配与替换
@@ -323,7 +325,7 @@ rg -n 'toy.transpose|toy.print' "$TOY_LAB/ch3-shared-before.mlir" "$TOY_LAB/ch3-
 
 按源码逻辑预期：优化后保留一个 transpose；第一个 print 仍使用它，第二个 print 改为使用原始常量。若两个 transpose 都消失，就要检查是不是把仍被打印的内层也删掉了。这里比较的是 use-def 关系，不能要求优化后继续保留 %inner/%outer 这两个文本名字。
 
-这是新编写的教学输入，本轮未执行；它没有冒充上游已经通过的回归测试。
+这是教材新增输入；2026-09-13 实测确认上述操作数量与 use-def 关系，记录见 [运行验证报告](RUNTIME-VALIDATION.md)。
 
 ### 12.3 观察三次 reshape 如何变成一个常量
 

@@ -37,7 +37,7 @@ MLIR 即使不了解 Toy 方言，也能解析、保存并重新打印通用形�
 
 例如下面的 IR 对 Toy 明显无效，却可能在未注册方言时通过结构性解析：
 
-> 代码性质：示意（非逐字源码，未编译或运行验证）。
+> 代码性质：示意（非逐字源码；已在未注册方言模式下解析，不代表 Toy 语义合法）。
 
 ```mlir
 func.func @main() {
@@ -45,7 +45,7 @@ func.func @main() {
 }
 ```
 
-问题包括：`print` 没有输入、错误地产生了结果，而且函数缺少终结操作。这个原文例子还混入了结构性错误，不能据此保证未知方言模式一定通过验证；研究不透明操作时应添加合法 `func.return`，把结构错误和 Toy 语义错误分开。成熟实现应注册方言和操作，使验证、构造和变换获得语义信息。
+问题包括：`print` 没有输入、错误地产生了结果，而且函数缺少明确的终结操作。2026-09-13 实测，本地 `mlir-opt -allow-unregistered-dialect` 仍接受这段文本：未注册操作的 `mightHaveTrait<IsTerminator>()` 可以为真，块末检查因而放行，见 [Verifier.cpp](/opt/llvm-project/mlir/lib/IR/Verifier.cpp:153)。这不等于 Toy 语义合法；研究不透明操作时仍宜补上 `func.return`，把终结条件和 Toy 操作约束分开。成熟实现应注册方言和操作，使验证、构造和变换获得语义信息。
 
 ## 4. 定义 Toy 方言
 
@@ -315,7 +315,7 @@ MLIR 生成器递归访问 AST：
 
 以下是便于观察的示意 IR。注意第 2 章真正的 `TransposeOp::build` 总是先给结果 `tensor<*xf64>`，此时还没有第 4 章的形状推断：
 
-> 代码性质：示意（非逐字源码，未编译或运行验证）。
+> 代码性质：示意（非逐字源码；完整片段已用 LLVM 18.1.8 解析验证）。
 
 ```mlir
 module {
@@ -343,7 +343,7 @@ ${TOY_BUILD}/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.t
 
 张量字面量经 `collectData()` 展平成 `std::vector<double>`，再配上 `RankedTensorType` 构造 `DenseElementsAttr`。`+` 与 `*` 分别生成 AddOp 和 MulOp，都是逐元素运算。GenericCallOp 用 `FlatSymbolRefAttr` 存 callee，初始结果无秩；返回表达式会使函数签名带一个无秩张量结果，没有显式 return 则补 `toy.return`。
 
-最终调用 `mlir::verify(theModule)`。本地生成器仍有教学实现中的错误传播缺口，例如 Ch2 的模块循环未逐个检查 `mlirGen(f)` 返回值，语句列表的 print 失败分支返回 success。应把这些看成源码审读练习，不能据注释声称所有错误路径都已完善。
+最终调用 `mlir::verify(theModule)`。本地生成器仍有教学实现中的错误传播缺口，例如 Ch2 的模块循环未逐个检查 `mlirGen(f)` 返回值，语句列表的 print 失败分支返回 success。实测 `def main() { print(missing); }` 会输出 unknown variable 错误，但进程仍返回 0 并输出只含 return 的函数。因此对错误输入还要检查诊断，不能只依赖退出码；这属于本地 Toy 示例的错误传播缺口。
 
 ```bash
 ${TOY_BUILD}/bin/toyc-ch2 /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy -emit=mlir -mlir-print-debuginfo 2> codegen.mlir
@@ -428,7 +428,7 @@ def f(a) {
 
 生成 prototype 时，a 被设成 `tensor<*xf64>`。创建 entry block 后，将源名 a 对应到第一个 Block argument。生成 t 的初始化器时，先查 a，不产生新操作，再创建初始无秩的 TransposeOp；变量表中 t 指向其结果。生成乘法时两次查 t，得到同一 Value，于是 MulOp 有两个相同 operands。ReturnOp 使用 MulOp 结果；最后生成器把函数签名改成有一个无秩张量结果。
 
-> 代码性质：示意（非逐字源码，未编译或运行验证）。
+> 代码性质：示意（非逐字源码；完整片段已用 LLVM 18.1.8 解析验证）。
 
 ```mlir
 toy.func @f(%arg0: tensor<*xf64>) -> tensor<*xf64> {
@@ -454,7 +454,7 @@ toy.func @f(%arg0: tensor<*xf64>) -> tensor<*xf64> {
 
 最小实验可先用合法 Func 容器包住未知操作：
 
-> 代码性质：示意（非逐字源码，未编译或运行验证）。
+> 代码性质：示意（非逐字源码；完整片段已用 LLVM 18.1.8 解析验证）。
 
 ```mlir
 module {
@@ -547,7 +547,7 @@ module {
 ### 14.3 用同一程序比较 AST、紧凑 IR 和通用 IR
 
 ```bash
-cmake --build "$TOY_BUILD" --target toyc-ch2 --parallel 2
+test -x "$TOY_BUILD/bin/toyc-ch2"
 "$TOY_BUILD/bin/toyc-ch2" \
   /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy \
   -emit=ast 2> "$TOY_LAB/ch2-ast.txt"
