@@ -268,3 +268,97 @@ FileCheck 的 `CHECK-LABEL` 定位函数，`CHECK-NEXT` 约束相邻输出，`CH
 **`mul(x, ones)` 可以无条件替换为 x 吗？** 不可以。至少要保证元素乘法语义、类型和形状兼容，还要考虑浮点语义允许的等价范围。教程没有实现此规则；它是要求先证明再重写的设计练习。
 
 **为何正确性不应依赖用户打开 `-opt`？** 规范化通常不应承担语言合法性。但本 Toy 后端确实依赖若干高层操作预先消失，因此驱动在请求 lowering 时强制运行必要准备阶段。生产编译器应明确区分必需合法化和可选性能优化。
+
+<a id="code-lab"></a>
+
+## 12. 关键代码与实验：证明删掉的是正确的节点
+
+本章不再重复 DRR 的整套定义，而把“模式为什么成功”和“结果怎样验证”接起来。准备好第 0 章环境，先构建本章工具：
+
+```bash
+cmake --build "$TOY_BUILD" --target toyc-ch3 mlir-tblgen FileCheck --parallel 2
+```
+
+### 12.1 一次真实的匹配与替换
+
+> 代码性质：逐字源码（按所引路径与起始行核对；不等于独立可编译）。
+
+[源码：Ch3/mlir/ToyCombine.cpp](/opt/llvm-project/mlir/examples/toy/Ch3/mlir/ToyCombine.cpp:39)
+
+```c++
+  mlir::LogicalResult
+  matchAndRewrite(TransposeOp op,
+                  mlir::PatternRewriter &rewriter) const override {
+    // Look through the input of the current transpose.
+    mlir::Value transposeInput = op.getOperand();
+    TransposeOp transposeInputOp = transposeInput.getDefiningOp<TransposeOp>();
+
+    // Input defined by another transpose? If not, no match.
+    if (!transposeInputOp)
+      return failure();
+
+    // Otherwise, we have a redundant transpose. Use the rewriter.
+    rewriter.replaceOp(op, {transposeInputOp.getOperand()});
+    return success();
+  }
+```
+
+这里的 op 是外层 transpose。getDefiningOp 沿其输入回到定义点：如果输入是函数块参数，就没有内层 TransposeOp，返回 failure；若找到内层，则用“内层的输入”替换“外层的结果”。
+
+replaceOp 没有要求删除内层。内层能否消失取决于替换完成后是否仍有使用，以及它是否可安全删除。这一点可以通过下面的小文件直接观察，而不是仅凭代数等式推测。
+
+### 12.2 用共享值例子防止误删
+
+配套输入：[03-shared-transpose.mlir](examples/03-shared-transpose.mlir)。它有两次转置，又单独打印内层结果，因此内层仍有可观察的用户。
+
+```bash
+"$TOY_BUILD/bin/toyc-ch3" \
+  "$TOY_ROOT/aiversion/examples/03-shared-transpose.mlir" \
+  -emit=mlir 2> "$TOY_LAB/ch3-shared-before.mlir"
+"$TOY_BUILD/bin/toyc-ch3" \
+  "$TOY_ROOT/aiversion/examples/03-shared-transpose.mlir" \
+  -emit=mlir -opt 2> "$TOY_LAB/ch3-shared-after.mlir"
+rg -n 'toy.transpose|toy.print' "$TOY_LAB/ch3-shared-before.mlir" "$TOY_LAB/ch3-shared-after.mlir"
+```
+
+按源码逻辑预期：优化后保留一个 transpose；第一个 print 仍使用它，第二个 print 改为使用原始常量。若两个 transpose 都消失，就要检查是不是把仍被打印的内层也删掉了。这里比较的是 use-def 关系，不能要求优化后继续保留 %inner/%outer 这两个文本名字。
+
+这是新编写的教学输入，本轮未执行；它没有冒充上游已经通过的回归测试。
+
+### 12.3 观察三次 reshape 如何变成一个常量
+
+```bash
+"$TOY_BUILD/bin/toyc-ch3" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy \
+  -emit=mlir 2> "$TOY_LAB/ch3-reshape-before.mlir"
+"$TOY_BUILD/bin/toyc-ch3" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy \
+  -emit=mlir -opt 2> "$TOY_LAB/ch3-reshape-after.mlir"
+diff -u "$TOY_LAB/ch3-reshape-before.mlir" "$TOY_LAB/ch3-reshape-after.mlir"
+```
+
+这个**完整官方文件**有 a、b、c 三个显式形状声明，所以初始有三次 reshape；不要与 §9 的两变量缩小示例混淆。最终目标是一个 2×1 常量和 print，不是让数据重新变回一维。
+
+```bash
+set -o pipefail
+"$TOY_BUILD/bin/toyc-ch3" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy \
+  -emit=mlir -opt 2>&1 \
+  | "$TOY_BUILD/bin/FileCheck" /opt/llvm-project/mlir/test/Examples/Toy/Ch3/trivial_reshape.toy
+```
+
+FileCheck 验证的是最终结构。要研究中间发生哪条规则，应结合源码和 pass 日志，不要从最终仅剩一个常量推断“肯定只执行了一次重写”。
+
+### 12.4 查看 DRR 生成的 C++，但不手工维护它
+
+```bash
+"$TOY_BUILD/bin/mlir-tblgen" -gen-rewriters \
+  /opt/llvm-project/mlir/examples/toy/Ch3/mlir/ToyCombine.td \
+  -I /opt/llvm-project/mlir/include \
+  -I /opt/llvm-project/mlir/examples/toy/Ch3/include \
+  > "$TOY_LAB/ch3-generated.inc"
+rg -n -A 7 'struct (RedundantReshapeOptPattern|ReshapeReshapeOptPattern|FoldConstantReshapeOptPattern)' \
+  "$TOY_LAB/ch3-generated.inc"
+```
+
+重点看生成类的构造函数、根操作名和 benefit，再找到 matchAndRewrite 中的约束检查。这个输出用于理解元编程，不是应该编辑后拷回源码树的文件；真正要修改的是 ToyCombine.td。

@@ -79,7 +79,7 @@ Module
 
 ## 3. 运行本章示例
 
-构建 LLVM/MLIR 与 Toy 示例后，先按 [环境准备](/opt/coding/mlir-toy/aiversion/00-preflight.md) 设置 `TOY_BUILD`，然后运行：
+构建 LLVM/MLIR 与 Toy 示例后，先按 [环境准备](../aiversion/00-preflight.md) 设置 `TOY_BUILD`，然后运行：
 
 ```bash
 ${TOY_BUILD}/bin/toyc-ch1 \

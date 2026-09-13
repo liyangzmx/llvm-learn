@@ -11,7 +11,7 @@ const fail = message => errors.push(message);
 const read = p => fs.readFileSync(p, 'utf8');
 const fence = String.fromCharCode(96).repeat(3);
 const manifest = JSON.parse(read(path.join(root, 'source-manifest.json')));
-const docs = ['README.md', 'SOURCES.md', 'VALIDATION.md', 'issues/ds4.1-response.md', 'issues/glm-response.md'];
+const docs = ['../../README.md', 'README.md', 'SOURCES.md', 'VALIDATION.md'];
 for (const directory of ['official', 'aiversion']) {
   const files = fs.readdirSync(path.join(root, directory)).filter(p => p.endsWith('.md')).sort();
   for (const name of files) docs.push(directory + '/' + name);

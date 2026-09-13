@@ -535,3 +535,129 @@ diff -u struct-before.mlir struct-after.mlir
 **问题四：** 为什么本章没有新增 Struct→LLVM lowering？
 
 答：教学示例通过内联、折叠和常量物化，在进入后端前消除了结构体。后端复用的前提是“高层概念已消失”，不是“LLVM 自动认识 Toy 的新类型”。
+
+<a id="code-lab"></a>
+
+## 16. 关键代码与实验：跟踪一个字段直到它变成张量
+
+类型存储与 parser/printer 的完整关键实现已有摘录。本节改看数据通路：字段名在哪里变成索引，常量属性如何替代字段访问，精确形状又在哪里恢复。
+
+### 16.1 字段名在前端消失的位置
+
+> 代码性质：逐字源码（按所引路径与起始行核对；不等于独立可编译）。
+
+[源码：Ch7/mlir/MLIRGen.cpp](/opt/llvm-project/mlir/examples/toy/Ch7/mlir/MLIRGen.cpp:290)
+
+```c++
+  std::optional<size_t> getMemberIndex(BinaryExprAST &accessOp) {
+    assert(accessOp.getOp() == '.' && "expected access operation");
+
+    // Lookup the struct node for the LHS.
+    StructAST *structAST = getStructFor(accessOp.getLHS());
+    if (!structAST)
+      return std::nullopt;
+
+    // Get the name from the RHS.
+    VariableExprAST *name = llvm::dyn_cast<VariableExprAST>(accessOp.getRHS());
+    if (!name)
+      return std::nullopt;
+
+    auto structVars = structAST->getVariables();
+    const auto *it = llvm::find_if(structVars, [&](auto &var) {
+      return var->getName() == name->getName();
+    });
+    if (it == structVars.end())
+      return std::nullopt;
+    return it - structVars.begin();
+  }
+```
+
+getStructFor 根据左侧表达式找到源语言结构体声明；右侧必须是 VariableExprAST，名字在声明的字段列表里顺序查找。返回迭代器差值，就是后面 StructAccessOp 使用的数字索引。
+
+返回类型是 optional<size_t>，不是用 0 表示失败：**第一个字段的合法索引恰好是 0**。调用者的 `if (!accessIndex)` 检查的是“是否有值”，不会把索引 0 当作访问失败。真正找不到声明或字段时才返回 nullopt。
+
+因此错误的字段名应在这个前端解析映射阶段定位；MLIR StructType 里已经没有原字段名，不能指望 LLVM 后端再替你发现“拼错了 a”。
+
+### 16.2 为什么 fold 返回的是属性
+
+> 代码性质：逐字源码（按所引路径与起始行核对；不等于独立可编译）。
+
+[源码：Ch7/mlir/ToyCombine.cpp](/opt/llvm-project/mlir/examples/toy/Ch7/mlir/ToyCombine.cpp:38)
+
+```c++
+OpFoldResult StructAccessOp::fold(FoldAdaptor adaptor) {
+  auto structAttr =
+      llvm::dyn_cast_if_present<mlir::ArrayAttr>(adaptor.getInput());
+  if (!structAttr)
+    return nullptr;
+
+  size_t elementIndex = getIndex();
+  return structAttr[elementIndex];
+}
+```
+
+输入必须已经有常量 ArrayAttr，才能按 index 取出字段属性。找不到属性时返回空 fold 结果，是“现在不能折叠”，不是“结构体值等于空”。若取出的字段还是 ArrayAttr，就能继续表示嵌套结构体；若是 DenseElementsAttr，物化钩子可以创建普通 toy.constant。
+
+随后恢复类型的关键只有几行：
+
+> 代码性质：逐字源码（按所引路径与起始行核对；不等于独立可编译）。
+
+[源码：Ch7/mlir/Dialect.cpp](/opt/llvm-project/mlir/examples/toy/Ch7/mlir/Dialect.cpp:265)
+
+```c++
+void ConstantOp::inferShapes() {
+  getResult().setType(cast<TensorType>(getValue().getType()));
+}
+```
+
+这里使用属性携带的 TensorType 设置结果 Type，不需要重新遍历所有数值来猜 shape。它与 materializeConstant 的接力使最终输入满足已有 Tensor→Affine lowering 的要求。
+
+### 16.3 按四个观察点读结构体例子
+
+```bash
+cmake --build "$TOY_BUILD" --target toyc-ch7 FileCheck --parallel 2
+"$TOY_BUILD/bin/toyc-ch7" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \
+  -emit=ast 2> "$TOY_LAB/ch7-ast.txt"
+"$TOY_BUILD/bin/toyc-ch7" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \
+  -emit=mlir 2> "$TOY_LAB/ch7-raw.mlir"
+"$TOY_BUILD/bin/toyc-ch7" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \
+  -emit=mlir -opt 2> "$TOY_LAB/ch7-opt.mlir"
+"$TOY_BUILD/bin/toyc-ch7" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \
+  -emit=mlir-affine 2> "$TOY_LAB/ch7-affine.mlir"
+```
+
+依次检查：
+
+1. AST 里还看得见 Struct 声明与字段名 a、b。
+2. 初始 Toy IR 里，结构体类型只有字段 Type，struct_access 使用索引 0/1。
+3. 优化后结构体操作消失，普通常量为 2×3，转置和乘法结果为 3×2。
+4. Affine 阶段只需要处理旧的张量计算语义，表现为循环、缓冲区和 Print。
+
+第四条没有 -opt 也会执行必要前处理，这是 Ch7 驱动的 lowering 分支；不能据此改变第 4 章“只有 -opt 才运行那条前处理流水线”的结论。
+
+### 16.4 将优化结果与官方 OPT 预期对照
+
+```bash
+set -o pipefail
+"$TOY_BUILD/bin/toyc-ch7" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \
+  -emit=mlir -opt 2>&1 \
+  | "$TOY_BUILD/bin/FileCheck" \
+    /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy --check-prefix=OPT
+```
+
+必须选择 OPT 前缀：默认 CHECK 描述未优化输出，还要求看到 struct_constant、generic_call 等结构。拿优化结果去匹配默认 CHECK，会制造与编译器正确性无关的失败。
+
+若要核对数值：
+
+```bash
+"$TOY_BUILD/bin/toyc-ch7" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch7/struct-codegen.toy \
+  -emit=jit > "$TOY_LAB/ch7-result.txt" 2> "$TOY_LAB/ch7-errors.txt"
+```
+
+成功时按运算语义应得到三行，分别为 `1 16`、`4 25`、`9 36`；实际格式带六位小数和元素后空格。本轮未执行这个实验；它验证的是本例通过消除常量结构体接上旧后端，不能推出已经支持任意运行时结构体布局和 ABI。

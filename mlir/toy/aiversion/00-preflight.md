@@ -102,8 +102,10 @@ python3 --version
 
 本地 LLVM 的具体依赖要求应查看 [llvm/CMakeLists.txt](/opt/llvm-project/llvm/CMakeLists.txt)，不要仅以网络上另一版本的最低要求判断。这里不要求额外检出新的 llvm-project，也不要求更新当前 release/18.x 源码。
 
+在本知识库的任意目录中执行下面的命令；`git rev-parse --show-toplevel` 用于定位仓库根目录，因此检出目录无需命名为 `llvm-learn`。构建产物放在仓库根目录的 `build-llvm18/`，已由 `.gitignore` 排除。
+
 ```bash
-export TOY_BUILD=/opt/coding/mlir-toy/build-llvm18
+export TOY_BUILD="$(git rev-parse --show-toplevel)/build-llvm18"
 
 cmake -G Ninja -S /opt/llvm-project/llvm -B "$TOY_BUILD" \
   -DLLVM_ENABLE_PROJECTS=mlir \
@@ -195,3 +197,58 @@ SSA 指每个 SSA 值只定义一次；这不意味着整个程序不能循环�
 3. 生成 LLVM 方言 IR 就算运行了吗？——还没有，需要翻译和后端执行流程。
 
 读不懂某个 C++ 模板时，先确认它属于“描述 IR”“生成 IR”还是“变换 IR”。有了这个定位，再读模板参数和接口，通常比从语法细节逐词猜用途更有效。
+
+<a id="code-lab"></a>
+
+## 10. 建立一套可反复使用的实验工作流
+
+后面每章的“关键代码与实验”都只选当前阶段的入口和转换点。第一次实验前先按 §5 完成 CMake 配置，再从本知识库的任意目录中，在同一个终端设置：
+
+```bash
+export TOY_ROOT="$(git rev-parse --show-toplevel)/mlir/toy"
+export TOY_BUILD="$(git rev-parse --show-toplevel)/build-llvm18"
+export TOY_LAB="$(mktemp -d /tmp/mlir-toy-lab.XXXXXX)"
+printf '教材目录：%s\n构建目录：%s\n实验输出：%s\n' "$TOY_ROOT" "$TOY_BUILD" "$TOY_LAB"
+```
+
+TOY_ROOT 指向教材与独立实验输入所在的 `mlir/toy/`。如果实际使用其他构建目录，应修改 TOY_BUILD 的值。TOY_LAB 是新建的独立临时目录，用来保存各阶段 IR，不会覆盖教材或 LLVM 的测试输入。关闭终端后变量不会自动保留；需要长期保存结果时，由你将这个目录复制到合适位置。后续命令都假设这三个变量已设置。
+
+### 10.1 每次只构建当前要观察的工具
+
+```bash
+cmake --build "$TOY_BUILD" --target toyc-ch1 FileCheck --parallel 2
+test -x "$TOY_BUILD/bin/toyc-ch1"
+"$TOY_BUILD/bin/toyc-ch1" --help
+```
+
+构建失败就先处理构建诊断，不继续解释后面的运行结果。“unknown target”通常是配置没有启用 Toy；“找不到文件”也可能只是 TOY_BUILD 指向了别的目录。学习第 N 章时，将目标和命令换成对应的 toyc-chN；FileCheck 是验证预期文本的辅助程序，不参与生成 Toy IR。
+
+### 10.2 读源码时先找函数，再看局部实现
+
+例如研究第 2 章的变量声明：
+
+```bash
+rg -n 'mlirGen\(VarDeclExprAST|create<ReshapeOp>|declare\(' \
+  /opt/llvm-project/mlir/examples/toy/Ch2/mlir/MLIRGen.cpp
+sed -n '379,405p' /opt/llvm-project/mlir/examples/toy/Ch2/mlir/MLIRGen.cpp
+```
+
+第一条用于定位入口、关键操作创建和符号登记；第二条只展开本版本的相关实现。按“调用者 → 当前方法 → 创建的操作”阅读，比从文件首行顺着 include 一直读下去更容易把握执行顺序。源码变化后，先重新搜索，不要盲用旧行号。
+
+### 10.3 把一次实验分成输入、阶段和判据
+
+例如查看 AST，三个部分分别是 ast.toy、-emit=ast、输出中函数/表达式的嵌套关系：
+
+```bash
+if "$TOY_BUILD/bin/toyc-ch1" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy \
+  -emit=ast 2> "$TOY_LAB/ch1-ast.txt"; then
+  sed -n '1,45p' "$TOY_LAB/ch1-ast.txt"
+else
+  sed -n '1,80p' "$TOY_LAB/ch1-ast.txt"
+fi
+```
+
+成功和失败都读取同一个 stderr 文件，但解读不同：成功时是 AST，失败时可能只是诊断。若用管道连接 FileCheck，先设置 `set -o pipefail`；若用 diff 比较 IR，退出码 1 表示不同，不等于工具崩溃。
+
+后文的结果说明分为“源码推导的观察点”和“官方 CHECK 的文本约束”。本轮没有构建 Toy，所以新命令与新增小例子仍是待运行实验，不是已经成功执行的日志。

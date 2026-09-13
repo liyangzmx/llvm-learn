@@ -476,3 +476,99 @@ module {
 **为什么把名字 b 加到局部变量表，不需要新建 MLIR 操作？** 名字属于前端符号环境；如果初始化器已经生成了值，别名式声明只要绑定同一 Value 即可，只有显式 shape 才另外引入 reshape。
 
 **如果 `.td` 修改后行为没变化，先查什么？** 查 CMake 是否生成对应章节的 `.inc`、是否重新链接正确 `toyc-chN`、是否误读另一个章节复制的 Ops.td。七个章目录是逐步演进的独立实现，不能混用。
+
+<a id="code-lab"></a>
+
+## 14. 关键代码与实验：变量声明到底生成了哪些操作
+
+本章已有 ODS、常量 builder 和 verifier 的摘录；现在补上它们如何被实际生成器调用。重点不在“记住所有 builder 重载”，而在“某个 AST 节点返回的 Value 由哪个操作定义”。
+
+### 14.1 一次声明的生成路径
+
+> 代码性质：逐字源码（按所引路径与起始行核对；不等于独立可编译）。
+
+[源码：Ch2/mlir/MLIRGen.cpp](/opt/llvm-project/mlir/examples/toy/Ch2/mlir/MLIRGen.cpp:379)
+
+```c++
+  mlir::Value mlirGen(VarDeclExprAST &vardecl) {
+    auto *init = vardecl.getInitVal();
+    if (!init) {
+      emitError(loc(vardecl.loc()),
+                "missing initializer in variable declaration");
+      return nullptr;
+    }
+
+    mlir::Value value = mlirGen(*init);
+    if (!value)
+      return nullptr;
+
+    // We have the initializer value, but in case the variable was declared
+    // with specific shape, we emit a "reshape" operation. It will get
+    // optimized out later as needed.
+    if (!vardecl.getType().shape.empty()) {
+      value = builder.create<ReshapeOp>(loc(vardecl.loc()),
+                                        getType(vardecl.getType()), value);
+    }
+
+    // Register the value in the symbol table.
+    if (failed(declare(vardecl.getName(), value)))
+      return nullptr;
+    return value;
+  }
+```
+
+`mlirGen(*init)` 递归生成初始化器，取得 SSA Value。显式 shape 不为空时，生成器再创建 ReshapeOp，并把变量 value 改成 reshape 的结果。最后 declare 只登记“源变量名 → 最终 Value”；它本身不是一条 Toy 操作。
+
+例如 `var b<2,3> = [1,2,3,4,5,6];` 依次得到一维常量、二维 reshape、名字绑定。即使输入本来已经是 2×3，代码也会先生成 reshape；“它是多余的”由后续规范化判断，不能要求 Parser 或 declare 替优化器完成工作。
+
+### 14.2 加号和乘号从哪里变成操作名
+
+以下是同文件二元表达式生成器中的分派部分；lhs/rhs 已由前面的递归调用生成：
+
+> 代码性质：逐字源码（按所引路径与起始行核对；不等于独立可编译）。
+
+[源码：Ch2/mlir/MLIRGen.cpp](/opt/llvm-project/mlir/examples/toy/Ch2/mlir/MLIRGen.cpp:204)
+
+```c++
+    switch (binop.getOp()) {
+    case '+':
+      return builder.create<AddOp>(location, lhs, rhs);
+    case '*':
+      return builder.create<MulOp>(location, lhs, rhs);
+    }
+
+    emitError(location, "invalid binary operator '") << binop.getOp() << "'";
+    return nullptr;
+  }
+```
+
+`builder.create<AddOp>` 返回类型化操作包装器，它的单个结果可转换成 Value 供递归调用者使用。这里没有逐元素 C++ for 循环：此时创建的是“将来要执行一次张量加法”的 IR，而不是计算张量数据。减法没有 case，解释了“Parser 认识 -”与“编译器支持减法”之间的差距。
+
+### 14.3 用同一程序比较 AST、紧凑 IR 和通用 IR
+
+```bash
+cmake --build "$TOY_BUILD" --target toyc-ch2 --parallel 2
+"$TOY_BUILD/bin/toyc-ch2" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy \
+  -emit=ast 2> "$TOY_LAB/ch2-ast.txt"
+"$TOY_BUILD/bin/toyc-ch2" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy \
+  -emit=mlir 2> "$TOY_LAB/ch2-custom.mlir"
+"$TOY_BUILD/bin/toyc-ch2" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch2/codegen.toy \
+  -emit=mlir -mlir-print-op-generic 2> "$TOY_LAB/ch2-generic.mlir"
+```
+
+`-mlir-print-op-generic` 只改变打印方式，不运行优化，也不把 Toy 方言“变成未知方言”。对照时找到同一 constant 的 value 属性、同一 reshape 的输入与结果 Type，再看 generic_call 的 callee 属性如何在紧凑语法中显示为 @名字。
+
+接着检查往返：
+
+```bash
+"$TOY_BUILD/bin/toyc-ch2" "$TOY_LAB/ch2-generic.mlir" \
+  -emit=mlir 2> "$TOY_LAB/ch2-roundtrip.mlir"
+diff -u "$TOY_LAB/ch2-custom.mlir" "$TOY_LAB/ch2-roundtrip.mlir"
+```
+
+只有前三个生成命令成功后，才能把文件当作输入继续。这里没有打开调试位置打印或 pass 追踪，避免将日志混进 IR。若出现差异，先判断是不是打印规范化和名字变化，再谈是否丢失语义。
+
+本实验应该回答两个具体问题：`b` 对应 constant 还是 reshape 的结果？generic_call 此时是否已经变成函数体？前者由 declare 的位置回答；后者仍是调用，直到第 4 章启用内联。

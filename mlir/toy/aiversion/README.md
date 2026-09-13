@@ -19,6 +19,28 @@
 
 每章先完整承接对应 official 正文，再追加深入讲解；两部分长度不要求各占一半。想先补基础时，可先读第 0 章，再在具体章节中结合前后两部分阅读。练习答案紧随题目，适合先自行推导，再核对原因。
 
+## 关键代码与实验入口
+
+各章新增了独立的源码阅读与实验部分：只选决定行为的入口或转换点，每段后解释它的输入、修改与后续使用，不复制整个实现文件。所有新实验先设置第 0 章的 TOY_ROOT、TOY_BUILD 与 TOY_LAB；分别定位教材输入、构建产物与独立临时输出目录。
+
+| 章 | 直接阅读 | 主要观察目标 |
+|---|---|---|
+| 0 | [实验工作流](00-preflight.md#code-lab) | 按需构建、查找源码、捕获输出和失败诊断 |
+| 1 | [Parser 入口与优先级](01-from-source-to-ast.md#code-lab) | 文件→Lexer→Parser→AST，乘法如何先结合 |
+| 2 | [声明与二元表达式生成](02-first-mlir.md#code-lab) | reshape 插入点，紧凑/通用 IR 与往返 |
+| 3 | [匹配、共享值与生成规则](03-rewriting.md#code-lab) | 只替换外层转置，比较重写前后与 TableGen 产物 |
+| 4 | [worklist 与 pass 追踪](04-interfaces-and-shapes.md#code-lab) | 就绪条件、-opt 门控、阶段日志与最终 IR |
+| 5 | [元素计算与 Print 边界](05-progressive-lowering.md#code-lab) | load/标量计算/store 分工，不支持 reshape 的失败路径 |
+| 6 | [printf 到 JIT](06-llvm-and-jit.md#code-lab) | 符号声明与调用分离，四层 IR 和运行输出 |
+| 7 | [字段到张量](07-custom-types.md#code-lab) | 名字→索引→属性→常量→精确 shape |
+
+另有两个小型教学输入，文件中只保留观察该问题所需的程序：
+
+- [共享转置结果](examples/03-shared-transpose.mlir)：规范化应删除外层转置，但保留仍被单独打印的内层结果。
+- [活跃的非恒等 reshape](examples/05-live-reshape.toy)：Toy IR 可生成，但按当前规则应在 Affine 合法化阶段失败。
+
+这两个输入及新增实验命令本轮均未运行；结论来自本地源码推导，不是上游已有测试成绩。源码摘录逐行核对与 shell 语法检查不能替代编译器运行验证。
+
 ## 版本规则
 
 唯一代码基准是本地 `/opt/llvm-project` 的 `release/18.x`，提交 `3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff`。源码目录为 `mlir/examples/toy/Ch1` 到 `Ch7`，测试为 `mlir/test/Examples/Toy/Ch1` 到 `Ch7`。网页原文会继续变化，不要从最新网页拷贝 API 后与这套本地代码混用。

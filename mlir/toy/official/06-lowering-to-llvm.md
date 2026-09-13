@@ -221,7 +221,7 @@ int runJit(mlir::ModuleOp module) {
 
 ## 5. 运行与观察
 
-先按 [环境准备](/opt/coding/mlir-toy/aiversion/00-preflight.md) 构建并设置 `TOY_BUILD`。本地现有 `/opt/llvm-project/build` 未启用 MLIR，不能直接假定其中已有这些二进制。
+先按 [环境准备](../aiversion/00-preflight.md) 构建并设置 `TOY_BUILD`。本地现有 `/opt/llvm-project/build` 未启用 MLIR，不能直接假定其中已有这些二进制。
 
 ```bash
 ${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=jit

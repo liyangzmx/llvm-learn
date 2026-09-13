@@ -390,3 +390,108 @@ diff -u affine-basic.mlir affine-opt.mlir
 **问题四：** 输入是 `tensor<?x3xf64>`，已经有 rank 了，能否直接进入本章循环生成？
 
 答：不能由 rank 已知推出静态 size 已知。这里的循环上界直接来自类型维度，动态维度的标记不是运行时维度值；实现没有为它生成查询和动态分配的完整路径。这也解释了第 4 章的简化 shape inference 与生产动态 shape 系统的距离。
+
+<a id="code-lab"></a>
+
+## 14. 关键代码与实验：从张量运算定位到一次 load/store
+
+本章已有完整的 lowerOpToLoops 与转置 pattern，不再重抄循环外壳。下面选两个连接点：二元运算如何取得当前元素，以及保留下来的 Print 如何换成新输入。
+
+### 14.1 二元运算的回调只负责一个元素
+
+以下摘自 BinaryOpLowering 的循环体生成回调；memRefOperands、loopIvs 和 loc 已由外层提供：
+
+> 代码性质：逐字源码（按所引路径与起始行核对；不等于独立可编译）。
+
+[源码：Ch5/mlir/LowerToAffineLoops.cpp](/opt/llvm-project/mlir/examples/toy/Ch5/mlir/LowerToAffineLoops.cpp:131)
+
+```c++
+                     typename BinaryOp::Adaptor binaryAdaptor(memRefOperands);
+
+                     // Generate loads for the element of 'lhs' and 'rhs' at the
+                     // inner loop.
+                     auto loadedLhs = builder.create<affine::AffineLoadOp>(
+                         loc, binaryAdaptor.getLhs(), loopIvs);
+                     auto loadedRhs = builder.create<affine::AffineLoadOp>(
+                         loc, binaryAdaptor.getRhs(), loopIvs);
+
+                     // Create the binary operation performed on the loaded
+                     // values.
+                     return builder.create<LoweredBinaryOp>(loc, loadedLhs,
+                                                            loadedRhs);
+```
+
+adaptor 只为重映射的输入提供 lhs/rhs 访问器，不做真实数据加载。两次 AffineLoadOp 才读取 `lhs[i,j]` 与 `rhs[i,j]`，LoweredBinaryOp 再生成标量加/乘。
+
+回调返回一个 f64 Value，**store 不在这里**：它由 lowerOpToLoops 接收后统一写入结果 buffer 的 `[i,j]`。因此要修改输出索引或分配策略，应找共同辅助函数；要修改“当前元素怎么算”，才改这个回调。AddOp/MulOp 分别把模板参数绑定到 arith::AddFOp/arith::MulFOp，从而复用相同循环结构。
+
+### 14.2 Print 不降级计算，但必须更新边界
+
+> 代码性质：逐字源码（按所引路径与起始行核对；不等于独立可编译）。
+
+[源码：Ch5/mlir/LowerToAffineLoops.cpp](/opt/llvm-project/mlir/examples/toy/Ch5/mlir/LowerToAffineLoops.cpp:255)
+
+```c++
+struct PrintOpLowering : public OpConversionPattern<toy::PrintOp> {
+  using OpConversionPattern<toy::PrintOp>::OpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(toy::PrintOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const final {
+    // We don't lower "toy.print" in this pass, but we need to update its
+    // operands.
+    rewriter.modifyOpInPlace(op,
+                             [&] { op->setOperands(adaptor.getOperands()); });
+    return success();
+  }
+};
+```
+
+这段没有创建打印循环，也没有 printf。它唯一的实质修改，是把 Print 的操作数替换成 adaptor 中已经重映射的 MemRef。动态合法性判断看到这个新类型后才允许保留 Print；下一章再处理它的执行实现。
+
+“保留操作名”与“不需要 conversion pattern”是两个不同命题。这里短短几行就是两层 IR 能正确交接的关键。
+
+### 14.3 对照未融合与融合后的结构
+
+```bash
+cmake --build "$TOY_BUILD" --target toyc-ch5 --parallel 2
+"$TOY_BUILD/bin/toyc-ch5" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir \
+  -emit=mlir-affine 2> "$TOY_LAB/ch5-basic.mlir"
+"$TOY_BUILD/bin/toyc-ch5" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch5/affine-lowering.mlir \
+  -emit=mlir-affine -opt 2> "$TOY_LAB/ch5-fused.mlir"
+rg -n 'memref.alloc|memref.dealloc|affine.for|affine.load|affine.store|arith.mulf|toy.print' \
+  "$TOY_LAB/ch5-basic.mlir" "$TOY_LAB/ch5-fused.mlir"
+```
+
+按三个层次观察，不只数行：
+
+- 结果 buffer 从哪个 alloc 来，释放在 print 之前还是之后？
+- 转置 load 是否用了反向索引，乘法是否读取相同输出坐标？
+- 融合后某个中间 store/load 消失时，其数值现在通过哪个 SSA Value 传给乘法？
+
+优化器可能继续做规范化，所以应追踪真实的定义和使用，不能把“最终必须保留某个固定名字的 %tmp”当作正确性条件。
+
+### 14.4 一个预期失败实验：找到缺失的 lowering，而不是掩盖它
+
+配套输入：[05-live-reshape.toy](examples/05-live-reshape.toy)。它先把 2×3 张量转置成 3×2，再声明把转置结果 reshape 回 2×3。这个 reshape 的输入不是直接常量，形状也不相同；现有三个规范化规则不能将它消去。
+
+```bash
+"$TOY_BUILD/bin/toyc-ch5" \
+  "$TOY_ROOT/aiversion/examples/05-live-reshape.toy" \
+  -emit=mlir -opt 2> "$TOY_LAB/ch5-live-reshape.mlir"
+rg -n 'toy.transpose|toy.reshape|toy.print' "$TOY_LAB/ch5-live-reshape.mlir"
+
+if "$TOY_BUILD/bin/toyc-ch5" \
+  "$TOY_ROOT/aiversion/examples/05-live-reshape.toy" \
+  -emit=mlir-affine 2> "$TOY_LAB/ch5-reshape-error.txt"; then
+  printf '降级成功：请核对版本或规则是否已变化。\n'
+else
+  sed -n '1,90p' "$TOY_LAB/ch5-reshape-error.txt"
+fi
+```
+
+按当前源码预期，第一条生成优化后的 Toy IR，仍能看到活跃 reshape；第二条在合法化 toy.reshape 时失败。该输入不是故意写坏 Toy 语法，而是触及当前后端未实现的能力。
+
+若只是将 target 改为允许所有 Toy 操作，conversion 也许不再报错，但下一阶段仍不知道如何执行残留的 reshape；这不是正确实现。此例由教材新增，本轮没有执行它，诊断完整措辞以实际运行输出为准。

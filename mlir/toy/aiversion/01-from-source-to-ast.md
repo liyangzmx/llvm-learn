@@ -79,7 +79,7 @@ Module
 
 ## 3. 运行本章示例
 
-构建 LLVM/MLIR 与 Toy 示例后，先按 [环境准备](/opt/coding/mlir-toy/aiversion/00-preflight.md) 设置 `TOY_BUILD`，然后运行：
+构建 LLVM/MLIR 与 Toy 示例后，先按 [环境准备](../aiversion/00-preflight.md) 设置 `TOY_BUILD`，然后运行：
 
 ```bash
 ${TOY_BUILD}/bin/toyc-ch1 \
@@ -218,3 +218,93 @@ flowchart TB
 **例题四：给函数参数设成 `tensor<*xf64>`，是否表示空张量？**
 
 不是。星号表示秩信息尚未知；数据本身可以有多个维度。空张量是某个已知维度为 0，属于另一种情况。
+
+<a id="code-lab"></a>
+
+## 12. 关键代码与实验：顺着入口看 AST 如何长出来
+
+先确认第 0 章的 TOY_BUILD 与 TOY_LAB 已设置。本章只读两个代码位置：文件如何交给 Parser，以及优先级如何改变树形；Lexer 和每个 AST 类的完整定义无需全部抄入教材。
+
+### 12.1 从文件内容进入 Parser
+
+> 代码性质：逐字源码（按所引路径与起始行核对；不等于独立可编译）。
+
+[源码：Ch1/toyc.cpp](/opt/llvm-project/mlir/examples/toy/Ch1/toyc.cpp:42)
+
+```c++
+std::unique_ptr<toy::ModuleAST> parseInputFile(llvm::StringRef filename) {
+  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> fileOrErr =
+      llvm::MemoryBuffer::getFileOrSTDIN(filename);
+  if (std::error_code ec = fileOrErr.getError()) {
+    llvm::errs() << "Could not open input file: " << ec.message() << "\n";
+    return nullptr;
+  }
+  auto buffer = fileOrErr.get()->getBuffer();
+  LexerBuffer lexer(buffer.begin(), buffer.end(), std::string(filename));
+  Parser parser(lexer);
+  return parser.parseModule();
+}
+```
+
+依次读这段代码：
+
+1. `getFileOrSTDIN` 取得输入缓冲区；打不开文件时返回空指针，不进入语法分析。
+2. `getBuffer()` 取得字符视图；LexerBuffer 使用 begin/end 读取字符，并带上文件名以产生位置。
+3. Parser 持有对词法器的引用；`parseModule()` 驱动解析，而不是 Lexer 主动决定整个程序的语法。
+4. 返回的是拥有 AST 的 unique_ptr。局部输入缓冲区离开此函数后，AST 应持有所需的名字、数值与位置，而不能继续借用临时 token 文本。
+
+因此报错为“Could not open input file”时，根本还没走到 parseExpression；不要从运算符优先级查起。
+
+### 12.2 真正决定乘法先结合的几行
+
+下面只摘出 parseBinOpRHS 的后半段；循环和函数外壳见源码：
+
+> 代码性质：逐字源码（按所引路径与起始行核对；不等于独立可编译）。
+
+[源码：Ch1/include/toy/Parser.h](/opt/llvm-project/mlir/examples/toy/Ch1/include/toy/Parser.h:267)
+
+```c++
+      int nextPrec = getTokPrecedence();
+      if (tokPrec < nextPrec) {
+        rhs = parseBinOpRHS(tokPrec + 1, std::move(rhs));
+        if (!rhs)
+          return nullptr;
+      }
+
+      // Merge lhs/RHS.
+      lhs = std::make_unique<BinaryExprAST>(std::move(loc), binOp,
+                                            std::move(lhs), std::move(rhs));
+```
+
+读 `a + b * c` 时，当前 tokPrec 对应 +，rhs 暂时只有 b；发现后面 * 的 nextPrec 更高，就以 b 为左侧递归构造 b*c。然后外层才创建 `BinaryExprAST('+', a, b*c)`。`std::move` 把已有子树的所有权交给新节点，不是复制一份大树。
+
+这段代码同时说明：括号可以通过递归改变组合顺序，而树里不必保留一个专门的“左括号对象”。
+
+### 12.3 打印 AST，并区分声明形状与字面量形状
+
+```bash
+cmake --build "$TOY_BUILD" --target toyc-ch1 FileCheck --parallel 2
+"$TOY_BUILD/bin/toyc-ch1" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy \
+  -emit=ast 2> "$TOY_LAB/ch1-ast.txt"
+rg -n 'Proto|VarDecl|Literal|BinOp|Call|Return' "$TOY_LAB/ch1-ast.txt"
+```
+
+观察 `b<2,3>`：VarDecl 上有声明 shape，而初始化器 Literal 仍是一维六元素。此时未产生 reshape 操作，也没有执行乘法；这些信息会在下一章交给 MLIRGen。
+
+可让官方测试检查其 AST 输出结构：
+
+```bash
+set -o pipefail
+"$TOY_BUILD/bin/toyc-ch1" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy -emit=ast 2>&1 \
+  | "$TOY_BUILD/bin/FileCheck" /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy
+```
+
+若只想改一个表达式观察树形，先复制输入，不动上游：
+
+```bash
+cp /opt/llvm-project/mlir/test/Examples/Toy/Ch1/ast.toy "$TOY_LAB/ch1-edit.toy"
+```
+
+用编辑器把 multiply_transpose 的返回表达式改成 `a + a * b`，再以 -emit=ast 运行副本；预期为加法在外、乘法在右子树。修改后不要继续沿用原文件的 FileCheck 预期，因为输入语义已经变了。这个实验只验证语法结构，不要求这组输入先通过形状检查。

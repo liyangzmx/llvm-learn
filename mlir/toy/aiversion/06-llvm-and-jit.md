@@ -221,7 +221,7 @@ int runJit(mlir::ModuleOp module) {
 
 ## 5. 运行与观察
 
-先按 [环境准备](/opt/coding/mlir-toy/aiversion/00-preflight.md) 构建并设置 `TOY_BUILD`。本地现有 `/opt/llvm-project/build` 未启用 MLIR，不能直接假定其中已有这些二进制。
+先按 [环境准备](../aiversion/00-preflight.md) 构建并设置 `TOY_BUILD`。本地现有 `/opt/llvm-project/build` 未启用 MLIR，不能直接假定其中已有这些二进制。
 
 ```bash
 ${TOY_BUILD}/bin/toyc-ch6 /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy -emit=jit
@@ -426,3 +426,113 @@ dump 写 stderr，程序的 printf 写 stdout，这是本地驱动的选择，�
 **问题四：** JIT 是不是解释器？为什么这里调用 invokePacked？
 
 答：这里的执行引擎通过 LLVM JIT 生成并调用本机代码，不是逐条解释 Toy AST。打包调用入口为宿主调用生成函数提供统一约定；本地 main 无参数、无返回值，使这个接口的使用最简单。若扩展带张量参数的入口，还需要正确构造与传递描述符，不能只传一个 C++ 数组地址。
+
+<a id="code-lab"></a>
+
+## 13. 关键代码与实验：给打印建立外部调用边界
+
+本章已展示完整 LLVM 转换规则集合、导出函数与 JIT 设置。这里不再复制这些长函数，只补足“从一个 toy.print 到模块符号、标量 load 和 call”的连接。
+
+### 13.1 为什么在循环外查找/插入 printf 声明
+
+> 代码性质：逐字源码（按所引路径与起始行核对；不等于独立可编译）。
+
+[源码：Ch6/mlir/LowerToLLVM.cpp](/opt/llvm-project/mlir/examples/toy/Ch6/mlir/LowerToLLVM.cpp:137)
+
+```c++
+  static FlatSymbolRefAttr getOrInsertPrintf(PatternRewriter &rewriter,
+                                             ModuleOp module) {
+    auto *context = module.getContext();
+    if (module.lookupSymbol<LLVM::LLVMFuncOp>("printf"))
+      return SymbolRefAttr::get(context, "printf");
+
+    // Insert the printf function into the body of the parent module.
+    PatternRewriter::InsertionGuard insertGuard(rewriter);
+    rewriter.setInsertionPointToStart(module.getBody());
+    rewriter.create<LLVM::LLVMFuncOp>(module.getLoc(), "printf",
+                                      getPrintfType(context));
+    return SymbolRefAttr::get(context, "printf");
+  }
+```
+
+已有 printf 符号时直接返回引用；没有时保存当前插入点，到 Module 开头创建 LLVMFuncOp 声明，再由守卫恢复原位置。它没有在这里实现 printf 的函数体，也没有发起运行时调用。
+
+所以一次声明被多个打印复用，是模块符号管理；每个元素打印一次，是循环体中的 call。把这两个频率混淆，会误以为每次迭代都在创建函数或全局字符串。
+
+### 13.2 最内层怎样把一个元素交给 printf
+
+此时格式字符串指针已经创建，loopIvs 已包含各层循环变量：
+
+> 代码性质：逐字源码（按所引路径与起始行核对；不等于独立可编译）。
+
+[源码：Ch6/mlir/LowerToLLVM.cpp](/opt/llvm-project/mlir/examples/toy/Ch6/mlir/LowerToLLVM.cpp:111)
+
+```c++
+    // Generate a call to printf for the current element of the loop.
+    auto printOp = cast<toy::PrintOp>(op);
+    auto elementLoad =
+        rewriter.create<memref::LoadOp>(loc, printOp.getInput(), loopIvs);
+    rewriter.create<LLVM::CallOp>(
+        loc, getPrintfType(context), printfRef,
+        ArrayRef<Value>({formatSpecifierCst, elementLoad}));
+
+    // Notify the rewriter that this operation has been removed.
+    rewriter.eraseOp(op);
+    return success();
+```
+
+MemRef Load 的结果是 f64，而不是一个完整张量；LLVM::CallOp 接收格式字符串指针和这个元素。生成这些操作后，原 toy.print 被删除，避免同一次打印既留下高层操作又出现低层调用。
+
+这里短暂混合了 MemRef、SCF 和 LLVM 方言操作。只有随后标准转换规则也完成合法化，full conversion 才能成功；不要截取这个中间状态就声称“所有 IR 已经是 LLVM 方言”。
+
+### 13.3 用一个输入沿每个停止点保存 IR
+
+```bash
+cmake --build "$TOY_BUILD" --target toyc-ch6 --parallel 2
+for stage in mlir mlir-affine mlir-llvm llvm; do
+  if ! "$TOY_BUILD/bin/toyc-ch6" \
+    /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy \
+    "-emit=$stage" 2> "$TOY_LAB/ch6-$stage.txt"; then
+    printf '失败阶段：%s\n' "$stage"
+    break
+  fi
+done
+```
+
+按层检查文件：
+
+| 文件 | 应重点找什么 | 说明 |
+|---|---|---|
+| ch6-mlir.txt | toy.constant、toy.print | 输入仍是 Toy 张量程序 |
+| ch6-mlir-affine.txt | alloc、store、消费 MemRef 的 toy.print | 计算已具备内存语义，打印尚保留 |
+| ch6-mlir-llvm.txt | llvm.func、llvm.call、全局字符串 | 全转换结束，仍是 MLIR |
+| ch6-llvm.txt | define、call、声明和全局常量 | 已翻译到 LLVM 自身的 IR |
+
+jit.toy 直接打印一个常量，没有转置/乘法；因此 Affine 阶段看不到计算循环并不奇怪。打印循环在下一阶段才由 PrintOpLowering 生成。研究张量计算循环则使用第 5 章的输入，别用错误的观察对象寻找根本不存在的操作。
+
+上述流程没有 -opt；再单独对比 LLVM 层优化：
+
+```bash
+"$TOY_BUILD/bin/toyc-ch6" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy \
+  -emit=llvm -opt 2> "$TOY_LAB/ch6-llvm-opt.txt"
+diff -u "$TOY_LAB/ch6-llvm.txt" "$TOY_LAB/ch6-llvm-opt.txt"
+```
+
+常量和循环有可能被进一步简化，但操作名消失并不证明运行结果正确。下一步仍要单独执行并检查 stdout。
+
+### 13.4 JIT 的数值输出与编译诊断分开保存
+
+```bash
+if "$TOY_BUILD/bin/toyc-ch6" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch6/jit.toy \
+  -emit=jit > "$TOY_LAB/ch6-result.txt" 2> "$TOY_LAB/ch6-jit-errors.txt"; then
+  sed -n '1,5p' "$TOY_LAB/ch6-result.txt"
+else
+  sed -n '1,90p' "$TOY_LAB/ch6-jit-errors.txt"
+fi
+```
+
+源码规定的预期为两行 1、2 和 3、4，每个数打印六位小数，后有空格。如果 LLVM IR 已成功生成但 JIT 失败，优先检查执行引擎、宿主目标、外部符号和入口，而不是仅凭最终失败就怀疑 Parser。
+
+本轮没有运行 JIT；以上是帮助你建立证据链的命令。尤其不要用 llvm-lowering.mlir 里过期的最后一条 CHECK 去否定正确的数值推导，相关边界已在 §5.1 说明。

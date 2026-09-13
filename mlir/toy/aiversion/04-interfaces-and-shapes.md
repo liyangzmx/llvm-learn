@@ -417,3 +417,89 @@ Module PassManager
 **已有 `tensor<?x3xf64>` 能否保证后续静态循环生成成功？** 不能。它有秩，但第一维 size 未知；Toy 的静态边界构造不会自动补出动态 size 查询。
 
 **本章做的是泛型专门化吗？** 从语言效果看，计算在调用上下文中具体化；从实现看，是展开调用加函数内传播。代码没有生成并缓存按签名命名的专门化函数，阅读时应明确这个层次差别。
+
+<a id="code-lab"></a>
+
+## 14. 关键代码与实验：跟踪形状推断工作表
+
+本章的接口声明和内联钩子已有源码摘录，现在只展开 shape inference 的调度循环。它决定何时可以询问一个操作的接口，因而比再抄一遍各操作的 setType 更关键。
+
+### 14.1 worklist 每轮如何向前推进
+
+> 代码性质：逐字源码（按所引路径与起始行核对；不等于独立可编译）。
+
+[源码：Ch4/mlir/ShapeInferencePass.cpp](/opt/llvm-project/mlir/examples/toy/Ch4/mlir/ShapeInferencePass.cpp:72)
+
+```c++
+    while (!opWorklist.empty()) {
+      // Find the next operation ready for inference, that is an operation
+      // with all operands already resolved (non-generic).
+      auto nextop = llvm::find_if(opWorklist, allOperandsInferred);
+      if (nextop == opWorklist.end())
+        break;
+
+      Operation *op = *nextop;
+      opWorklist.erase(op);
+
+      // Ask the operation to infer its output shapes.
+      LLVM_DEBUG(llvm::dbgs() << "Inferring shape for: " << *op << "\n");
+      if (auto shapeOp = dyn_cast<ShapeInference>(op)) {
+        shapeOp.inferShapes();
+      } else {
+        op->emitError("unable to infer shape of operation without shape "
+                      "inference interface");
+        return signalPassFailure();
+      }
+    }
+```
+
+逐次解释这段循环：
+
+1. find_if 扫描集合，寻找所有操作数均为 RankedTensorType 的操作；它不是“取源码中排在第一的操作”。
+2. 找不到就 break。break 后还有单独的残项检查，所以“停止循环”不等于 pass 成功。
+3. 找到后先 erase，再调用 ShapeInference 接口。接口返回 void，本轮不会重新把它放入集合以反复求解。
+4. 没有接口是另一种明确失败；有接口但实现不正确，也不能依靠这个循环自动补救。
+
+这里没有重写 tensor 数值，setType 更新的是 SSA 结果携带的静态类型信息。正确实现必须保证新类型与运算语义一致。
+
+### 14.2 先验证 -opt 是否真正启用了流水线
+
+```bash
+cmake --build "$TOY_BUILD" --target toyc-ch4 FileCheck --parallel 2
+"$TOY_BUILD/bin/toyc-ch4" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir \
+  -emit=mlir 2> "$TOY_LAB/ch4-no-opt.mlir"
+"$TOY_BUILD/bin/toyc-ch4" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir \
+  -emit=mlir -opt 2> "$TOY_LAB/ch4-opt.mlir"
+rg -n 'toy.generic_call|toy.cast|tensor<\*xf64>|toy.func private' "$TOY_LAB/ch4-no-opt.mlir"
+sed -n '1,45p' "$TOY_LAB/ch4-opt.mlir"
+```
+
+第一份保留泛型函数、调用和无秩类型；第二份应收敛为 main 中的具体张量计算。若准备观察形状推断却漏加 -opt，驱动就不会运行这条流水线；应先检查命令，再排查接口注册。
+
+### 14.3 查看每个 pass 后的 IR，而不是把日志再次当输入
+
+```bash
+"$TOY_BUILD/bin/toyc-ch4" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir \
+  -emit=mlir -opt -mlir-disable-threading -mlir-print-ir-after-all \
+  2> "$TOY_LAB/ch4-passes.log"
+rg -n 'IR Dump|toy.generic_call|toy.cast|tensor<' "$TOY_LAB/ch4-passes.log"
+```
+
+按阶段观察：调用是否展开、形状信息是否沿值传播、cast 是否简化、重复常量/转置是否合并。Inliner 本身可能做简化，因此**某个 cast 未出现在可见 dump 中，不代表它从未被创建**。这些日志在 pass 边界打印，不是对每个内部重写事件都做记录。
+
+日志带有多份 IR 与标题，不能把 ch4-passes.log 直接作为下一次 -x=mlir 的输入；要重用最终模块，使用上一小节没有追踪标志的输出。
+
+### 14.4 把观察结果交给官方检查
+
+```bash
+set -o pipefail
+"$TOY_BUILD/bin/toyc-ch4" \
+  /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir \
+  -emit=mlir -opt 2>&1 \
+  | "$TOY_BUILD/bin/FileCheck" /opt/llvm-project/mlir/test/Examples/Toy/Ch4/shape_inference.mlir
+```
+
+本地 CHECK 要求私有函数和无秩类型消失，并检查乘法两端使用同一个转置结果。它覆盖“内联＋形状推断＋清理”的组合结果，不是只测 inferShapes 这个方法。排错时先看第一个偏离预期的阶段，再定位该阶段使用的接口。
