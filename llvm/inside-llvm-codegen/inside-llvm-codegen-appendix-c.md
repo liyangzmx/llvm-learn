@@ -20,9 +20,24 @@ Pass 是编译器中最基础的概念之一，是对编译对象实施某项分
 
 ## C.1 LegacyPassManager 中的 Pass
 
+**把 Pass 的粒度理解为一次调用处理哪个对象。** 一个函数内的分析通常不需要每次遍历整个模块，因此可以围绕 Function 组织；循环变换又需要知道当前 Loop 与函数分析之间的关系；机器阶段则处理 MachineFunction。粒度规定作用对象和管理接口，不代表只能读那个对象的一行代码，也不表示所有较细粒度 Pass 都是更粗粒度类的 C++ 子类。
+
+分析 Pass 计算可被查询的信息，例如支配树；变换 Pass 修改程序，例如删除分支。删除分支可能使之前的支配树过期，所以管理器还要处理依赖、保留与失效。如果只把 PassManager 理解成“依次调用一串函数”，就会漏掉编译正确性所依赖的分析生命周期。
+
 针对代码处理的不同位置，LLVM 提供了 7 种 Pass。具体结构示意图如图 C-1 所示。
 
-![图 C-1 LLVM 中的 Pass 结构示意图](origin/assets/figures/p427-C-1.png)
+```mermaid
+classDiagram
+ Pass <|-- ModulePass
+ ModulePass <|-- ImmutablePass
+ Pass <|-- FunctionPass
+ FunctionPass <|-- MachineFunctionPass
+ Pass <|-- CallGraphSCCPass
+ Pass <|-- LoopPass
+ Pass <|-- RegionPass
+```
+
+空心三角指向基类。图描述 legacy Pass 的类型继承，不是执行先后；New PM 不以这棵继承树作为所有 Pass 的接口。
 
 **图 C-1 LLVM 中的 Pass 结构示意图**
 
@@ -40,13 +55,33 @@ Pass 是编译器中最基础的概念之一，是对编译对象实施某项分
 
 6）LoopPass：这类 Pass 用于遍历并处理函数中的循环。若遍历时遇到嵌套循环，则先处理内层循环，后处理外层循环。LoopPass 可以获取函数或模型级的分析信息，使用者通常重写 runOnLoop() 函数，实现自定义功能。
 
-7）RegionPass ：和 LoopPass 类似，这类 Pass 用于遍历并处理函数的区域，其中函数的区域是由单入口 / 单出口基本块组成。图 C-2a 是一个程序的控制流图，图 C-2b 是分析该流程图后识别到的 3 个区域。
+7）RegionPass ：和 LoopPass 类似，这类 Pass 用于遍历并处理函数的区域，其中函数的区域是由单入口 / 单出口基本块组成。图 C-2 在同一张 CFG 上用三个框标出嵌套区域。
 
-![图 C-2 CFG 和区域划分示意图](origin/assets/figures/p428-C-2.png)
+```mermaid
+flowchart TD
+ subgraph Outer["外层区域：entry 到 exit 前"]
+ E["entry"] --> H["循环头"]
+ subgraph Mid["循环内区域"]
+ H --> T["条件块"]
+ subgraph Inner["菱形区域"]
+ T --> L["左块"]
+ T --> R["右块"]
+ L --> J["汇合"]
+ R --> J
+ end
+ J --> B["循环尾"]
+ end
+ B --> H
+ B --> X["退出前块"]
+ end
+ X --> O["exit"]
+```
+
+以命名块重绘原图的嵌套单入口/单出口结构。框表示区域范围，实线表示 CFG；RegionInfo 的出口块按其定义不属于该区域，不能仅凭视觉框线推导其他分析的循环集合。
 
 **图 C-2 CFG 和区域划分示意图**
 
-通常 RegionPass 和 CFG 优化相关，针对某一区域进行局部优化。RegionPass 可以访问函数或模型级的分析信息。注意，因为图 C-2b 的 3 个区域是函数的子区域，所以可以使用全局信息。使用者通常要重写 runOnRegion() 函数，实现自定义功能。基于区域的优化并不多，LLVM 中只有几个 RegionPass，主要与 CFG 优化、多面体优化相关。
+通常 RegionPass 和 CFG 优化相关，针对某一区域进行局部优化。RegionPass 可以访问函数或模型级的分析信息。这三个区域仍属于同一函数；能查询哪些分析，应按管理器的依赖与接口约定确定。使用者通常要重写 runOnRegion() 函数，实现自定义功能。基于区域的优化并不多，LLVM 中只有几个 RegionPass，主要与 CFG 优化、多面体优化相关。
 
 ## C.2 LegacyPassManager 对 Pass 的管理
 
@@ -74,15 +109,38 @@ LLVM 中上述三种依赖会混合存在，所以需要管理依赖，保证 Pa
 | LPPassManager | `FunctionPass` + `PMDataManager`，管理循环 Pass |
 | RGPassManager | `FunctionPass` + `PMDataManager`，管理区域 Pass |
 
-外层 `legacy::PassManager` 是持有实现对象的公共接口，不等于 MPPassManager。本段以源码表为准，原图 C-3 保留供辨认书中的类名。
+外层 `legacy::PassManager` 是持有实现对象的公共接口，不等于 MPPassManager。图 C-3 按这张源码对照表重绘，区分公共接口、管理器实现与基类。
 
-![图 C-3 各种 Pass 的继承关系示意图](origin/assets/figures/p429-C-3.png)
+```mermaid
+classDiagram
+ Pass <|-- MPPassManager
+ PMDataManager <|-- MPPassManager
+ ModulePass <|-- CGPassManager
+ PMDataManager <|-- CGPassManager
+ ModulePass <|-- FPPassManager
+ PMDataManager <|-- FPPassManager
+ FunctionPass <|-- LPPassManager
+ PMDataManager <|-- LPPassManager
+ FunctionPass <|-- RGPassManager
+ PMDataManager <|-- RGPassManager
+```
+
+按正文已核查的 LLVM 18 继承关系重绘，尤其 MPPassManager 的基类是 Pass，而非原图暗示的 ModulePass。
 
 **图 C-3 各种 Pass 的继承关系示意图**
 
 Pass 管理子系统通过层级关系进行依赖管理，各种 Pass 包含关系示意图如图 C-4所示。
 
-![图 C-4 各种 Pass 包含关系示意图](origin/assets/figures/p430-C-4.png)
+```mermaid
+flowchart TD
+ M["模块层管理"] --> CG["调用图 SCC 管理"]
+ M --> F["函数层管理"]
+ CG -. "按需要组织函数层处理" .-> F
+ F --> L["循环层管理"]
+ F --> R["区域层管理"]
+```
+
+图表示典型管理粒度关系，不把 Region 固定画在 Loop 内部：区域与循环不是同一个概念，RGPassManager 与 LPPassManager 都在函数层衔接。
 
 **图 C-4 各种 Pass 包含关系示意图**
 
@@ -105,6 +163,12 @@ RGPassManager 直接继承 LoopPass 呢？最主要的原因是循环和区域�
 区域）表示，但是区域并不一定是循环。
 
 ## C.3 New PassManager
+
+**逐步看一次分析缓存失效。** 假设先查询函数 F 的支配树，AnalysisManager 计算并缓存结果；接着某变换删除一条 CFG 边；如果变换未维护支配树，却声称全部分析仍保留，后续 Pass 就可能读取旧树并作出错误变换。正确做法是只保留确实仍有效或已维护的分析，其余让管理器失效，下一次需要时重新计算。
+
+再看嵌套粒度：模块中有 F、G 两个函数，要对每个函数运行一组函数 Pass，需要由 module-to-function adaptor 在模块层组织调用。adaptor 解决遍历与不同分析管理器之间的衔接，不是把 FunctionPass 生硬当成 ModulePass。循环层同理还有自身的适配关系与更新需求。
+
+因此阅读流水线字符串时，先用括号看嵌套范围，再看范围内的执行顺序；阅读 C++ 实现时，再对照 PreservedAnalyses 与 analysis manager。本书 LLVM 18 的 `opt` 新 PM 流程和传统后端 codegen 管理不应直接混为同一套入口。
 
 LLVM 中存在两套管理 Pass 的基础设施，但其接口、分析模型和支持范围并不完全相同。为什么引入新机制？主要是考虑代码实现和性能两方面的因素。
 

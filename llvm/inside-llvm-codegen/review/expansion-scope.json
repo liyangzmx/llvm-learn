@@ -1,0 +1,150 @@
+{
+  "chapters": [
+    {
+      "chapter": "ch1",
+      "before_chars": 8723,
+      "after_chars": 10914,
+      "origin_chars": 7693,
+      "added_chars_net": 2191,
+      "mermaid_before": 1,
+      "mermaid_after": 3
+    },
+    {
+      "chapter": "ch2",
+      "before_chars": 23289,
+      "after_chars": 25951,
+      "origin_chars": 32064,
+      "added_chars_net": 2662,
+      "mermaid_before": 6,
+      "mermaid_after": 9
+    },
+    {
+      "chapter": "ch3",
+      "before_chars": 21618,
+      "after_chars": 25273,
+      "origin_chars": 22835,
+      "added_chars_net": 3655,
+      "mermaid_before": 3,
+      "mermaid_after": 8
+    },
+    {
+      "chapter": "ch4",
+      "before_chars": 17039,
+      "after_chars": 18619,
+      "origin_chars": 14076,
+      "added_chars_net": 1580,
+      "mermaid_before": 3,
+      "mermaid_after": 6
+    },
+    {
+      "chapter": "ch5",
+      "before_chars": 14998,
+      "after_chars": 17823,
+      "origin_chars": 6802,
+      "added_chars_net": 2825,
+      "mermaid_before": 4,
+      "mermaid_after": 10
+    },
+    {
+      "chapter": "ch6",
+      "before_chars": 34188,
+      "after_chars": 36121,
+      "origin_chars": 19050,
+      "added_chars_net": 1933,
+      "mermaid_before": 0,
+      "mermaid_after": 2
+    },
+    {
+      "chapter": "ch7",
+      "before_chars": 40419,
+      "after_chars": 48060,
+      "origin_chars": 62832,
+      "added_chars_net": 7641,
+      "mermaid_before": 4,
+      "mermaid_after": 7
+    },
+    {
+      "chapter": "ch8",
+      "before_chars": 50496,
+      "after_chars": 59178,
+      "origin_chars": 84644,
+      "added_chars_net": 8682,
+      "mermaid_before": 3,
+      "mermaid_after": 6
+    },
+    {
+      "chapter": "ch9",
+      "before_chars": 28380,
+      "after_chars": 31315,
+      "origin_chars": 28349,
+      "added_chars_net": 2935,
+      "mermaid_before": 2,
+      "mermaid_after": 2
+    },
+    {
+      "chapter": "ch10",
+      "before_chars": 79180,
+      "after_chars": 91027,
+      "origin_chars": 104643,
+      "added_chars_net": 11847,
+      "mermaid_before": 2,
+      "mermaid_after": 24
+    },
+    {
+      "chapter": "ch11",
+      "before_chars": 27862,
+      "after_chars": 33961,
+      "origin_chars": 43395,
+      "added_chars_net": 6099,
+      "mermaid_before": 3,
+      "mermaid_after": 6
+    },
+    {
+      "chapter": "ch12",
+      "before_chars": 16875,
+      "after_chars": 18872,
+      "origin_chars": 8502,
+      "added_chars_net": 1997,
+      "mermaid_before": 1,
+      "mermaid_after": 4
+    },
+    {
+      "chapter": "ch13",
+      "before_chars": 11360,
+      "after_chars": 12946,
+      "origin_chars": 7665,
+      "added_chars_net": 1586,
+      "mermaid_before": 1,
+      "mermaid_after": 1
+    },
+    {
+      "chapter": "appendix-a",
+      "before_chars": 18592,
+      "after_chars": 21135,
+      "origin_chars": 15576,
+      "added_chars_net": 2543,
+      "mermaid_before": 0,
+      "mermaid_after": 8
+    },
+    {
+      "chapter": "appendix-b",
+      "before_chars": 6309,
+      "after_chars": 7418,
+      "origin_chars": 5775,
+      "added_chars_net": 1109,
+      "mermaid_before": 0,
+      "mermaid_after": 1
+    },
+    {
+      "chapter": "appendix-c",
+      "before_chars": 9200,
+      "after_chars": 11023,
+      "origin_chars": 7126,
+      "added_chars_net": 1823,
+      "mermaid_before": 0,
+      "mermaid_after": 4
+    }
+  ],
+  "net_added_chars": 61108,
+  "scope": "Character counts are review aids, not measures of conceptual completeness."
+}

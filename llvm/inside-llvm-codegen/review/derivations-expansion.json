@@ -1,0 +1,477 @@
+{
+  "checks": 29,
+  "passed": true,
+  "cases": [
+    {
+      "name": "ch8-pressure",
+      "passed": true,
+      "detail": {
+        "orders": 80,
+        "trace1": [
+          [
+            "a"
+          ],
+          [
+            "a",
+            "b"
+          ],
+          [
+            "a",
+            "b",
+            "c"
+          ],
+          [
+            "a",
+            "b",
+            "c",
+            "d"
+          ],
+          [
+            "c",
+            "d",
+            "m"
+          ],
+          [
+            "m",
+            "n"
+          ],
+          [
+            "r"
+          ],
+          []
+        ],
+        "trace2": [
+          [
+            "a"
+          ],
+          [
+            "a",
+            "b"
+          ],
+          [
+            "m"
+          ],
+          [
+            "c",
+            "m"
+          ],
+          [
+            "c",
+            "d",
+            "m"
+          ],
+          [
+            "m",
+            "n"
+          ],
+          [
+            "r"
+          ],
+          []
+        ]
+      }
+    },
+    {
+      "name": "ch8-list-order",
+      "passed": true,
+      "detail": {
+        "forward": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E"
+        ],
+        "reverse_selection": [
+          "E",
+          "D",
+          "C",
+          "B",
+          "A"
+        ]
+      }
+    },
+    {
+      "name": "ch8-recurrence",
+      "passed": true,
+      "detail": {
+        "1": false,
+        "2": false,
+        "3": true,
+        "4": true
+      }
+    },
+    {
+      "name": "ch10-two-node-pbqp",
+      "passed": true,
+      "detail": {
+        "costs": [
+          11,
+          8,
+          3,
+          "infinity"
+        ],
+        "choice": [
+          "R0",
+          "spill"
+        ]
+      }
+    },
+    {
+      "name": "ch10-r1-r2",
+      "passed": true,
+      "detail": {
+        "r1": [
+          3,
+          7
+        ],
+        "r2": [
+          [
+            5,
+            4
+          ],
+          [
+            4,
+            3
+          ]
+        ]
+      }
+    },
+    {
+      "name": "ch10-hopfield",
+      "passed": true,
+      "detail": {
+        "-1,-1": 0,
+        "-1,1": 4,
+        "1,-1": -2,
+        "1,1": -2
+      }
+    },
+    {
+      "name": "ch7-low-bits",
+      "passed": true,
+      "detail": {
+        "all_8bit_pairs": 65536,
+        "wide_carry": "00ff + 0001 = 0100",
+        "scope": "bit-vector model only; no poison/undef proof"
+      }
+    },
+    {
+      "name": "ch11-frame",
+      "passed": true,
+      "detail": [
+        [
+          -8,
+          0,
+          8
+        ],
+        [
+          -12,
+          -8,
+          4
+        ],
+        [
+          -32,
+          -16,
+          16
+        ]
+      ]
+    },
+    {
+      "name": "ch11-outlining",
+      "passed": true,
+      "detail": {
+        "L20_saving": 24,
+        "L4_saving": -8
+      }
+    },
+    {
+      "name": "ch12-offset",
+      "passed": true,
+      "detail": {
+        "jump_offset_slots": 3,
+        "ordinary_bpf_bits": 64
+      }
+    },
+    {
+      "name": "ch11-suffix-tree",
+      "passed": true,
+      "detail": {
+        "0": "aba$",
+        "1": "ba$",
+        "2": "a$",
+        "3": "$"
+      }
+    },
+    {
+      "name": "ch3-original-live-graph",
+      "passed": true,
+      "detail": {
+        "scans_including_unchanged": 3,
+        "rounds": [
+          {
+            "A": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "B": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "C": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "D": [
+              "a",
+              "b"
+            ],
+            "E": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "F": [
+              "a",
+              "b",
+              "u"
+            ],
+            "G": [
+              "a",
+              "b"
+            ]
+          },
+          {
+            "A": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "B": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "C": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "D": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "E": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "F": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "u"
+            ],
+            "G": [
+              "a",
+              "b"
+            ]
+          },
+          {
+            "A": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "B": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "C": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "D": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "E": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ],
+            "F": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "u"
+            ],
+            "G": [
+              "a",
+              "b"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-ch4",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 7,
+        "current": 7
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-ch1",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 7,
+        "current": 7
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-ch5",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 8,
+        "current": 8
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-ch11",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 25,
+        "current": 25
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-appendix-a",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 12,
+        "current": 12
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-ch10",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 49,
+        "current": 49
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-ch8",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 36,
+        "current": 36
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-appendix-b",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 0,
+        "current": 0
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-ch13",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 8,
+        "current": 8
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-ch12",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 16,
+        "current": 16
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-ch9",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 30,
+        "current": 30
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-appendix-c",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 1,
+        "current": 1
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-ch2",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 30,
+        "current": 31
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-ch6",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 31,
+        "current": 31
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-ch7",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 47,
+        "current": 47
+      }
+    },
+    {
+      "name": "preserved-code-inside-llvm-codegen-ch3",
+      "passed": true,
+      "detail": {
+        "original_non_mermaid_blocks": 13,
+        "current": 13
+      }
+    },
+    {
+      "name": "origin-untouched",
+      "passed": true,
+      "detail": {
+        "files": 400
+      }
+    }
+  ],
+  "scope": "Finite teaching-model checks and preservation checks; does not rerun historical compiler experiments or prove all transformations."
+}

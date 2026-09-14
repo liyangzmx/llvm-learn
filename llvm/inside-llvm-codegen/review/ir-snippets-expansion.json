@@ -1,0 +1,152 @@
+{
+  "tool": "/opt/llvm-project/build/bin/llvm-as",
+  "checks": 18,
+  "cases": [
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 218,
+      "ir_sha256": "2b04fb0437004fc49f81c5373069f8d4366ff1703c57214ca70a2d62a214a191",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 1325,
+      "ir_sha256": "b9077b4236591bc8126f93d695bf2a57d34d4a213b10a2128cb6630f2f0ec025",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch11.md",
+      "line": 625,
+      "ir_sha256": "e6a49570f1543e95092b5aef3aad426d850a02134fb145a70d3da8278bcd274f",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch2.md",
+      "line": 119,
+      "ir_sha256": "b88025857f99ac814919094927856ae0d3bfa714c501413774cfebc18246b01f",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch2.md",
+      "line": 141,
+      "ir_sha256": "3114e9974ae539d0a4ccbacc8dcb3dab54a10468b70303c9cb76f6f30116f0f0",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch2.md",
+      "line": 730,
+      "ir_sha256": "ece8a59ef28c36cab46d02aa1d8cdef30ffb632e1850e03f70f6c1a764c0e3d8",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch5.md",
+      "line": 412,
+      "ir_sha256": "53d4b435cba62a7e6607ec41b3385fba56c8684eec873361d6326cbec85963f0",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch5.md",
+      "line": 445,
+      "ir_sha256": "75cc5086d7ae632dac3959a459e2e1bc3ff68255d0c99f657efb4cc9571a3235",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch7.md",
+      "line": 163,
+      "ir_sha256": "1f43a567e4bdcc732292e5c40d27492ae038b8c73ea8d7ba44a643e77afb4146",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch7.md",
+      "line": 209,
+      "ir_sha256": "f3d7e07a18bf6995b804208311d53fe3ae9dd301a65b838c73ac347817136d7b",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch7.md",
+      "line": 401,
+      "ir_sha256": "22cd56102191b2fdbdc1eefdfb94bb15597f08df5de1d71bbfe7659868033be6",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch7.md",
+      "line": 836,
+      "ir_sha256": "13a9bfa441e622529a617e1feafbed0b482320d4c8a9f0e066571640cc913d68",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch8.md",
+      "line": 150,
+      "ir_sha256": "29b3b87fb0031aa941d39f7a1eaa06c43e6ea6438c2e6df851a3f3353801f58e",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch8.md",
+      "line": 936,
+      "ir_sha256": "794a14335ef95aac95efd69a0bf5f22d023cf8dfbe24893426fe60e7e829fe7c",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch9.md",
+      "line": 125,
+      "ir_sha256": "6d5c8c8ad56e3280f474f67ebbdafe4138c9c713383077072e667b321c8904da",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch9.md",
+      "line": 287,
+      "ir_sha256": "07ff0b4d48d9009c2d97f0889e71a58b9a1d657ca458d5d5882814bcd194ad08",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch9.md",
+      "line": 348,
+      "ir_sha256": "62dd6424a2c044f18a3ae4bd31e24dd6338be0fd46da0aee6107ff31fde6bb06",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    },
+    {
+      "file": "inside-llvm-codegen-ch9.md",
+      "line": 713,
+      "ir_sha256": "4cb91684036456b27d4b94fe293b57b8efd49e09cb7d4e18fa44ec84ce703b25",
+      "returncode": 0,
+      "diagnostic": "",
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "scope": "llvm-as parsing and IR verification of displayed llvm/llvm-ir fences. Does not execute code, validate C++/MIR fragments, or prove transformations equivalent."
+}

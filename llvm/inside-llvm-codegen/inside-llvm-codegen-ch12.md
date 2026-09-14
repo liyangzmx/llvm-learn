@@ -4,6 +4,9 @@
 
 经过寄存器分配、栈帧布局和机器优化，后端得到可发射的MachineInstr。目标AsmPrinter把它们及标签、节和符号等事件交给MC层，由MC输出汇编文本或可重定位目标文件。`.o`只是链接/装载的输入，采用ELF格式不等于已经成为可执行文件；BPF对象还需要相应装载、解释或JIT环境。
 
+<details>
+<summary>动手实验前展开：本章环境初始化（首次阅读推导可先略过）</summary>
+
 <!-- manual-lab:ch12-setup -->
 
 ```sh
@@ -21,17 +24,33 @@ export BOOK_INPUT CODEGEN_LAB
 printf '实验输出目录：%s\n' "$CODEGEN_LAB"
 ```
 
+</details>
+
 以下命令按正文顺序在同一个 Bash 会话运行；输入取自本章实验目录，所有新文件写入刚创建的临时目录。
-
-
 
 下文直接生成 IR、MIR、汇编、目标文件、MC 编码、反汇编和重定位输出；自动运行器仍提供 `--out` 和 JSON 汇总。本章实测覆盖编译、组装、机器指令校验和反汇编，没有装载BPF程序到内核执行。
 
 ## 12.1 MC
 
+**从机器指令到字节，中间还差什么。** 一条 MachineInstr 已经能说“把 R1 加到 R0”，但它可能还带活跃性、帧索引、机器基本块等编译信息。MC 层保留编码/打印需要的 opcode、寄存器、立即数、符号表达式等，把优化分析所需的信息与文件输出所需的信息分开。
+
+最明显的差别是分支目标。编译过程中可以引用一个基本块对象；写目标文件时，需要表示它的符号及最终地址差。若符号尚不能确定，就要留下修正信息。因而 MCInst 不只是“更短的 MachineInstr”，还处在符号、节、布局和目标文件机制之中。
+
+把过程拆成三问：目标指令如何转换成 MCInst？MCInst 如何打印为汇编或编码为字节？尚未确定的符号表达式由汇编器还是链接器解决？后面的 AsmPrinter、MCCodeEmitter、AsmBackend、ObjectWriter，分别参与这些环节，而不是四个可互相替代的文件输出函数。
+
 代码生成和后端强关联，MIR 转为 MC 由具体后端完成。例如，BPF 后端生成 MC 的功能由 BPFMCInstLower 实现，其过程如图 12-2 所示。
 
-![图 12-2 eBPF 后端生成 MC 过程](origin/assets/figures/p387-12-2.png)
+```mermaid
+flowchart LR
+ MI["BPF MachineInstr"] --> AP["BPFAsmPrinter::emitInstruction"]
+ AP --> SP["需要时处理目标特殊发射"]
+ AP --> ML["BPFMCInstLower::Lower"]
+ ML --> MC["MCInst"]
+ MC --> ST["MCStreamer"]
+ SP --> ST
+```
+
+箭头表示发射调用/数据流的主干，普通 lowering 与目标特殊处理按指令情形选择。
 
 **图 12-2 eBPF 后端生成 MC 过程**
 
@@ -97,7 +116,16 @@ flowchart TD
 
 MC emission 是整条代码生成管线的最后一部分，而非从此才开始代码生成。`MCStreamer` 抽象标签、节切换、指令与数据发射等事件；汇编路径使用 MCAsmStreamer，目标文件路径使用各格式的 MCObjectStreamer/MCAssembler/ObjectWriter。图 12-4 展示基本类关系，具体目标还可提供 streamer 扩展。
 
-![图 12-4 机器码生成实现类的继承关系](origin/assets/figures/p388-12-4.png)
+```mermaid
+classDiagram
+ MCStreamer <|-- MCObjectStreamer
+ MCStreamer <|-- MCAsmStreamer
+ MCObjectStreamer <|-- MCELFStreamer
+ MCObjectStreamer <|-- MCXCOFFStreamer
+ MCObjectStreamer <|-- MCWasmStreamer
+```
+
+空心三角指向基类。MCAsmStreamer 输出汇编文本，MCObjectStreamer 的具体子类处理相应对象格式；对象输出不等于已链接的可执行文件。
 
 **图 12-4 机器码生成实现类的继承关系**
 
@@ -125,6 +153,12 @@ int test(int a, int b)
 ```
 
 ### 12.2.1 汇编代码生成
+
+**同一条指令走两种输出路径。** MachineInstr 经目标 lowering 得到 MCInst 后，如果输出汇编文本，MCInstPrinter 按目标语法打印操作码、寄存器和立即数；流中还会输出标签、节切换、对齐等指令/伪指令。若直接输出对象，则 MCInst 交给编码路径，不需要先写 `.s` 再调用外部汇编器。
+
+因此名为 AsmPrinter 的 Pass 也参与对象输出。它组织函数、符号和指令的发射，而具体 streamer 决定把这些事件变成文本还是对象内部结构。调试到 AsmPrinter，并不能据此判断本次只生成汇编。
+
+追踪一条返回指令时，可以先在 MIR 找目标 opcode，再在目标 emitInstruction/MC lowering 看它是否展开 pseudo、如何传递操作数，然后在文本输出观察助记符。若它展开成多个 MCInst，要逐个记录；不能先假定 MIR 一行必然对应汇编一行或固定字节数。
 
 代码清单12-2使用C++引用。运行器实际执行 `clang++ --target=bpfel -mcpu=generic -O2 -S test.cpp`，同时生成IR与目标文件；随后用llc在 `prologepilog` 后导出MIR并执行机器校验。
 
@@ -291,6 +325,23 @@ LBB0_2:                                 # %return
 
 ### 12.2.2 二进制代码生成
 
+**手算一次 BPF 相对跳转，理解布局为什么重要。** 在普通 BPF 单槽指令模型中，跳转偏移按“相对于下一指令的指令槽数”计算。假设跳转在字节地址 16，下一指令地址 24，目标地址 48，则偏移为 `(48−24)/8=3`。若误用当前指令地址作基准，就会算成 4，跳错一个槽。
+
+如果中间插入一个占两个槽的宽立即数指令，应按最终编码占用的槽数重新计算，而不是按汇编文本行数。目标地址尚未完成布局时，编码器先留下占位及 fixup；布局后能在当前汇编单元求出的表达式可直接修正，不能在这里确定的外部引用则按对象格式和目标规则生成 relocation，交后续链接/装载处理。
+
+```mermaid
+flowchart TD
+ I["MCInst 与符号表达式"] --> E["编码已知字段<br/>为未知字段记录 fixup"]
+ E --> L["节和 fragment 布局"]
+ L --> Q{"表达式现在可解且允许在本地修正？"}
+ Q -->|是| F["按目标规则写入字段"]
+ Q -->|否| R["生成 relocation 与符号信息"]
+ F --> O["对象文件"]
+ R --> O
+```
+
+fixup 是汇编阶段待处理的字段修正；relocation 是对象文件交给后续阶段的记录。不是每个 fixup 都会留下 relocation，也不是只要符号在本文件就一定可以省略重定位，仍取决于对象格式和目标链接语义。下面比较对象字节、反汇编、符号表与重定位表，就是从四个角度核对同一次发射的结果。
+
 输出目标文件时，MC 层进行指令编码、片段布局、符号求值和 fixup/重定位处理，最终写出 ELF 头、节、符号、数据等结构。汇编指示符被解释为这些事件或元信息，并非每个指示符都逐字变成一种二进制指令。
 
 1. 指令信息
@@ -357,8 +408,6 @@ cat "$CODEGEN_LAB/test-object.txt"
 ```
 
 反汇编为 15 条指令；readobj 记录 0x60 的 R_BPF_64_32 调用重定位和 .eh_frame 的 R_BPF_64_ABS64。
-
-
 
 反汇编得到15条指令，占120字节：
 

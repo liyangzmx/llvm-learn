@@ -1,0 +1,918 @@
+{
+  "mermaidVersion": "11.12.2",
+  "checks": 101,
+  "newOrChanged": 68,
+  "passed": true,
+  "cases": [
+    {
+      "file": "inside-llvm-codegen-appendix-a.md",
+      "line": 21,
+      "sha256": "d44d385db1c99bd83f5fdae54f83e2af7a59ca4637dd873ac0305431c7151b1f",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1364.40625 198",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-appendix-a.md",
+      "line": 52,
+      "sha256": "dc5ad9e42bb2c5c5da5e62dd15d3850bf381a3a44d489d2e548ecd38e8f97d48",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1084 198",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-appendix-a.md",
+      "line": 305,
+      "sha256": "87d818c3047c586fce4681ef5a22f759eaf0a9fe4a9b144161c11104bbec595a",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 828.3125 192.9936981201172",
+      "nodes": 5
+    },
+    {
+      "file": "inside-llvm-codegen-appendix-a.md",
+      "line": 365,
+      "sha256": "a7c0e87cd83de9f7aa7d491c9dc5f464cc712a67bc47498cc9fa6b4cec57ca3f",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 845.8125 441",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-appendix-a.md",
+      "line": 401,
+      "sha256": "771323d7e23c3467b7330fee9a7248c5aade9642a8f219c489ac2ae44140a4ea",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 686.171875 454",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-appendix-a.md",
+      "line": 419,
+      "sha256": "d1ee457461ff35ee1c5ace4b517192ee4f31ad2af255661db1941d7d301c2aaa",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 853.921875 277",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-appendix-a.md",
+      "line": 471,
+      "sha256": "9f3598442abbfe9f24a467f56008201af5a5d39af230ef857f4ecd452cbb3e50",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 878.125 430",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-appendix-a.md",
+      "line": 526,
+      "sha256": "8fb690899b653d1717c6453268ec1d2cdafb55d440b779a98ab50fd1529708d5",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 712.765625 302",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-appendix-b.md",
+      "line": 104,
+      "sha256": "a1203061cece86446029791a851778deefb4a6f12eab33bd5cce32ff1db6c4f2",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 450 766",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-appendix-c.md",
+      "line": 29,
+      "sha256": "8e53ec862f866507292e4b852eeaec23d9e07516ba2477bd83b95d6685d9b046",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 905.9765625 368",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-appendix-c.md",
+      "line": 60,
+      "sha256": "a58991db940a20459f90b41f9ef9c661df38b60ff3dad2f20e8983c9fde26b26",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 462.5 948",
+      "nodes": 9
+    },
+    {
+      "file": "inside-llvm-codegen-appendix-c.md",
+      "line": 114,
+      "sha256": "c01f5d95fce69d9a766560ed5a2a6d5df66ae122ac33f5c0b0d4c0a0c4ac1289",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 999.51953125 234",
+      "nodes": 9
+    },
+    {
+      "file": "inside-llvm-codegen-appendix-c.md",
+      "line": 134,
+      "sha256": "3ff72c26ab63873ea9ddced079385649599542ff766e60b18c12932fac99590f",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 346 406",
+      "nodes": 5
+    },
+    {
+      "file": "inside-llvm-codegen-ch1.md",
+      "line": 13,
+      "sha256": "5b3e26c17647315f42a5b684a827bb2c0a6643c69a31e1faf03d5a4f42c62677",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1581.140625 174",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-ch1.md",
+      "line": 31,
+      "sha256": "93b2dcd887d683e36ebe897cc6136e36543c23008f4c3b73e4854371afab956c",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 2397.828125 174",
+      "nodes": 10
+    },
+    {
+      "file": "inside-llvm-codegen-ch1.md",
+      "line": 162,
+      "sha256": "3875e4e9827956b302c9098a6625e295bd80393b3115d7d68ed492021efd9ecd",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 621 790",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 41,
+      "sha256": "0b0859e7673c15c4c958559a0e56ee8367f214f9a8998838501ceb3bdd8b4874",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 570.5 806",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 61,
+      "sha256": "081e26d1f9c134ce727a9dd623cc95d4f5f937190e0953b9201d9d5e191fb706",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 726.359375 70",
+      "nodes": 3
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 77,
+      "sha256": "8dd15839774b1e01cce91c28f7c150d6c949a0c1413054b0200d099237eb4f1c",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 571.4921875 2246.90625",
+      "nodes": 24
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 328,
+      "sha256": "e6b6a2dbb3a93a5fa3c977507c271ee9cdd8e4f25022570cedeb2f1bf52681fc",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 488.3125 454",
+      "nodes": 5
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 340,
+      "sha256": "2b61f8b2c919e7babd6f8f9942c1d24c116e67a6798032e19e0cfbbc3d6ea778",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 422.5 350",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 467,
+      "sha256": "b92e2fd4ca1d98f61d7a72385e47411168881ec83ebfc57e4499499171ec35f6",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 585.34375 174",
+      "nodes": 3
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 700,
+      "sha256": "8d8557bb144ed15201d0d2ffd9e2a3da2d66d607ca25bf98bc8fe1150973aaa4",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 485.59375 270",
+      "nodes": 3
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 1057,
+      "sha256": "bb47173a461ea92cda1bc9625dca59e1932b775795cef6feddc35b374422b437",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 337.140625 278",
+      "nodes": 5
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 1485,
+      "sha256": "125e298c37d613c34ac70a594c307ae6c937b6c733837c8ebfaba9493493284b",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 976 1206",
+      "nodes": 11
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 1550,
+      "sha256": "3241142e47d568d63193676e44e69660e619e57caf28d29a9e62d05852ed5955",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1138.6875 70",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 1583,
+      "sha256": "c1f0fa003ea8f1fd4857d5536c2a8df94b04df7e0587ada1d3c0e0966553c820",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1012.40625 284",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 1643,
+      "sha256": "25818e9ed53b7eeb93d2f2bfea38a33c5e06ec301fbab27ef22d926e272f6cd9",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 981.453125 129",
+      "nodes": 3
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 1730,
+      "sha256": "5b642c787fe4186f5d56a426198c508fe5d1dab60561af68148fc7edd442648e",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 276.734375 278",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 1746,
+      "sha256": "9873d9da11e4c313322c16fce8ed74a06b490bd3b5783672ef4e192e85848872",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 399.375 350",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 1811,
+      "sha256": "40ec3f1fa5360cafdffe388cbcedb0aa8dd64965bb549c7f414c01dbf534cd87",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1070.921875 198",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 2015,
+      "sha256": "8ccc5f9c2269ac2181831f0c303553f0e88ca42d093ec17df6b9ce4e700a7a24",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 408.265625 222",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 2027,
+      "sha256": "6da87145ef014db9bbcee4f569b2e6c776285d7f17ecad124ed7fe72dd212f31",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 589.046875 94",
+      "nodes": 3
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 2049,
+      "sha256": "f5807ee196600ff77091aa8b3b31ca0efbd893a8d826d000739de7aaf933fedf",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 557.375 94",
+      "nodes": 3
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 2061,
+      "sha256": "ca26959c0f8b833c4b05b4096c22b777bb60bba2019decc4738574657a5d62f7",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 672.65625 94",
+      "nodes": 3
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 2093,
+      "sha256": "57f8c3565b38b744b1a6543c63ffaee54fcdf234794f5ab8a767c2780890fbb5",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 869.921875 70",
+      "nodes": 3
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 2127,
+      "sha256": "68883f532387d2790e4a7a15d9f0fce93b5c214035a2eff59019652dd33a7740",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 608.6875 205",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 2235,
+      "sha256": "2620076b6a56ab0cb51ec054fb831285924691b283eafcb36f3fa2f24ccd3ace",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 199.6328125 840",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 2254,
+      "sha256": "85221b60fb60729664925c4b053ed2d3d989b4fbac43483262db9fc1380f2a18",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 657.65625 146",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch10.md",
+      "line": 2271,
+      "sha256": "7c2224ec27913a3f4389df51573a995fedc8219bed9550a2f407b93a380e2c23",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 979.5 918",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-ch11.md",
+      "line": 9,
+      "sha256": "2198c765909121ee3d7807547bb9154ab53ff646e04af913d8ab416dbfd15c12",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 276 1206",
+      "nodes": 11
+    },
+    {
+      "file": "inside-llvm-codegen-ch11.md",
+      "line": 191,
+      "sha256": "1e313220e1fa4bf40b1fb075e2bf6e2fbf10ed4cc9a017e82b2783c3f8568811",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 510 558",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-ch11.md",
+      "line": 275,
+      "sha256": "0f98032316f9766bfa7dd4e982b3bab9c0e3506ec4459cbf00620e06d8d9e07d",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 966.0625 244",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-ch11.md",
+      "line": 295,
+      "sha256": "7b61638f8337cd344e679028824f364faf43826d6a728e9d1156034cce840e11",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 603.5625 174",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch11.md",
+      "line": 808,
+      "sha256": "33a66729b841c2897532e0ec7e28fcab589a3f9e51f0936f00d2aba6cced542b",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 477.703125 326",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-ch11.md",
+      "line": 831,
+      "sha256": "fb8aeacea09ea90c41608f46956a1a7b60d05af2e88b834daf6f8dab6f9c6b7b",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 868.265625 710",
+      "nodes": 17
+    },
+    {
+      "file": "inside-llvm-codegen-ch12.md",
+      "line": 43,
+      "sha256": "3a5ae403d40aa6b16e1ba70120c25d003f899f2326045b57ecc1fe2e730d4d6e",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1309.984375 174",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-ch12.md",
+      "line": 101,
+      "sha256": "2fb1ed9954e7b3fcba5e8fdbbd2acfc59c38c149633393c71b93ee65b863d2ee",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 586 1022",
+      "nodes": 11
+    },
+    {
+      "file": "inside-llvm-codegen-ch12.md",
+      "line": 119,
+      "sha256": "f46f31db1809c6cfeb5790b731ea0dfc7f20f6a6cf54ec5aa476b44f5589e64a",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 601.765625 368",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-ch12.md",
+      "line": 332,
+      "sha256": "04ef8831ba09ea28999caabe2bef701726ce00c33ed6a109b43d82ee430e7ad2",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 520.265625 862",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-ch13.md",
+      "line": 43,
+      "sha256": "4113dfa82148c070e174cb8e8a86e26937fdd4d819f41900945a15fc8f54260b",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 506.921875 1070",
+      "nodes": 10
+    },
+    {
+      "file": "inside-llvm-codegen-ch2.md",
+      "line": 10,
+      "sha256": "a1009811452128376ef564294bf5d851d990dab4362c03b42c7be59b5778fab7",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 1295.0625 70",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-ch2.md",
+      "line": 79,
+      "sha256": "3cc411a1b6d65d26cf673e1de302b841b8d1c80268083a987ddc227132c32a7b",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 586 614",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-ch2.md",
+      "line": 184,
+      "sha256": "0deacd0239742088a60e70a03ded9aeb560af720a9f4340bf66e06d4a1008590",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 529.4375 174",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch2.md",
+      "line": 200,
+      "sha256": "3382c95d252522496ed7b571ad100133fd03c7935c6097b150e7a2615bf59000",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 331.40625 338.03125",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch2.md",
+      "line": 275,
+      "sha256": "278fc197101b64e1ab782208002ac167dda59af0bb5bb0fddecaf072728c6788",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 278.5 302",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch2.md",
+      "line": 378,
+      "sha256": "2f874e8edcee9c63c2fb8454928c051e0439fe69955e6a233c4c04748bed062e",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 300.296875 554.03125",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-ch2.md",
+      "line": 465,
+      "sha256": "31a97721cee28f890d94c1e192f0a82926ca4401a1005c7fefb81996db4cc725",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 679.75 302",
+      "nodes": 5
+    },
+    {
+      "file": "inside-llvm-codegen-ch2.md",
+      "line": 479,
+      "sha256": "dc8a5f4d1e38c9ee4d15896f7dcb7b539d0050251b4bd59b49010ac045e612e7",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 426.96875 278",
+      "nodes": 5
+    },
+    {
+      "file": "inside-llvm-codegen-ch2.md",
+      "line": 512,
+      "sha256": "233344dbba0d70f6b90a88f9cbe99b46815a23aac2d05347b566709e816b51ad",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 385.640625 454.484375",
+      "nodes": 5
+    },
+    {
+      "file": "inside-llvm-codegen-ch3.md",
+      "line": 39,
+      "sha256": "f338a7792c680826aa7c4563667195772b66c7bbeb651b20c665777095b9c486",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 225.1875 278",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch3.md",
+      "line": 79,
+      "sha256": "27cf649fede0e6c4ecd1670af74afdfb1790231c6f001d8880200c4fc5818e1f",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 442.8125 382",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-ch3.md",
+      "line": 180,
+      "sha256": "2eac47c453c3ce6cd39fe7228caa85168d8bbc80749a172570beed73abbcb564",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1452.359375 244",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-ch3.md",
+      "line": 277,
+      "sha256": "cbead41f6492cecdb3078b98300ec663929712e3414a624742980786254a72c5",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 546.5 278",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-ch3.md",
+      "line": 329,
+      "sha256": "e88a74201223bdd218a8d8d94813bc93a1402a4a937e847b817622ce74093dad",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1004.28125 434",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-ch3.md",
+      "line": 354,
+      "sha256": "5fb72a3aafc1901e1976b1771c0f344e0b4da302dd051a193e032eed2ea82b3d",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 457.171875 406",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-ch3.md",
+      "line": 439,
+      "sha256": "af0f39e6097af333255e13ff46336c8d6130ecb4469c86718494b5ed4349e256",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 665.4450073242188 486",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-ch3.md",
+      "line": 602,
+      "sha256": "cf691fd3b8f7c5d81b61687dfb4cf071a6f2bf56f523ddad276171c3e8a25ae0",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 471.2734375 814.09375",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-ch4.md",
+      "line": 65,
+      "sha256": "08c6c7eda1c5e109247723d6f94afc7477bc5bde525d0ebcb7ab7b558dc91619",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 206.453125 382",
+      "nodes": 5
+    },
+    {
+      "file": "inside-llvm-codegen-ch4.md",
+      "line": 78,
+      "sha256": "499a9b37d15b3afd255942f49c8559b9f2f66440abdb9cf67843a436271f18ec",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1217.25 400",
+      "nodes": 14
+    },
+    {
+      "file": "inside-llvm-codegen-ch4.md",
+      "line": 146,
+      "sha256": "a7f2e62677d2835c5e5996e9c8fa3fbbdfec8027045573cb7a1fc569b053ed1e",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 382.171875 278",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-ch4.md",
+      "line": 182,
+      "sha256": "eb77437cd43efaef50564b1fce482f3c002ca9aebb3f688f7c4778dc4d34877a",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 316.9219055175781 326",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch4.md",
+      "line": 240,
+      "sha256": "7ac04a01fedee4fea6a832b0a65b89751873a1fd59221b44f7363bdf37b4e2a1",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "-0.27299976348876953 0 238.8120574951172 486",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-ch4.md",
+      "line": 453,
+      "sha256": "c5620d5b959f90a02d13f9d43f38b3cfa6deeb9bca44037f87025581b6831ea7",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 434.0625 278",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch5.md",
+      "line": 10,
+      "sha256": "843527225a4e458b38c95f35d9c834758a7371705450fb1fd5ed177471f716c6",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1615.546875 244",
+      "nodes": 9
+    },
+    {
+      "file": "inside-llvm-codegen-ch5.md",
+      "line": 75,
+      "sha256": "50a377bdeaaf5e582930e55a23cab72c56f870c3539df6ac2498c4a6f169ae42",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 296.5625 382",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-ch5.md",
+      "line": 91,
+      "sha256": "c9beaa97b990365a8131e309ce838d2eae136b5a781021db948d80129bb0f218",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1972.8125 199",
+      "nodes": 10
+    },
+    {
+      "file": "inside-llvm-codegen-ch5.md",
+      "line": 140,
+      "sha256": "e947e0cb519b68334691e536020fdb5eb8b21c3b68ef76506d834074af7b0082",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 220.109375 382",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch5.md",
+      "line": 152,
+      "sha256": "b70ae80e64941fd4e6015abb2b1c019f39f3129de31880c62e0d09fad257ea65",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1705.8812255859375 244",
+      "nodes": 9
+    },
+    {
+      "file": "inside-llvm-codegen-ch5.md",
+      "line": 232,
+      "sha256": "7e0205d85aeabc4c49826ed88a412b25b3214dc094f18f10d14c292ab4c7d564",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 354.43798828125 496.71875",
+      "nodes": 5
+    },
+    {
+      "file": "inside-llvm-codegen-ch5.md",
+      "line": 245,
+      "sha256": "8680fac30ef8a279c04b0bff9271f7b715ec44eb5c809213952d261f110a9253",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1994.390625 244",
+      "nodes": 13
+    },
+    {
+      "file": "inside-llvm-codegen-ch5.md",
+      "line": 282,
+      "sha256": "bedd60df2997e111798ff8a7190ba18a90a0d34cf0f8c49320fd3598cb7560dd",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 374.546875 590",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-ch5.md",
+      "line": 328,
+      "sha256": "820ed606f3742b61af7734c1eedf9a22bb55127c66ece3c9fcf1170facd4e938",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 225.734375 832.765625",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-ch5.md",
+      "line": 355,
+      "sha256": "a7188def8f7eea4d44e7743af649cd71efcc2a9bdf3d05127bf2ec2d84d99a6c",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 2211.765625 351.90625",
+      "nodes": 10
+    },
+    {
+      "file": "inside-llvm-codegen-ch6.md",
+      "line": 344,
+      "sha256": "29dfc365b7f8ad98f31ff174e74ac36e6f210e9614e3cd68a4aef3103f257ad2",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1535.21875 382",
+      "nodes": 10
+    },
+    {
+      "file": "inside-llvm-codegen-ch6.md",
+      "line": 644,
+      "sha256": "5686fc82ee66afacd03bd8b49766afeeecdf302db6fd6b6edac274fe969b49f4",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1247.640625 174",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-ch7.md",
+      "line": 44,
+      "sha256": "0bd6fc621b84e2afbd0246e0b2078231b1b1a60b44e175a18b840c73cfc39513",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0.5 0 665.4921875 2254.03125",
+      "nodes": 18
+    },
+    {
+      "file": "inside-llvm-codegen-ch7.md",
+      "line": 80,
+      "sha256": "ea80a29e9961f0f5b0fa1393ffae5b44ea2c50316914b37068e690ea00e0b109",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 1129.546875 174",
+      "nodes": 6
+    },
+    {
+      "file": "inside-llvm-codegen-ch7.md",
+      "line": 302,
+      "sha256": "a7a3ef9987d0c2c58ed98c0219dc9bc9f4ef6dc370e6cf8df06ed15d69f61287",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 569 1078",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-ch7.md",
+      "line": 452,
+      "sha256": "010c622c5683bfbb1b010773a17a15d767605c90b4d997ce50e6807471ed9594",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 467.78125 854",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-ch7.md",
+      "line": 583,
+      "sha256": "ec31302eed919421c3f47b62a1b02045345b0620d56da47e7ae08c0a2266b474",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 574.9140625 863.8125",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-ch7.md",
+      "line": 804,
+      "sha256": "f17bae94ac4ac841e4ae132f2a28a5962b6cb43abd24032236ca3bf2d9f56dcf",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 1464.546875 70",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-ch7.md",
+      "line": 1233,
+      "sha256": "08b128f8f7b93a74e799fce939971999c9464742330ca7ba720fde4b5cae5127",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 276 1126",
+      "nodes": 10
+    },
+    {
+      "file": "inside-llvm-codegen-ch8.md",
+      "line": 50,
+      "sha256": "b84c76f92cfcd3f6777cf1ac61bf6781e6068a9ade7f770038493801e3f1c92f",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 547.625 226",
+      "nodes": 5
+    },
+    {
+      "file": "inside-llvm-codegen-ch8.md",
+      "line": 94,
+      "sha256": "2b9f19bcfa6c3ae05e875dc88af720e2dfdcd857320c7bbbb67eaa0f1a4dfd2e",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 517.40625 174",
+      "nodes": 4
+    },
+    {
+      "file": "inside-llvm-codegen-ch8.md",
+      "line": 258,
+      "sha256": "a9a5c03e6abe148f7e2c32302492a06d980096e06d0f1f1cf7d419a3f13e4029",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 511.859375 278",
+      "nodes": 7
+    },
+    {
+      "file": "inside-llvm-codegen-ch8.md",
+      "line": 389,
+      "sha256": "4f47f1b6728091632598a5d331ddf13bfa2ffc4dc76c16f986860e16e494f27d",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 354.5 966.90625",
+      "nodes": 8
+    },
+    {
+      "file": "inside-llvm-codegen-ch8.md",
+      "line": 441,
+      "sha256": "719f9384be5893f066b3315924789381aa5f105bc5cb3b58ce5603a39f8be396",
+      "isNew": true,
+      "passed": true,
+      "viewBox": "0 0 964 94",
+      "nodes": 5
+    },
+    {
+      "file": "inside-llvm-codegen-ch8.md",
+      "line": 917,
+      "sha256": "924cf616ba53315919fcc0ddc0d531fb6ab2eef7761ebb76faff358ea3a65e16",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 860.0718383789062 159.0500030517578",
+      "nodes": 3
+    },
+    {
+      "file": "inside-llvm-codegen-ch9.md",
+      "line": 9,
+      "sha256": "e2aea5f61dc08ddfcfadffa5387deda02fd8bc2ea1caa2141923b0cc29cc2d5b",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 220 1110",
+      "nodes": 11
+    },
+    {
+      "file": "inside-llvm-codegen-ch9.md",
+      "line": 75,
+      "sha256": "5c23f950a6667c61f32027c571f66cb307c46958d1ef778402dd95af7132be22",
+      "isNew": false,
+      "passed": true,
+      "viewBox": "0 0 559.15625 711",
+      "nodes": 7
+    }
+  ],
+  "scope": "All chapter Mermaid fences parsed and rendered as SVG in isolated Chromium; all requests fulfilled with local cached assets. Numeric/semantic correctness checked separately."
+}

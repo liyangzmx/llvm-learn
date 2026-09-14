@@ -18,7 +18,18 @@ IR 是程序的一种表示，其设计注重支持变换操作，需要保证�
 
 这些理念听起来都非常有道理，但实际实现过程中很难完全遵守，原因非常复杂，有些是基于性能考虑，有些是基于实现复杂性的考虑。早期编译器通常只使用一种 IR，但随着编译器的演进，情况变得更加复杂，通常会有多层级的 IR。例如，在 LLVM 代码生成过程中，输入为 LLVM IR，最终输出为机器码，整个过程使用了诸多中间表示，包含狭义的LLVM IR、DAG、MachineInstr（MIR）、通用 MIR、MC 等。在代码生成过程中，IR 的生命周期如图 A-1 所示。
 
-![图 A-1 IR 生命周期](origin/assets/figures/p405-A-1.png)
+```mermaid
+flowchart LR
+ IR["LLVM IR"] --> DAG["SelectionDAG：合法化与选择"]
+ IR --> GI["GMIR：GlobalISel 各阶段"]
+ DAG --> MI["目标 MIR"]
+ GI --> MI
+ MI --> RA["调度、分配、栈帧等"]
+ RA --> MC["MCInst 与符号/节"]
+ MC --> O["汇编文本或对象字节"]
+```
+
+按两条常见路径重绘，避免原图把多个转换统称为“指令选择”。FastISel 等路径见第 7 章。
 
 **图 A-1 IR 生命周期**
 
@@ -26,13 +37,28 @@ IR 是程序的一种表示，其设计注重支持变换操作，需要保证�
 
 ## A.1 狭义 LLVM IR 介绍
 
+**第一次读一份 IR，可以只追踪一个返回值。** 先看 Module 的目标和数据布局，再找 Function 的参数及返回类型；从 `ret` 使用的值往回找唯一静态定义，继续沿操作数追到形参、常量或 load。若遇到 PHI，先转到它标出的前驱边，再看该边带来的定义。这样一次只走一条值链，比从第一行把全部属性名背下来有效。
+
+例如 `%t = add i32 %a, %b` 后 `ret i32 %t`：%t 是结果名字，add 是操作，i32 是运算位宽，%a/%b 是输入；它不说明 %t 已经位于某个硬件寄存器。若 `%a` 来自 `load i32, ptr %p`，再单独追 %p 指向的对象和可能影响这次读的 store/call。值链与内存效果是两类关系，需要分别分析。
+
+本附录把后续表示并列，是为了观察同一计算逐步增加哪些约束。不要仅凭名字中有 IR，就把 LLVM IR、DAG 和 MIR 的规则互相套用。
+
 由于 LLVM IR 的复杂性，本书无法全面展开介绍，本节简单介绍 LLVM IR 语法，更为详细的资料读者可以参考官网学习。
 
 ### A.1.1 IR 文件布局
 
 LLVM IR 文件以模块为基础进行存储，其布局示意图如图 A-2 所示。
 
-![图 A-2 LLVM IR 文件布局示意图](origin/assets/figures/p406-A-2.png)
+```mermaid
+flowchart TD
+ M["Module"] --> T["目标信息：triple / data layout 等"]
+ M --> G["全局变量、别名等符号"]
+ M --> D["函数声明与定义"]
+ M --> A["属性组"]
+ M --> N["元数据"]
+```
+
+这是内容分类，不是强制文本排布顺序；合法模块也不必恰好包含每一种内容。属性组与元数据分开列出。
 
 **图 A-2 LLVM IR 文件布局示意图**
 
@@ -276,7 +302,17 @@ entry:
 
 以 %add = add nsw i32 %b, %a 为例，来展示 LLVM IR 的存储结构，如图 A-4 所示。
 
-![图 A-4 LLVM IR 的存储结构](origin/assets/figures/p412-A-4.png)
+```mermaid
+flowchart LR
+ I["Instruction / User: %add"] --> U0["操作数 Use 0"]
+ I --> U1["操作数 Use 1"]
+ U0 --> B["Value %b"]
+ U1 --> A["Value %a"]
+ B -. "use-list 可找到 Use 0 及其用户" .-> U0
+ A -. "use-list 可找到 Use 1 及其用户" .-> U1
+```
+
+实线说明从用户操作数找到定义值，虚线说明从值枚举使用。这里画语义结构，不把简化字段布局当作 C++ ABI 内存排布。
 
 **图 A-4 LLVM IR 的存储结构**
 
@@ -312,6 +348,10 @@ for (User *user : Fun->users()) {
 
 ## A.2 指令选择 DAG 介绍
 
+读一行 DAG 日志时先拆成“节点标识、结果类型列表、操作、输入”。若看到一个 load 返回 i32 和 ch，这是一个节点的两个结果；用户引用其结果 0 得到数值，引用结果 1 得到顺序联系。SDValue 保存节点和结果编号，SDUse 则连接某个用户的操作数与被用的值。结果编号不是该节点的输入编号。
+
+从一条 add 反向找输入，可以看到数据链；从函数根沿 chain 反向找，可以看到需要保留的有序效果。这两种遍历可能经过不同节点，不能把某条 chain 上没有出现的纯计算断言为“已丢失”。第 7 章补充的 load 双结果图可与这里的数据结构对应起来阅读。
+
 在 LLVM 的实现中重新设计相关的结构，分别如下。
 
 1）SDValue：由 SDNode 指针和结果序号组成，引用某节点的一个结果；它可作为其他节点的操作数值。
@@ -322,7 +362,18 @@ for (User *user : Fun->users()) {
 
 SDNode（SD 是 SelectionDAG 的缩写）结构示意图如图 A-5 所示。
 
-![图 A-5 SDNode 结构示意图](origin/assets/figures/p413-A-5.png)
+```mermaid
+flowchart LR
+ N["SDNode"] --> O["操作码"]
+ N --> T["结果类型列表：可有多个结果"]
+ N --> U["操作数 SDUse 列表"]
+ N --> L["使用链表"]
+ V["SDValue"] --> N
+ V --> R["结果编号 ResNo"]
+ U --> V
+```
+
+SDUse 引用的是带结果编号的 SDValue。一个节点的多个输出不应压成一个笼统的 Type 字段。
 
 **图 A-5 SDNode 结构示意图**
 
@@ -347,13 +398,37 @@ LLVM 18.1.8 的 `SelectionDAG` 构造函数用 `getVTList(MVT::Other, MVT::Glue)
 
 可以使用图来描述上述 IR，由于整个图较大，因此这里仅仅展示从函数入口到 add 指令的 DAG，如图 A-6 所示。
 
-![图 A-6 SDNode 示例](origin/assets/figures/p414-A-6.png)
+```mermaid
+flowchart TD
+ E["EntryToken<br/>LLVM 18: ch,glue"] -->|chain 0| C0["CopyFromReg: i64,ch"]
+ E -->|chain 0| C1["CopyFromReg: i64,ch"]
+ R0["参数物理寄存器 0"] --> C0
+ R1["参数物理寄存器 1"] --> C1
+ C0 -->|值结果 0| T0["trunc i64 到 i32"]
+ C1 -->|值结果 0| T1["trunc i64 到 i32"]
+ T0 --> A["add nsw i32"]
+ T1 --> A
+```
+
+只画参数到加法的相关子图，不表示完整 DAG。修正原图只写 EntryToken 的 chain 而遗漏 LLVM 18 节点结果类型信息的问题；常用入口值仍为结果 0。
 
 **图 A-6 SDNode 示例**
 
 最后仍然以 add 指令为例来展示指令的存储结构，如图 A-7 所示。
 
-![图 A-7 SDNode 存储示例](origin/assets/figures/p415-A-7.png)
+```mermaid
+flowchart LR
+ ADD["add 节点"] --> O0["SDUse operand 0<br/>User=add"]
+ ADD --> O1["SDUse operand 1<br/>User=add"]
+ O0 --> V0["SDValue: trunc0，结果 0"]
+ O1 --> V1["SDValue: trunc1，结果 0"]
+ V0 --> T0["trunc0 节点"]
+ V1 --> T1["trunc1 节点"]
+ T0 -. "使用链包含" .-> O0
+ T1 -. "使用链包含" .-> O1
+```
+
+add 的操作数指向两个 trunc 的结果；两个 trunc 的使用链又能找到 add 对应的操作数。图中不使用容易误认成另一条计算依赖的指针折线。
 
 **图 A-7 SDNode 存储示例**
 
@@ -393,7 +468,20 @@ MIR 本质上包含了后端相关和后端无关的内容。其中，后端相�
 
 MachineInstr 的操作数数量由目标指令描述、寻址形式、隐式寄存器和 regmask 等共同决定，不能把不超过 3 个作为通用假设。为了方便后续的实现，会对 MachineInstr 中的多个操作数进行排序，通常将显式 Def 操作数排在显式 Use 操作数之前；这只是数据布局，不代表先写寄存器再读寄存器的执行次序（这种排序和具体的体系结构无关）。例如，一条加法指令为 add %i1, %i2, %i3，意思是将 %i1 和 %i2 相加并将结果放到 %i3 中，在 MIR 的表述中，操作数的顺序却是 %i3, %i1, %i2，会将目的操作数（%i3）放在前边。这样的设计会给代码实现带来一些便利，例如在打印调试信息时，可以根据操作数的顺序直接输出指令：%r3 = add %i1, %i2。另外，在对操作数的使用情况进行判断时，一条指令可能有零个、一个或多个 Def，还可能有隐式 Def；应使用 getNumExplicitDefs()/defs() 等接口及操作数标志，不能只检查第一个操作数。
 
-![图 A-9 MIR 结构示意图](origin/assets/figures/p417-A-9.png)
+```mermaid
+flowchart TD
+ F["MachineFunction"] --> B["MachineBasicBlock 列表"]
+ F --> R["MachineRegisterInfo"]
+ F --> S["MachineFrameInfo"]
+ B --> I["MachineInstr 列表"]
+ B --> C["前驱、后继、live-ins"]
+ I --> O["MachineOperand 列表"]
+ I --> D["MCInstrDesc / flags 等"]
+ I -. parent .-> B
+ B -. parent .-> F
+```
+
+实线是包含/关联，虚线是 parent 回链；机器基本块未必与某个 IR 基本块一一对应。
 
 **图 A-9 MIR 结构示意图**
 
@@ -435,7 +523,16 @@ BPF::ADD_rr
 
 在机器码生成阶段，LLVM 会将 MIR 转换为 MC。MC 比 MIR 更为简单，其关键字段包括操作码○一、Flags、源位置 SMLoc 和操作数 SmallVector；操作数可表示寄存器、立即数和表达式等。主要的指令描述类MCInst 结构如图 A-10 所示。
 
-![图 A-10 MCInst 结构示意图](origin/assets/figures/p418-A-10.png)
+```mermaid
+flowchart TD
+ I["MCInst"] --> O["Opcode"]
+ I --> F["Flags"]
+ I --> L["SMLoc"]
+ I --> A["MCOperand 列表"]
+ A --> R["寄存器 / 整数或浮点立即数 / 表达式等"]
+```
+
+图列出关键成员类别；MCOperand 不携带完整 MachineOperand 的活跃性、帧索引等机器优化信息。
 
 **图 A-10 MCInst 结构示意图**
 

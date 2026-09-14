@@ -7,13 +7,34 @@
 
 控制流可区分可归约与不可归约的情形。本章用入口结构帮助理解：图 5-1a 的循环区域有多个入口，且没有一个支配整个区域的 header，因此是不可归约循环区域；图 5-1b 展示了具有单一入口的自然循环。不能只观察整个 SCC 的入口数就断言其内部所有循环结构均可归约，内部仍可能包含不可归约区域。
 
-![图 5-1 不可归约和可归约循环示意](origin/assets/figures/p076-5-1.png)
+```mermaid
+flowchart TD
+ subgraph I["a. 两个入口进入同一循环区域"]
+ E["入口"] --> A["BB1"]
+ E --> P["BB4"]
+ P --> B["BB2"]
+ A --> B
+ B --> A
+ B --> C["BB3 / 离开区域"]
+ end
+ subgraph R["b. 单入口自然循环"]
+ E2["入口"] --> H["BB1: header"]
+ H --> L["BB2: latch"]
+ L --> H
+ L --> X["BB3 / 退出"]
+ end
+```
+
+a 中 BB1 不能支配 BB2，因为入口可经 BB4 绕过 BB1；BB2 也不能支配 BB1，因此该双节点环没有共同 header。
 
 **图 5-1 不可归约和可归约循环示意**
 
 LLVM 的 LoopInfo 主要表示自然循环，不负责枚举 CFG 中所有可能的环。不可归约控制流仍是合法的 LLVM IR，也可以接受通用 CFG 或其他分析、优化；不能据此断言 LLVM 或其他现代编译器只支持自然循环。许多基于 LoopInfo 的循环变换依赖单入口和支配性质，因此本章按 LLVM 的习惯把自然循环简称为循环。下面介绍自然循环性质、LLVM 中的表示与规范化形式。
 
 本章命令使用 **Bash**，先执行下面的准备块，再在同一 shell 中按正文顺序执行后续命令。工具应为已构建的 LLVM 18.1.8；这些步骤不会启动构建。输入只读，所有生成文件写入 `CODEGEN_LAB` 指向的新临时目录。
+
+<details>
+<summary>动手实验前展开：本章环境初始化（首次阅读推导可先略过）</summary>
 
 <!-- manual-lab:ch5-setup -->
 
@@ -30,8 +51,16 @@ printf '本章临时输出目录：%s\n' "$CODEGEN_LAB"
 "$LLVM_BUILD/bin/opt" --version
 ```
 
+</details>
+
 预期工具报告 LLVM 18.1.8。后面的 `opt` 命令显式指定 Pass；使用解释器时，返回码 0 表示输入中 `main` 的检查通过，不表示在 BPF 内核或 JIT 上运行过。
 ## 5.1 自然循环
+
+**按定义收集循环节点，而不是圈住图上的闭合形状。** 设 CFG 为 P→H、H→B、B→L、L→H，且 H 还有一条退出边 H→X。H 支配 L，所以 L→H 是回边。先放入 {H,L}，从 L 沿前驱逆向找：加入 B，再遇到已在集合中的 H 就停止越过 H 的搜索，得到 {H,B,L}。P 在 H 之前，不属于循环；X 是退出后的块，也不属于循环。
+
+逆向搜索时把 H 预先标记为已访问很关键。若继续从 H 搜索它的前驱 P，会把循环外的进入路径也错误纳入。对多个指向 H 的回边可以分别收集再合并；若内层还有自己的 header，LoopInfo 会建立嵌套关系，而不是把整个 SCC 永远当成一个扁平循环。
+
+这个例子还区分了 latch 与 exiting：L 是 latch，因为它跳回 H；H 是 exiting，因为它能离开循环到 X。两者可能重合，但定义完全不同。阅读旋转、化简和栈帧下沉时，先标清这些角色，才能知道某条新边改变了入口、回边还是出口。
 
 自然循环的定义有许多的描述方式，直观地描述是“只有单入口、内部基本块可以构成环的子图”。下面在入口可达 CFG 子图中，采用支配关系（参考第 4 章）来给出自然循环的正式定义。首先我们需要用支配关系定义回边（Back Edge）。
 
@@ -59,11 +88,36 @@ flowchart TD
 
 通过自然循环的定义，可以在程序的控制流中找出自然循环。但当程序较为复杂的时候，会出现多个自然循环，这些循环会存在嵌套的情况，即一个循环包含另一个循环。为了区分这种包含关系的循环，通常将位于外层的循环称为外循环（outer loop），位于内层的循环称为内循环（inner loop）。如图 5-4 所示，BB3 和 BB4 组成的循环是 BB2、BB3 和BB4 组成的循环的内循环，而 BB2、BB3 和 BB4 组成的循环是 BB3 和 BB4 组成的循环的外循环。
 
-![图 5-3 自然循环识别示例 图 5-4 外循环和内循环示例](origin/assets/figures/p078-5-3.png)
+```mermaid
+flowchart TD
+ subgraph A["图 5-3：自然循环"]
+ P["BB1"] --> H["BB2"]
+ H --> B["BB3"]
+ B --> L["BB4"]
+ L -->|回边| H
+ L --> X["BB5"]
+ end
+ subgraph N["图 5-4：嵌套循环"]
+ P2["BB1"] --> H2["BB2: 外层 header"]
+ H2 --> B2["BB3: 内层 header"]
+ B2 --> L2["BB4"]
+ L2 -->|内层回边| B2
+ L2 -->|外层回边| H2
+ L2 --> X2["BB5"]
+ end
+```
+
+补齐原合并图引用中容易漏掉的嵌套关系：外层集合为 {BB2,BB3,BB4}，内层为 {BB3,BB4}。
 
 **图 5-3 自然循环识别示例 图 5-4 外循环和内循环示例**
 
 ## 5.2 LLVM 的循环实现
+
+**规范化是为变换提供固定位置。** 如果循环头有两个循环外前驱 P、Q，想把一条每次循环都不变的计算移到循环之前，直接放在 P 会漏掉 Q 路径，放在 H 又仍会每次迭代执行。建立统一 preheader 后，可以把它放到这个专门的进入块。多个回边合成统一 latch、让退出块成为 dedicated exits，也是在减少后续变换必须分别处理的结构情况。
+
+LCSSA 解决另一个接口问题：循环内定义的值如果被循环外使用，在退出处用 PHI 明确“从哪条循环退出边带出了哪个值”。即使某个出口 PHI 只有一个输入，仍能成为变换循环时的值边界。若优化克隆、拆分或删除一段循环，主要修复出口 PHI，就能让外部使用继续引用明确的结果。
+
+LoopSimplify、LCSSA 与旋转不应混成一个操作。前者规范入口/回边/出口结构，LCSSA 规范跨循环边界的值，旋转改变测试与循环体的排列。尤其从入口测试的 while 变成尾部测试结构时，必须保留初始条件不满足就执行零次的路径；直接把它写成无入口保护的 do-while 会多执行一次循环体。
 
 LLVM 的 Loop / LoopInfo 数据结构及依赖它们的许多循环变换基于自然循环；需要覆盖一般循环区域的分析可考虑 CycleInfo 等接口。不可归约控制流不能直接当成一个 LoopInfo 自然循环，但并不因此被排除在所有优化之外。下面按节点相对循环的位置介绍术语。
 
@@ -95,7 +149,24 @@ flowchart TD
 
 注意：除了 header 外，这些角色的节点可能有多个；循环也可能没有退出节点。一个基本块还可以兼具多个角色，例如图 5-7 中的同一个基本块兼任 header、latch 和 exiting。
 
-![图 5-6 entering、exit 节点示例 图 5-7 循环节点合并示例](origin/assets/figures/p079-5-6.png)
+```mermaid
+flowchart TD
+ subgraph A["图 5-6：角色分开"]
+ P["entering"] --> H["header"]
+ H --> B["循环体"]
+ B --> E["exiting"]
+ E --> L["latch"]
+ L --> H
+ E --> X["exit"]
+ end
+ subgraph C["图 5-7：角色可以重合"]
+ P2["entering"] --> H2["header + latch + exiting"]
+ H2 --> H2
+ H2 --> X2["exit"]
+ end
+```
+
+entering/exit 在循环外，header/latch/exiting 在循环内。重合取决于边的角色，不要求一个节点只对应一个术语。
 
 **图 5-6 entering、exit 节点示例 图 5-7 循环节点合并示例**
 
@@ -171,7 +242,32 @@ preheader 只有一条后继边，只有 latch 回到 header，exit 的前驱仅
 
 为了将一些不符合循环化简形式的循环尽可能地进行化简，LLVM 还专门实现了一个 Pass。这个 Pass 针对循环化简形式的性质设置了下面 3 个主要功能。每个功能点都是先判断循环是否符合对应的性质，如果不符合则执行相应的变换，并尝试让其符合。
 
-![图 5-9 不符合循环化简形式的 3 种情况](origin/assets/figures/p081-5-9.png)
+```mermaid
+flowchart TD
+ subgraph A["a. 缺少统一 preheader"]
+ P["entering P"] --> H["header"]
+ Q["entering Q"] --> H
+ H --> L["latch"]
+ L --> H
+ end
+ subgraph B["b. 多个 latch"]
+ PH["preheader"] --> H2["header"]
+ H2 --> L1["latch 1"]
+ H2 --> L2["latch 2"]
+ L1 --> H2
+ L2 --> H2
+ end
+ subgraph C["c. exit 有循环外前驱"]
+ E["入口"] --> H3["header"]
+ E --> O["循环外块"]
+ H3 --> L3["latch / exiting"]
+ L3 --> H3
+ L3 --> X["exit"]
+ O --> X
+ end
+```
+
+每个子图只保留造成不规范的边：a 需统一进入位置，b 需统一回边位置，c 需专用退出块隔开循环外入边。
 
 **图 5-9 不符合循环化简形式的 3 种情况**
 
@@ -183,7 +279,19 @@ preheader 只有一条后继边，只有 latch 回到 header，exit 的前驱仅
 
 此外，LoopSimplify 会清理妨碍自然循环结构的不可达前驱边等，但不是一个保证删除所有不可达基本块的通用清理 Pass。存在 indirectbr 等无法安全拆边的情况时，规范化可能不能完全成功；调用方必须检查所需形式是否成立。图 5-10 展示了为图 5-9a 插入 preheader 的情况。
 
-![图 5-10 将图 5-9a 进行循环化简](origin/assets/figures/p081-5-10.png)
+```mermaid
+flowchart TD
+ P["原 entering P"] --> PH["新增 preheader"]
+ Q["原 entering Q"] --> PH
+ PH --> H["header"]
+ H --> B["循环体"]
+ B --> E["exiting"]
+ E --> L["latch"]
+ L --> H
+ E --> X["exit"]
+```
+
+P/Q 的输入如需合并，也要修复 preheader 与 header 的 PHI；只连 CFG 边并不完成整个变换。
 
 **图 5-10 将图 5-9a 进行循环化简**
 
@@ -244,7 +352,26 @@ int test(int n) {
 
 图 5-12 展示代码清单 5-1 的旋转过程。图 5-12a 是循环旋转前的示意图，循环是从循环头退出，所以不是 do-while 的形式；图 5-12b 是经过旋转之后的循环，从循环尾部退出，变成了 do-while 的形式；图 5-12c 是添加 guard 后保持零次迭代语义的形式。对于 n ≤ 0 仍有可能发生的本例，图 5-12b 只是中间概念图，不能单独替换原循环；5-12c 中 guard 跳过循环后与循环 exit 在外部 BB 汇合，避免破坏 dedicated exits。
 
-![图 5-12 循环旋转变换示意图](origin/assets/figures/p083-5-12.png)
+```mermaid
+flowchart TD
+ subgraph Before["旋转前：头部测试"]
+ P["preheader"] --> H{"header: 条件成立？"}
+ H -->|是| B["body / latch"]
+ B --> H
+ H -->|否| X["exit"]
+ end
+ subgraph After["旋转后：保留零次迭代保护"]
+ G{"guard: 初始条件成立？"} -->|是| P2["preheader"]
+ G -->|否| X2["循环外汇合"]
+ P2 --> B2["body: 执行一次迭代"]
+ B2 --> T{"后续条件成立？"}
+ T -->|是| B2
+ T -->|否| EX["exit"]
+ EX --> X2
+ end
+```
+
+重绘保留了入口 guard，避免把“循环旋转”画成无条件至少执行一次。body 与尾部判断可以同处一个机器/IR 基本块，图中拆开只为解释顺序。
 
 **图 5-12 循环旋转变换示意图**
 
